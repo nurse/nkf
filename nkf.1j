@@ -1,0 +1,424 @@
+.TH NKF 2 9/Sep/2002
+.SH NAME
+nkf \- ネットワーク用漢字コード変換フィルタ v2.0
+.SH SYNOPSIS
+.B nkf
+.RI [ options ]
+.RI [ file ]
+.SH DESCRIPTION
+\fInkf\fPはネットワークでメールやニュースの読み書きをするために作られた、漢
+字コードの変換フィルタである。
+.PP
+この\fInkf\fPの特徴としては、入力漢字コード系の統計的な自動認識機能がある。
+このため、利用者は、入力漢字コード系が何であるかを知らなくても、出力漢字
+コード系のみ指定すれば良いことになる。ただ、この判定機構は、理論的には完
+全ではないが、通常のニュースやメールのメッセージについては確実に動作する
+安全なものにはなっている。
+.PP
+現在、\fInkf\fPが認識できる入力の漢字コード系は、いわゆる「JISコード」(ISO-
+2022-JPに基づくもの)、MS漢字コード(シフトJIS)、日本語EUC(AT&Tコード)のい
+ずれかである。出力する漢字コード系も、この3種類である。
+.PP
+入力は、ファイルを指定しなければ、標準入力となる。出力は標準出力である。
+.PP
+指定できるオプションは、以下の通り。\fB\-mu\fP のように続けることができる。
+.TP
+.B \-j
+JISコードを出力する。(デフォルト)
+.TP
+.B \-e
+EUCコードを出力する。
+.TP
+.B \-s
+シフトJISコードを出力する。
+.TP
+.B \-w
+UTF8コードを出力する。
+.TP
+.B \-m[BQSN0]
+MIME を解読する。(デフォルト) ISO-2022-JP(base64)とISO-8859-1(Q encode)
+のみを解読する。ISO-8859-1 (Latin-1) を解読する時は、
+-lフラグも必要である。\-m0 ではMIMEを解読しない。\-mQ, \-mBでは、
+Q encode, B encode されているものとして処理する。
+.nf
+  \-mB   MIME base64 stream を解読する。ヘッダなどは取り除くこと。
+  \-mQ   MIME quoted stream を解読する。
+  \-mS   MIME のチェックを厳しくする (デフォルト)
+  \-mN   MIME のチェックを緩くする
+  \-m0   MIME を解読しない。
+
+   \-mS は、宣言の内容と、その後に続くbase64の整合性をチェックする。
+   \-mN  は、改行で切られたMIMEなども解読する。解読が止まらないこともある。
+.fi
+.TP
+.B  \-M[BQ] 
+MIME に変換する。JISにコード変換してからbase64される。
+.RS
+.nf
+  \-M    ヘッダ形式に変換する
+  \-MB   base64 stream に変換する
+  \-MQ   Quoted stream に変換する
+.fi
+.TP
+.B "\-J \-E \-S \-X \-B"
+期待される入力コードの性質を指定する。
+.RS
+.IP \fB\-J\fP
+ISO-2022-JPを仮定する。
+.IP \fB\-E\fP
+日本語EUC(AT&T)を仮定する。
+.IP \fB\-S\fP
+MS漢字を仮定する。X0201仮名も仮定される。
+.IP \fB\-X\fP
+MS漢字中にX0201仮名があると仮定する。
+.IP \fB\-B\fP
+壊れた(Broken)JISコード。ESCがなくなったと仮定する。
+.RS
+.IP \fB\-B1\fP
+ \fBESC-(\fP, \fBESC-$\fP のあとのコードを問わない
+.IP \fB\-B2\fP
+改行のあとに強制的にASCIIの戻す
+.RE
+.RE
+.TP
+.BI \-f ?
+一行\fI?\fP文字になるように簡単な整形をおこなう。デフォルトは
+60文字である。
+.TP
+.B \-Z
+X0208中の英数字と若干の記号をASCIIに変換する。\-Z1 はX0208間隔をASCII
+spaceに変換する。\-Z2はX0208間隔をASCII space 二つに変換する。趣味によって
+使い分けてほしい。
+.TP
+.B \-b
+バッファリング出力を行う。(デフォルト)
+.TP
+.B \-u
+出力時に、バッファリングしない。
+ssh localhost | nkf \-u というように使う。
+.TP
+.B \-t
+何もしない。
+.TP
+.BI \-I
+iso-2022-jp以外の漢字コードを〓に変換。
+.TP
+.BI \-i ?
+JIS漢字を指示するシーケンスとして \fBESC-'$'-\fP\fI?\fPを使用する。
+(デフォルトは、ESC-'$'-'B')
+.TP
+.BI \-o ?
+1バイト英数文字セットを指示するシーケンスとして、\fBESC-'('-\fP\fI?\fPを使用す
+る。
+(デフォルトは、ESC-'('-'B')
+.TP
+.B \-r
+ROT13/47の変換をする。
+.TP
+.B \-v
+バージョンを表示する。
+.TP
+.B \-T
+テキストモードで出力する。(MS-DOS上でのみ効力を持つ)
+.TP
+.B \-l
+0x80-0xfeのコードをISO-8859-1 (Latin-1)として扱う。
+JISコードアウトプットとの組合せみのみ有効。
+\-s, \-e, \-xとは両立しない。
+.TP
+.B \-x
+通常おこなわれるX0201仮名->X0208の仮名変換をしないで、
+ X0201仮名を保存する。入力は、MS\-Kanjiの1byte仮名、SO/SI、
+ESC\-(\-I, SSOを受け付ける。出力は、日本語EUC中ではSSO、
+JISでは ESC\-'('\-I を使う。
+.TP
+.B \-O
+ファイルに出力する。Unixでは不要な機能だがWindowsやMSDOSでは
+必要らしい。直後の引き数でなく、最後のファイル名が出力ファイ
+ル名となり上書きされてしまうので注意。ファイル名がない場合は、
+nkf.out。\-OW では、元のファイルを変換結果で置き換える。
+複数のファイルを書き換えることも可能。
+.TP
+.B \-c
+NLまえにCRを付加する。
+.TP
+.B \-d
+NLまえのCRを削除する。単独のCRは、NLに置き換えられる。
+.TP
+.B \-L[wmu] 改行モード 
+.nf
+		    -Lu   unix (LF) 
+		    -Lw   windows (CRLF) 
+		    -Lm   mac (CR) 
+		デフォルトは変換なし。
+.fi
+.TP
+.B \-- 長い名前のオプション。これらは、上のオプションの組合せの別名。
+.nf
+     \--fj,\--unix,\--mac,\--msdos, \--windows
+           これらのシステムに適した変換をします。
+
+     \--jis,\--euc,\--sjis,\--mime,\--base64  
+	   対応する変換をします。
+
+     \--hirakana, \--katakana 平仮名、片仮名変換
+     \--help
+     \--version
+     \--		これ以降のオプションを無視する
+.fi
+.SH AUTHOR
+
+.nf
+市川  至	ichikawa@flab.fujitsu.co.jp	(was ichikawa@fujitsu.JUNET)
+河野  真治      kono@ie.u-ryukyu.acjp
+Rei FURUKAWA    furukawa@tcp-ip.or.jp
+.fl
+
+
+.SH BUGS
+
+実は、入力のコード系の判定は、EUCとシフトJISとの自動判定であり、最初に
+特定できる文字が来た時点で確定してしまう。そして、特定不能の間は保留バッ
+ファにためておかれ、確定後に処理される。このため、
+.IP 1)
+7ビットJISは常に認識される。シフトJIS、EUC混合もほとんどの
+場合は問題がない。ただし、
+.IP 2)
+シフトJISのX0201仮名とEUCが識別できない。したがって、
+デフォルトではシフトJISのX0201仮名はないと仮定している。
+.PP
+このフィルタの変換は、コード系に対応した一括写像を施すだけなので、外字
+や特殊記号や罫線素片など、JIS第一、第二水準表において定義されていないコー
+ドに各社により割り当てられた文字変換しない。第三水準なども変換しない。
+UTF8の日本語以外の部分にも対応していない。
+
+.SH "kono@csl.sony.co.jp (Shinji Kono) による変更。"
+
+.PP
+X0201仮名(いわゆる半角かな)はデフォルトでX0208(全角仮名)に変換される。
+ただし、シフトJISのX0201仮名
+はデフォルトではEUCだと解釈されてしまう。これが望ましくない時には \-S や
+\- \-X などのフラグを使えば良い。\-Xを指定すると一旦確定したシフトJISから 
+EUCに移行することはない。ESC-(-Iによる X0201は常に認識される。SI/SO
+SSOは、\-lが指定されていなければX0201と解釈する。
+.PP
+MIME decodeは、ISO-2022-JPのbase64と、ISO-8859-1の16進encodeのみ
+decodeする。 MIME decodeは、単純な改行や空白は安全に読み飛ばされる。
+ということは、 MIME decode中の空白は保存されない。変換は可逆ではない。
+lessやrnで行が分割された時は、 Terminalによって異なる ESC-[-K などが挿入
+されるので、完全にはdecode できない。\-mN では、チェックが緩いので
+decodeできる場合もある。
+ISO-8859-1 出力はJIS コード出力としか両立しない。
+.PP
+Fold 機能はfmtと異なり行頭の空白を無視する。禁則処理はあるが指定された
+長さ+5で強制改行する。-f60-10 などとすると強制改行の余地(fold-margin)
+を調整できる。-f40-0とすると禁則処理なしとなる。
+.PP
+X0201仮名はrot47されない。
+
+.SH nkf 1.6 "kono@ie.u-ryukyu.ac.jp (Shinji Kono) による変更。"
+
+ -B のlevelを0,1,2 に増やした。MIMEのbase64, Q-Encodingを解読する
+機能を付けた。ヘッダなどは解読しないので、Encodeされた部分だけを
+通す必要がある。 -mB は、nkf1.5と違う動きをするので、-B -m とすること。
+
+.SH nkf 1.6.1
+
+\-Z1 でX0208間隔\->ASCII spaceの変換をおこなう。
+\-Z2 でX0208間隔\->ASCII space 2個の変換をおこなう。
+.PP
+
+.SH nkf 1.7
+.PP
+ESC-$-(-B などにも対応するようになった。
+.PP
+copy right の非営利の条件が不要になった。使用時の問い合わせも不要。
+.PP
+Perl Extension として使えるようになった。
+
+.SH nkf 1.9
+.PP
+MIME エンコードの機能時でも、コード変換されしまうので注意。
+base64 エンコードでは改行時に先頭に空白が付くのでメールヘッダ
+に使用できる。
+.PP
+コード変換モジュールは、サブルーチンを継続によって接続する
+形式となった。複数の変換を自由に接続できるようになった。
+.PP
+      getc <-- iconv --> oconv --> other conversion --> putc
+.PP
+という形で、順に呼び出される。
+
+.PP
+長いオプション名を許すようになった。
+    \--mac
+    \--jis
+    \--unix
+など。
+
+.SH
+UTF-8 サポートについて
+.PP
+furukawa@tcp-ip.or.jp による。
+.PP
+従来の nkf と同様に、nkf -e として起動すると、自動判別で
+UTF-8 と判定されれば、そのまま euc-jp に変換される。
+
+.PP
+オプションで、文字コードを指定できる。
+
+    \-w   出力を utf-8 に指定します
+    \-W   入力を utf-8 と仮定します
+.PP
+特に自動判別、コード混在、エラー処理系には判定を失敗するこがある。
+
+.PP
+  \-Z3 オプションの新設
+        X0208 の '＞', '＜', '”', '＆'  をそれぞれ
+        '&gt;', '&lt;', '&quot;', '&amp;' に変換します
+
+.SH nkf 2.0 
+
+.PP
+newline を保存する folding -F。fmtに近い動作をする。
+
+.PP
+folding のマージン。-f60-0 などと、0にすると禁
+則せずに、強制的にfoldingする。携帯にメールを送るときに使
+う。
+
+.PP
+nkf \-f40\-0
+などとしてメールを 40 文字づつ切り出して、
+「Subject 160 文字目から 199 文字目まで」
+「本文    200 文字目から 239 文字目まで」
+とする。
+
+.SH
+MIME関係
+
+.PP
+fixed mime mode ( -mQ ) で =? で Q-encode が抜けてしまうバグの修正。
+
+.PP
+Q encode の Soft Wrap に対応。
+
+.PP
+MIME encode のWrapでは、先頭に一文字の空白挿入。
+した。あA の MIME 変換は、A を含んで変換しないといけ
+ないが、対応していない。RFCには反した動作だが、
+encoded word 間のwhite spaceは無視される。
+nkf_test.pl では、MIMEの空白を削除してから比較している。
+
+.PP
+non-strict mime \-MN では、空白、改行をまたいで、base64 encoding
+を解読する。これで、スクリーンからcut&pasteで
+デコードすることも可能。止まらない可能性あり。
+
+.PP
+nkf_test.pl のバグチェックを増やした。
+test が失敗したときにdiffを取るようにした。
+make_test.pl でテスト作成可能。
+
+.PP
+Perl moduleで、\\0を含む文字列も変換できるようになった。
+Perl XSでの文字列の長さの扱いを修正。
+
+NKFをNKF.modにしたので、Mac OS X でMakeでコンパイル化。
+
+.PP
+rot13が1.9で動かなくなっていたのを修正。
+
+.PP
+\-Z の間隔やおかしな変換の修正
+
+.PP
+hiragana/katakana 変換ができるようになりました。
+   \-h1   \--katakana ひらがな->かたかな
+   \-h2   \--hirakana かたかな->ひらがな
+   \-h3   \--hirakana-katakana かたかな<->ひらがな
+
+\-OW で、引数のファイルを直接、置き換えることができます。
+
+
+.SH ACKNOWLEDGE
+
+以下のかたがた、どうもありがとうございました。
+
+.nf
+
+nkf 1.4
+morb@fujitsu, kiss@ayumi.stars.flab.fujitsu, cen122@flab.fujitsu,
+yuki@flab.fujitsu 他、fujitsu & flab.fujitsuの皆さんの協力に感謝。
+shinoda@cs.titech, kato@cs.titech, uematsu@cs.titech  TNX
+kono@ie.u-ryukyu.ac.jp
+
+nkf 1.9
+Akio Furukawa
+From: OHARA Shigeki
+Hiroaki Sengoku 
+Ikuhiro MORITA (森田 育宏)
+Junn Ohta
+KAWAMURA Masao
+Kazuhiko Mori 
+Keitaro Isokawa
+Ken-ichi Hirose
+Ki-ichiro SATO 
+Kiwamu Aoyama
+Koichi Hirayama 
+Mitsuru Hase（長谷　満）
+OHARA Shigeki (大原 重樹)
+Rei FURUKAWA 
+Satoru Takabayashi
+Shigeyuki Takagi
+Shin MICHIMUKO 
+Tsutomu Sakai 
+YAMASHITA Junji (山下 純司)
+Yasuyuki Sato 
+Yoshiaki Yanagihara
+Yoshiaki Yanagihara 
+hat@so-net
+ＤＣＣ技術部渡辺
+かとぺ / 加藤 貴司
+かべdais
+ひろせ まさあき
+イントラネットシステム(株)松尾
+鵜飼文敏
+塩崎 毅彦(SHIOZAKI Takehiko)
+河村雅夫 (Media Lab.)
+河野 康司
+喜瀬“冬猫”浩＠南国沖縄
+金井 智彦
+桂田 祐史 （かつらだ まさし）
+高橋宜盟
+国吉
+黒江明彦
+三宅正泰
+山倉 真
+山本 芳人
+山野裕司 (やまのゆうじ)
+重村法克
+小島基靖
+上田　健
+新井 康司 (Koji Arai)
+森　千絵子
+森　和彦
+水野 貴文
+前地和俊
+仲宗根＠並列信頼研
+猪谷 英一郎 == Eiichiro Itani
+藤原　秀行　
+八田 真行 (Masayuki Hatta)
+尾川敏也
+望月 孝志 
+木村（＠筑波大学数学研究科）
+野村俊彰
+有岡＠ミノルタ
+有沢 明宏
+落合一喜
+林  亮
+國安 治
+
+
+河野真治
+     www.ie.u-ryukyu.ac.jp/~kono/nkf/

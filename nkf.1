@@ -1,0 +1,254 @@
+.TH NKF 1L 24/Feb/2000
+.SH NAME
+nkf \- Network Kanji code conversion Filter v2.0
+.SH SYNOPSIS
+.B nkf
+[
+.B options
+] [
+.B file
+]
+.SH DESCRIPTION
+.PP
+.B Nkf
+is a yet another kanji code converter among networks, hosts and terminals.
+It converts input kanji code to designated kanji code
+such as 7-bit JIS, MS-kanji (shifted-JIS), utf-8 or EUC.
+.PP
+One of the most unique facicility of 
+.B nkf
+is the guess of the input kanji code.
+It currently recognizes 7-bit JIS, MS-kanji (shifted-JIS),utf-8 and EUC.
+So users needn't the input kanji code specification.
+
+By default X0201 kana is converted into X0208 kana. For
+X0201 kana, SO/SI, SSO and
+ESC-(-I methods are supported. For automatic code detection, nkf assumes
+no X0201 kana in MS-Kanji. To accept X0201 in MS-Kanji, use \-X, \-x or
+\-S.
+.PP
+Options are bellow:
+.TP
+.B \-j
+output 7-bit JIS code.
+This is a default.
+.TP
+.B \-s
+output MS-kanji (shifted-JIS) code.
+.TP
+.B \-e
+output EUC (AT&T) code.
+.TP
+.B \-w
+output UTF-8 (Unicode 8bit form).
+.TP
+.B \-S
+Assume MS-Kanji and X0201 kana input. It also accpet JIS.
+AT&T EUC is recognized as X0201 kana. Without \-x flag,
+X0201 kana is converted into X0208.
+.TP
+.B \-J
+Assume  JIS input. It also accepts Japanese EUC.
+This is the default. This flag does not excludde MS-Kanji.
+.TP
+.B \-E
+Assume AT&T EUC input. It also accpet JIS.
+Same as \-J.
+.TP
+.B \-B
+Assume broken JIS-Kanji, which lost ESC.  Usefull when your site is 
+using old B-News Nihongo patch. \-B1 allows any char after ESC-( or
+ESC-$. \-B2 forces ASCII after NL.
+.TP
+.B \-W
+Assume UTF-8 input.
+.TP
+.B \-m
+MIME ISO-2022-JP/ISO8859-1 decode. (default) To see ISO8859-1 (Latin-1)
+\-l is necessary. \-mN does loose encoding. It allows line break in the
+middle of the basr64 encoding.
+.TP
+.B \-mB
+Decode MIME base64 encoded stream. Remove header or other part before
+conversion. 
+.TP
+.B \-mQ
+Decode MIME quoted stream. '_' in quoted is converted to space.
+.TP
+.B \-m0
+No MIME decode.
+.TP
+.B \-M
+MIME encode. Header style. All ASCII code and control characters are
+intact.
+.TP
+.B \-MB
+MIME encode.  Base64 stream. Kanji conversion is performed before encoding,
+so this cannot be used as a picture encoder. \MQ perfome quoted encoding.
+.TP
+.B \-l
+Input and output code is ISO8859-1 (Latin-1) and ISO-2022-JP.
+\-s, \-e and \-x are not compatible with this option.
+.TP
+.BI \-f n
+Folding on 
+.BI n 
+length in a line. Default 60. \-f40-0 forces 0 margin folding.
+.TP
+.B \-X
+Allow X0201 kana in MS-Kanji.  
+X0201 is converted into X0208 by default.
+This is default in MSDOS.
+.TP
+.B \-x
+Try to preseve X0208 kana.
+Assume X0201 kana in MS-Kanji. And
+do not convert X0201 kana to X0208. 
+In JIS output, ESC-(-I is used. In EUC output, SSO is used.
+.TP
+.B \-Z
+Convert X0208 alphabet to ASCII. \-Z1 converts X0208 kankaku to one 
+ASCII space. \-Z2 converts X0208 kankaku to two ASCII spaces.
+.TP
+.B \-Z3
+Replacing "><&" into '&gt;', '&lt;', '&quot;', '&amp;' as in HTML.
+.TP
+.B \-I
+Replacing Non iso-2022-jp char into the strage geta character.
+.TP
+.B \-b
+bufferd output.
+This is a default.
+.TP
+.B \-u
+unbufferd output.
+.TP
+.B \-t
+no operations.
+.TP
+.B \-O
+Output result to file. The first name in arguments becomes output.
+Please be careful. If there are no file arguments, nkf.out is chosen.
+\-OW does rewriting. Original listed files are replaced by filtered
+result.
+.TP
+.BI \-i c
+output 
+.BI ESC\-$\- c
+as sequence to designate JIS-kanji
+(Default is
+.BR B .)
+.TP
+.BI \-o c
+output 
+.BI ESC\-(\- c
+as sequence to designate single-byte roman characters
+(Default is
+.BR B .)
+.TP
+.B \-r
+{de/en}crypt ROT13/47
+.TP
+.B \-v
+display Version
+.TP
+.B \-T
+Text mode output (MS-DOS)
+.TP
+.B \-c
+add CR after NL.
+.TP
+.B \-d
+delete CR after NL.
+.TP
+.B -L[wmu] new line mode
+.nf
+    -Lu   unix (LF) 
+    -Lw   windows (CRLF) 
+    -Lm   mac (CR) 
+default no conversion
+.fl
+.PP
+.B \-F
+New line preserving line folding.
+
+.PP
+hiragana/katakana translation
+   \-h1   \--katakana 
+   \-h2   \--hirakana
+   \-h3   \--hirakana-katakana
+
+.TP
+.B --
+long options
+.nf
+ --fj,--unix,--mac,--msdos, --windows
+       convert for these system
+
+ --jis,--euc,--sjis,--mime,--base64  
+       convert for named code
+ --jis-input,--euc-input,--sjis-input,--mime-input,--base64-input
+       assume input system
+
+ -- ignore rest of -option
+
+ --help
+ --version
+.fl
+
+.SH "FILES"
+nkf - binary
+.SH AUTHOR
+Itaru Ichikawa <ichikawa@flab.fujitsu.co.jp>,
+(was ichikawa@fujitsu.JUNET)
+.SH EDITOR
+a_kuroe@hoffman.cc.sophia.ac.jp (Akihiko Kuroe),
+kono@ie.u-ryukyu.ac.jp (Shinji KONO),
+furukawa@tcp-ip.or.jp ( Rei FURUKAWA    )`
+.SH BUGS
+.B Nkf
+cannot handle some input that contains mixed kanji codes.
+Automatic code detection 
+becomes very weak with \-x, \-X and \-S. 
+MIME encoding is very loose.
+
+.fl
+
+.SH ACKNOWLEDGE
+
+Thanks for those people.
+
+nkf 1.7,1.9,2.0
+
+Akio Furukawa,
+OHARA Shigeki,
+Hiroaki Sengoku,
+Ikuhiro MORITA,
+Junn Ohta,
+KAWAMURA Masao,
+Kazuhiko Mori,
+Keitaro Isokawa,
+Ken-ichi Hirose,
+Ki-ichiro SATO,
+Kiwamu Aoyama,
+Koichi Hirayama,
+Mitsuru Hase,
+OHARA Shigeki,
+Rei FURUKAWA,
+Satoru Takabayashi,
+Shigeyuki Takagi,
+Shin MICHIMUKO,
+Tsutomu Sakai,
+YAMASHITA Junji,
+Yasuyuki Sato,
+Yoshiaki Yanagihara,
+Yoshiaki Yanagihara,
+hat@so-net,
+SHIOZAKI Takehiko,
+Koji Arai,
+Eiichiro Itani,
+Masayuki Hatta,
+and many others.
+
+URL:
+     www.ie.u-ryukyu.ac.jp/~kono/nkf/

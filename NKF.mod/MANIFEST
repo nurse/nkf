@@ -1,0 +1,6 @@
+Changes
+MANIFEST
+Makefile.PL
+NKF.pm
+NKF.xs
+test.pl

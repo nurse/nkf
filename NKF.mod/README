@@ -1,0 +1,31 @@
+			v2.0 河野真治  kono@ie.u-ryukyu.ac.jp
+                        Sun Sep  8 09:22:41 JST 2002
+
+これは、Perl から nkf を使う拡張モジュールです。Perl 5 以上で
+動作するはずです。いつものように、
+	perl Makefile.PL
+	make
+	make install
+とすることにより使えるようになります。
+
+使い方は、
+	use NKF;
+	$output = nkf(@flag,$input);
+
+のように使います。flag は、nkf と同じです。
+
+配布の条件は、nkf と同様とします。
+
+-- おまけ
+
+Perl module の debug の方法
+    make >& loglog
+でlogをとり、cc に-g  を付け加えてcompileします。
+
+setenv PERL_DL_NONLAZY 1
+
+してから、
+   gdb /usr/bin/perl
+そして、
+   run "-Iblib/lib" "-Iblib/arch" test.pl
+とします。これは、make test してみるとオプションがわかります。
