@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.43 2004/11/21 00:46:53 rei_furukawa Exp $ */
+/* $Id: nkf.c,v 1.44 2004/11/21 00:57:24 rei_furukawa Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2004-11-15"
 #include "config.h"
@@ -2065,7 +2065,7 @@ kanji_convert(f)
 	    } else if (c1 == NL && mime_f && !mime_decode_mode ) {
 		if ((c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
 		    i_ungetc(SPACE,f);
-		    continue;
+		    /* continue; */
 		} else {
 		    i_ungetc(c1,f);
 		}
