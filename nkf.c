@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.51 2004/12/31 17:19:43 naruse Exp $ */
+/* $Id: nkf.c,v 1.52 2005/01/01 08:26:43 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2005-01-01"
 #include "config.h"
@@ -4261,7 +4261,13 @@ mimeout_addchar(c)
 {
     switch(mimeout_mode) {
     case 'Q':
-	if(c>=DEL) {
+	if(c==SPACE){
+	    (*o_mputc)('_');
+	    base64_count++;
+	} else if (c==CR||c==NL) {
+	    (*o_mputc)(c);
+	    base64_count = 0;
+	} else if(c<SPACE||c=='='||c=='?'||c=='_'||DEL<=c) {
 	    (*o_mputc)('=');
 	    (*o_mputc)(itoh4(((c>>4)&0xf)));
 	    (*o_mputc)(itoh4((c&0xf)));
@@ -4299,9 +4305,16 @@ mime_putc(c)
     int i = 0;
     int j = 0;
     
-    if (mimeout_f==FIXED_MIME && base64_count>50) {
-	eof_mime();
-	(*o_mputc)(NL);
+    if (mimeout_f==FIXED_MIME && base64_count>71) {
+	if (mimeout_mode=='Q') {
+	    if (c!=CR && c!=NL) {
+		(*o_mputc)('=');
+		(*o_mputc)(NL);
+	    }
+	} else {
+	    eof_mime();
+	    (*o_mputc)(NL);
+	}
 	base64_count=0;
     } else if (mimeout_f!=FIXED_MIME && (c==CR||c==NL)) {
 	base64_count=0;
