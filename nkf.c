@@ -95,8 +95,11 @@ static char *Patchlevel =
 **
 **/
 
-#if (defined(__TURBOC__) || defined(LSI_C)) && !defined(MSDOS)
+#if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C)) && !defined(MSDOS)
 #define MSDOS
+#if (defined(__Win32__) || defined(_WIN32)) && !defined(__WIN32__)
+#define __WIN32__
+#endif
 #endif
 
 #ifdef PERL_XS
@@ -125,7 +128,7 @@ static char *Patchlevel =
 #define setbinmode(fp)
 #endif
 
-#ifdef _IOFBF /* SysV and MSDOS */
+#ifdef _IOFBF /* SysV and MSDOS, Windows */
 #define       setvbuffer(fp, buf, size)       setvbuf(fp, buf, _IOFBF, size)
 #else /* BSD */
 #define       setvbuffer(fp, buf, size)       setbuffer(fp, buf, size)
@@ -134,15 +137,25 @@ static char *Patchlevel =
 /*Borland C++ 4.5 EasyWin*/
 #if defined(__TURBOC__) && defined(_Windows) && !defined(__WIN32__) /*Easy Win */
 #define         EASYWIN
+#ifndef __WIN16__
+#define __WIN16__
+#endif
 #include <windows.h>
 #endif
 
 #ifdef OVERWRITE
 /* added by satoru@isoternet.org */
 #include <sys/stat.h>
-#ifndef MSDOS
+#ifndef MSDOS /* UNIX, OS/2 */
 #include <unistd.h>
 #include <utime.h>
+#else
+#if defined(_MSC_VER) /* VC++ */
+#include <sys/utime.h>
+#elif defined(__TURBOC__) /* BCC */
+#include <utime.h>
+#elif defined(LSI_C) /* LSI C */
+#endif
 #endif
 #endif 
 
@@ -3624,13 +3637,13 @@ void
 version()
 {
     fprintf(stderr,"Network Kanji Filter Version %s (%s) "
-#if defined(MSDOS) && !defined(_Windows)
+#if defined(MSDOS) && !defined(__WIN32__) && !defined(__WIN16__)
                   "for DOS"
 #endif
-#if !defined(__WIN32__) && defined(_Windows)
+#if defined(MSDOS) && defined(__WIN16__)
                   "for Win16"
 #endif
-#if defined(__WIN32__) && defined(_Windows)
+#if defined(MSDOS) && defined(__WIN32__)
                   "for Win32"
 #endif
 #ifdef __OS2__
