@@ -1452,7 +1452,13 @@ kanji_convert(f)
                     SEND;
         } else {
             /* first byte */
-	    if (iconv == w_iconv16) {
+	    if (
+#ifdef UTF8_INPUT_ENABLE
+                iconv == w_iconv16
+#else
+                0
+#endif
+                ) {
 		c2 = c1;
 		c1 = (*i_getc)(f);
 		SEND;
