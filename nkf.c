@@ -46,7 +46,7 @@ static char *CopyRight =
 static char *Version =
       "2.0";
 static char *Patchlevel =
-      "4/0401/Shinji Kono";
+      "4/0410/Shinji Kono";
 
 /*
 **
@@ -1121,6 +1121,9 @@ options(cp)
 		    cp++;
 		    input_f = UTF16BE_INPUT;
 		}
+	    } else if (cp[0] == '8') {
+		cp++;
+		input_f = UTF8_INPUT;
 	    } else
                 input_f = UTF8_INPUT;
             continue;
@@ -4020,7 +4023,13 @@ usage()
 #ifdef DEFAULT_CODE_UTF8
     fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, AT&T JIS (EUC), UTF-8 (DEFAULT)\n");
 #endif
+#ifdef UTF8_OUTPUT_ENABLE
+    fprintf(stderr,"         After 'w' you can add more options. (80?|16((B|L)0?)?) \n");
+#endif
     fprintf(stderr,"J,S,E,W  Input assumption is JIS 7 bit , Shift JIS, AT&T JIS (EUC), UTF-8\n");
+#ifdef UTF8_INPUT_ENABLE
+    fprintf(stderr,"         After 'W' you can add more options. (8|16(B|L)?) \n");
+#endif
     fprintf(stderr,"t        no conversion\n");
     fprintf(stderr,"i_/o_    Output sequence to designate JIS-kanji/ASCII (DEFAULT B)\n");
     fprintf(stderr,"r        {de/en}crypt ROT13/47\n");
@@ -4042,8 +4051,21 @@ usage()
     fprintf(stderr,"I        Convert non ISO-2022-JP charactor to GETA\n");
     fprintf(stderr,"-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n");
     fprintf(stderr,"long name options\n");
-    fprintf(stderr," --fj,--unix,--mac,--windows                convert for the system\n");
+    fprintf(stderr," --fj,--unix,--mac,--windows                        convert for the system\n");
     fprintf(stderr," --jis,--euc,--sjis,--utf8,--utf16,--mime,--base64  convert for the code\n");
+    fprintf(stderr," --hiragana, --katakana    Hiragana/Katakana Conversion\n");
+#ifdef INPUT_OPTION
+    fprintf(stderr," --cap-input, --url-input  Convert hex after ':' or '%'\n");
+#endif
+#ifdef NUMCHAR_OPTION
+    fprintf(stderr," --numchar-input      Convert Unicode Character Reference\n");
+#endif
+#ifdef SHIFTJIS_CP932
+    fprintf(stderr," --no-cp932           Don't convert Shift_JIS FAxx-FCxx to equivalnet CP932\n");
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+    fprintf(stderr," --ms-ucs-map         Microsoft UCS Mapping Compatible\n");
+#endif
 #ifdef OVERWRITE
     fprintf(stderr," --overwrite          Overwrite original listed files by filtered result\n");
 #endif
