@@ -4,10 +4,10 @@ while ( <test_data/*.cmd> ) {
     $test = $file; $test =~ s/\.cmd$//;
     $out = $test.".out"; $out = `cat $out`;
     $in = $test.".in"; $in = `cat $in`;
-    $opt = `cat $file`; chop($opt);
+    $opt = `cat $file`; chomp($opt);
 
-    $inpack = pack('u',$in); chop($inpack);
-    $outpack = pack('u',$out); chop($outpack);
+    $inpack = pack('u',$in); chomp($inpack);
+    $outpack = pack('u',$out); chomp($outpack);
 
 print << "EOFEOF";
 # $test
