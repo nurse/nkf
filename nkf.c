@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.49 2004/12/23 22:49:38 rei_furukawa Exp $ */
+/* $Id: nkf.c,v 1.50 2004/12/29 21:04:23 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2004-12-01"
 #include "config.h"
@@ -4368,7 +4368,7 @@ mime_putc(c)
 		    mimeout_buf_count = 0;
 		}
 		mimeout_buf[mimeout_buf_count++] = c;
-		if (mimeout_buf_count>75) {
+		if (mimeout_buf_count>MIMEOUT_BUF_LENGTH) {
 		    open_mime(output_mode);
 		}
 		return;
@@ -4384,7 +4384,7 @@ mime_putc(c)
 	    }
 	    open_mime(output_mode);
         }
-    } else { /* c==EOF */
+    } else if (c == EOF) { /* c==EOF */
 	j = mimeout_buf_count;
 	i = 0;
 	for (;i<j;i++) {
