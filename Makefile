@@ -6,6 +6,8 @@ SHAR = shar
 PERL = perl
 RM = rm -rf
 VERSION = 204
+EXIST = test -f
+#EXIST = exist #nmake
 
 nkf : nkf.c config.h utf8tbl.o
 	$(CC) $(CFLAGS) -o nkf nkf.c utf8tbl.o
@@ -15,7 +17,7 @@ utf8tbl.o : utf8tbl.c config.h
 
 clean:
 	-$(RM) nkf.o nkf nkf.in nkf.out nkf$(VERSION) *~ *.bad utf8tbl.o
-	cd NKF.mod; make clean
+	cd NKF.mod; if $(EXIST) Makefile; then make clean; fi
 test:	nkf
 	$(PERL) test.pl
 
