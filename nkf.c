@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.55 2005/01/24 08:19:34 naruse Exp $ */
+/* $Id: nkf.c,v 1.56 2005/02/02 17:52:31 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2005-01-01"
 #include "config.h"
@@ -1885,7 +1885,7 @@ kanji_convert(f)
             /* second byte */
             if (c2 > DEL) {
                 /* in case of 8th bit is on */
-                if (!estab_f) {
+                if (!estab_f&&!mime_decode_mode) {
                     /* in case of not established yet */
                     /* It is still ambiguious */
                     if (h_conv(f, c2, c1)==EOF) 
@@ -3547,6 +3547,7 @@ FILE *f;
     }
     mime_decode_mode = p[i-2];
 
+    set_iconv(FALSE, mime_priority_func[j]);
     clr_code_score(find_inputcode_byfunc(mime_priority_func[j]), SCORE_iMIME);
 
     if (mime_decode_mode=='B') {
