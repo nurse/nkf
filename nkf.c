@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.52 2005/01/01 08:26:43 naruse Exp $ */
+/* $Id: nkf.c,v 1.53 2005/01/01 13:15:26 rei_furukawa Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2005-01-01"
 #include "config.h"
@@ -967,7 +967,7 @@ options(cp)
 		int j;
                 p = (unsigned char *)long_option[i].name;
                 for (j=0;*p && (*p != '=') && *p == cp[j];p++, j++);
-		if (!*p || *p == cp[j]){
+		if (*p == cp[j]){
 		    p = &cp[j];
 		    break;
 		}
