@@ -39,17 +39,14 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id */
+/* $Id: nkf.c,v 1.37 2004/11/08 14:15:14 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
-#define NKF_RELEASE_DATE "2004-11-06"
+#define NKF_RELEASE_DATE "2004-11-08"
 #include "config.h"
 
 static char *CopyRight =
       "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2004 Kono, Furukawa";
-static char *Version =
-      "2.0";
-static char *Patchlevel =
-      "4/0410/Shinji Kono";
+
 
 /*
 **
@@ -4068,18 +4065,19 @@ usage()
     fprintf(stderr," --cap-input, --url-input  Convert hex after ':' or '%'\n");
 #endif
 #ifdef NUMCHAR_OPTION
-    fprintf(stderr," --numchar-input      Convert Unicode Character Reference\n");
+    fprintf(stderr," --numchar-input   Convert Unicode Character Reference\n");
 #endif
 #ifdef SHIFTJIS_CP932
-    fprintf(stderr," --no-cp932           Don't convert Shift_JIS FAxx-FCxx to equivalnet CP932\n");
+    fprintf(stderr," --no-cp932        Don't convert Shift_JIS FAxx-FCxx to equivalnet CP932\n");
+    fprintf(stderr," --cp932inv        convert Shift_JIS EDxx-EFxx to equivalnet CP932 FAxx-FCxx\n");
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-    fprintf(stderr," --ms-ucs-map         Microsoft UCS Mapping Compatible\n");
+    fprintf(stderr," --ms-ucs-map      Microsoft UCS Mapping Compatible\n");
 #endif
 #ifdef OVERWRITE
-    fprintf(stderr," --overwrite          Overwrite original listed files by filtered result\n");
+    fprintf(stderr," --overwrite       Overwrite original listed files by filtered result\n");
 #endif
-    fprintf(stderr," -g, --guess          Guess the input code\n");
+    fprintf(stderr," -g, --guess       Guess the input code\n");
     fprintf(stderr," --help,--version\n");
     version();
 }
@@ -4100,7 +4098,7 @@ version()
 #ifdef __OS2__
                   "for OS/2"
 #endif
-                  ,Version,Patchlevel);
+                  ,NKF_VERSION,NKF_RELEASE_DATE);
     fprintf(stderr,"\n%s\n",CopyRight);
 }
 #endif
