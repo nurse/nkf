@@ -1,4 +1,4 @@
-.TH NKF 2 9/Sep/2002
+.TH NKF 2 13/Oct/2003
 .SH NAME
 nkf \- ネットワーク用漢字コード変換フィルタ v2.0
 .SH SYNOPSIS
@@ -164,9 +164,16 @@ NLまえのCRを削除する。単独のCRは、NLに置き換えられる。
      \--hirakana, \--katakana 平仮名、片仮名変換
      \--cap-input, \--url-input それぞれ ':', '%' に続く 16 進数を文字に変換する
      \--overwrite 元のファイルを変換結果で置き換える。複数のファイルを書き換えることも可能。
+     \--no-cp932 Shift_JIS の、FAxx-FCxx を、CP932 で同値な文字に読み換える動作を無効にする
      \--help
      \--version
      \--		これ以降のオプションを無視する
+.fi
+.TP
+.B 次の 2 つは、config.h で EXEC_IO を define した時のみ有効
+.nf
+     \--exec-in  nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf の入力とする
+     \--exec-out  nkf [options] --exec-out cmd args... とやると、nkf の出力を cmd の入力とする
 .fi
 .SH AUTHOR
 
@@ -317,6 +324,9 @@ non-strict mime \-MN では、空白、改行をまたいで、base64 encoding
 を解読する。これで、スクリーンからcut&pasteで
 デコードすることも可能。止まらない可能性あり。
 
+.SH
+その他
+
 .PP
 nkf_test.pl のバグチェックを増やした。
 test が失敗したときにdiffを取るようにした。
@@ -342,6 +352,30 @@ hiragana/katakana 変換ができるようになりました。
 
 \--overwrite で、引数のファイルを直接、置き換えることができます。
 
+.SH nkf 2.0.4 (予定)
+
+.PP
+Shift_JIS の FAxx-FCxx について、普通の式では euc に変換できませんが、CP932 で同値な文字に読み換えて変換します。この動作を無効にするには、--no-cp932 をつけてください。
+
+.PP
+perl module に
+   nkf_continue     オプション、自動判別の状態などを引き継いで変換
+   inputcode        自動判別結果の文字コードを返す
+を追加しました。
+
+.PP
+\--numchar-input オプションを新設
+    mhonarc など、日本語を UTF-16 の &#....; のパターンで出力するものを変換します。
+
+.PP
+\--exec-in, \--exec-out オプションを新設
+
+    nkf -e \--exec-in cmd args...
+    とやると、cmd の出力を nkf の入力とします。
+
+    nkf -e \--exec-out cmd args...
+    とやると、nkf の出力を cmd の入力とします。
+
 
 .SH ACKNOWLEDGE
 
@@ -357,10 +391,12 @@ kono@ie.u-ryukyu.ac.jp
 
 nkf 1.9-
 Akio Furukawa
+Andy Taki
 From: OHARA Shigeki
 Fumitaka Kitagawa
 Hiroaki Sengoku 
 Ikuhiro MORITA (森田 育宏)
+Yoshiharu ITO
 Junn Ohta
 KAWAMURA Masao
 Kazuhiko Mori 
@@ -375,6 +411,7 @@ Rei FURUKAWA
 Satoru Takabayashi
 Shigeyuki Takagi
 Shin MICHIMUKO 
+TOYODA Jiro
 Tsutomu Sakai 
 YAMASHITA Junji (山下 純司)
 Yasuyuki Sato 
@@ -421,7 +458,9 @@ hat@so-net
 落合一喜
 林  亮
 國安 治
-
+木下 雄介
+成瀬ゆい
+鶴谷直樹
 
 河野真治
      www.ie.u-ryukyu.ac.jp/~kono/nkf/

@@ -61,7 +61,7 @@ DDEESSCCRRIIPPTTIIOONN
 
 
 
-                            9/Sep/2002                          1
+                           13/Oct/2003                          1
 
 
 
@@ -127,7 +127,7 @@ NKF(2)                                                     NKF(2)
 
 
 
-                            9/Sep/2002                          2
+                           13/Oct/2003                          2
 
 
 
@@ -174,9 +174,14 @@ NKF(2)                                                     NKF(2)
                    --hirakana, --katakana 平仮名、片仮名変換
                    --cap-input, --url-input それぞれ ':', '%' に続く 16 進数を文字に変換する
                    --overwrite 元のファイルを変換結果で置き換える。複数のファイルを書き換えることも可能。
+                   --no-cp932 Shift_JIS の、FAxx-FCxx を、CP932 で同値な文字に読み換える動作を無効にする
                    --help
                    --version
                    --        これ以降のオプションを無視する
+
+       次次のの 22 つつはは、、ccoonnffiigg..hh でで EEXXEECC__IIOO をを ddeeffiinnee ししたた時時ののみみ有有効効
+                   --exec-in  nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf の入力とする
+                   --exec-out  nkf [options] --exec-out cmd args... とやると、nkf の出力を cmd の入力とする
 
 AAUUTTHHOORR
        市川  至  ichikawa@flab.fujitsu.co.jp   (was ichikawa@fujitsu.JUNET)
@@ -185,15 +190,10 @@ AAUUTTHHOORR
 
 
 
-BBUUGGSS
-       実は、入力のコード系の判定は、EUCとシフトJISとの自動判定で
-       あり、最初に特定できる文字が来た時点で確定してしまう。そし
-       て、特定不能の間は保留バッファにためておかれ、確定後に処理
-       される。このため、
 
 
 
-                            9/Sep/2002                          3
+                           13/Oct/2003                          3
 
 
 
@@ -201,6 +201,12 @@ BBUUGGSS
 
 NKF(2)                                                     NKF(2)
 
+
+BBUUGGSS
+       実は、入力のコード系の判定は、EUCとシフトJISとの自動判定で
+       あり、最初に特定できる文字が来た時点で確定してしまう。そし
+       て、特定不能の間は保留バッファにためておかれ、確定後に処理
+       される。このため、
 
        1)     7ビットJISは常に認識される。シフトJIS、EUC混合も ほ
               とんどの場合は問題がない。ただし、
@@ -250,22 +256,22 @@ nnkkff 11..66 kkoonnoo@@iiee..uu--rryyuukkyyuu..aacc..
        するので、-B -m とすること。
 
 
-nnkkff 11..66..11
-       -Z1  でX0208間 隔->ASCII  spaceの 変 換 を お こなう。 -Z2
-       でX0208間隔->ASCII space 2個の変換をおこなう。
 
 
 
-
-
-
-                            9/Sep/2002                          4
+                           13/Oct/2003                          4
 
 
 
 
 
 NKF(2)                                                     NKF(2)
+
+
+nnkkff 11..66..11
+       -Z1  でX0208間 隔->ASCII  spaceの 変 換 を お こなう。 -Z2
+       でX0208間隔->ASCII space 2個の変換をおこなう。
+
 
 
 nnkkff 11..77
@@ -318,20 +324,18 @@ UUTTFF--88 ササポポーートトににつついいてて
                '&gt;', '&lt;', '&quot;', '&amp;' に変換します
 
 
-nnkkff 22..00
-       newline を保存する folding -F。fmtに近い動作をする。
 
-
-
-
-
-                            9/Sep/2002                          5
+                           13/Oct/2003                          5
 
 
 
 
 
 NKF(2)                                                     NKF(2)
+
+
+nnkkff 22..00
+       newline を保存する folding -F。fmtに近い動作をする。
 
 
        folding のマージン。-f60-0 などと、0にすると禁則せずに、強
@@ -363,6 +367,7 @@ MMIIMMEE関関係係
        ードすることも可能。止まらない可能性あり。
 
 
+そそのの他他
        nkf_test.pl のバグチェックを増やした。 test が失敗したとき
        にdiffを取るようにした。 make_test.pl でテスト作成可能。
 
@@ -384,20 +389,47 @@ MMIIMMEE関関係係
           -h2   --hirakana かたかな->ひらがな
           -h3   --hirakana-katakana かたかな<->ひらがな
 
-       --overwrite で、引数のファイルを直接、置き換えることができ
-       ます。
 
 
-
-
-
-                            9/Sep/2002                          6
+                           13/Oct/2003                          6
 
 
 
 
 
 NKF(2)                                                     NKF(2)
+
+
+       --overwrite で、引数のファイルを直接、置き換えることができ
+       ます。
+
+
+nnkkff 22..00..44 ((予予定定))
+       Shift_JIS の FAxx-FCxx について、普通の式では euc に変換で
+       きませんが、CP932 で同値な文字に読み換えて変換します。この
+       動作を無効にするには、--no-cp932 をつけてください。
+
+
+       perl module に
+          nkf_continue     オプション、自動判別の状態などを引き継
+       いで変換
+          inputcode        自動判別結果の文字コードを返すを追加し
+       ました。
+
+
+       --numchar-input オプションを新設
+           mhonarc など、日本語を UTF-16 の &#....; のパターン で
+       出力するものを変換します。
+
+
+       --exec-in, --exec-out オプションを新設
+
+           nkf -e --exec-in cmd args...
+           とやると、cmd の出力を nkf の入力とします。
+
+           nkf -e --exec-out cmd args...
+           とやると、nkf の出力を cmd の入力とします。
+
 
 
 AACCKKNNOOWWLLEEDDGGEE
@@ -412,14 +444,28 @@ AACCKKNNOOWWLLEEDDGGEE
 
        nkf 1.9-
        Akio Furukawa
+       Andy Taki
        From: OHARA Shigeki
        Fumitaka Kitagawa
        Hiroaki Sengoku
        Ikuhiro MORITA (森田 育宏)
+       Yoshiharu ITO
        Junn Ohta
        KAWAMURA Masao
        Kazuhiko Mori
        Keitaro Isokawa
+
+
+
+                           13/Oct/2003                          7
+
+
+
+
+
+NKF(2)                                                     NKF(2)
+
+
        Ken-ichi Hirose
        Ki-ichiro SATO
        Kiwamu Aoyama
@@ -430,6 +476,7 @@ AACCKKNNOOWWLLEEDDGGEE
        Satoru Takabayashi
        Shigeyuki Takagi
        Shin MICHIMUKO
+       TOYODA Jiro
        Tsutomu Sakai
        YAMASHITA Junji (山下 純司)
        Yasuyuki Sato
@@ -454,18 +501,6 @@ AACCKKNNOOWWLLEEDDGGEE
        三宅正泰
        山倉 真
        山本 芳人
-
-
-
-                            9/Sep/2002                          7
-
-
-
-
-
-NKF(2)                                                     NKF(2)
-
-
        山野裕司 (やまのゆうじ)
        重村法克
        小島基靖
@@ -485,10 +520,24 @@ NKF(2)                                                     NKF(2)
        野村俊彰
        有岡＠ミノルタ
        有沢 明宏
+
+
+
+                           13/Oct/2003                          8
+
+
+
+
+
+NKF(2)                                                     NKF(2)
+
+
        落合一喜
        林  亮
        國安 治
-
+       木下 雄介
+       成瀬ゆい
+       鶴谷直樹
 
        河野真治
             www.ie.u-ryukyu.ac.jp/~kono/nkf/
@@ -523,6 +572,23 @@ NKF(2)                                                     NKF(2)
 
 
 
-                            9/Sep/2002                          8
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                           13/Oct/2003                          9
 
 

@@ -26,6 +26,7 @@
 
 /* --exec-in, --exec-out オプション
  * pipe, fork, execvp あたりが無いと動きません
+ * MS-DOS, MinGW などでは undef にしてください
  */
 #define EXEC_IO
 
