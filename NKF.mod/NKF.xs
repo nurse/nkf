@@ -153,7 +153,7 @@ nkf(...)
 
     /* Convestion */
     kanji_convert(NULL);
-    /* nkf_putchar(0);    Null terminator */
+    nkf_putchar(0);     /* Null terminator */
 
     RETVAL = result;
     SvPOK_on(RETVAL);       
@@ -161,7 +161,7 @@ nkf(...)
 	   SvCUR_set(RETVAL, strlen(output)); 
        because output can contain \0. 
      */
-    SvCUR_set(RETVAL, output_ctr);
+    SvCUR_set(RETVAL, output_ctr - 1);
 
     OUTPUT:
     RETVAL
