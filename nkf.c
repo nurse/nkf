@@ -3228,7 +3228,6 @@ void debug(str)
 }
 #endif
 
-#ifdef INPUT_OPTION 
 int
 hex2bin(x)
      int x;
@@ -3236,6 +3235,8 @@ hex2bin(x)
     if (nkf_isdigit(x)) return x - '0';
     return nkf_toupper(x) - 'A' + 10;
 }
+
+#ifdef INPUT_OPTION 
 
 #ifdef ANSI_C_PROTOTYPE
 int hex_getc(int ch, FILE *f, int (*g)(FILE *f), int (*u)(int c, FILE *f))
@@ -3842,12 +3843,12 @@ usage()
     fprintf(stderr,"d,c      Delete \\r in line feed and \\032, Add \\r in line feed\n");
     fprintf(stderr,"I        Convert non ISO-2022-JP charactor to GETA\n");
     fprintf(stderr,"-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n");
-#ifdef OVERWRITE
-    fprintf(stderr," --overwrite          Overwrite original listed files by filtered result\n");
-#endif
     fprintf(stderr,"long name options\n");
     fprintf(stderr," --fj,--unix,--mac,--windows                convert for the system\n");
     fprintf(stderr," --jis,--euc,--sjis,--utf8,--utf16,--mime,--base64  convert for the code\n");
+#ifdef OVERWRITE
+    fprintf(stderr," --overwrite          Overwrite original listed files by filtered result\n");
+#endif
     fprintf(stderr," --help,--version\n");
     version();
 }
