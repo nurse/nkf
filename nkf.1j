@@ -136,8 +136,7 @@ JISでは ESC\-'('\-I を使う。
 ファイルに出力する。Unixでは不要な機能だがWindowsやMSDOSでは
 必要らしい。直後の引き数でなく、最後のファイル名が出力ファイ
 ル名となり上書きされてしまうので注意。ファイル名がない場合は、
-nkf.out。\-OW では、元のファイルを変換結果で置き換える。
-複数のファイルを書き換えることも可能。
+nkf.out。
 .TP
 .B \-c
 NLまえにCRを付加する。
@@ -162,6 +161,8 @@ NLまえのCRを削除する。単独のCRは、NLに置き換えられる。
 	   対応する変換をします。
 
      \--hirakana, \--katakana 平仮名、片仮名変換
+     \--cap-input, \--url-input それぞれ ':', '%' に続く 16 進数を文字に変換する
+     \--overwrite 元のファイルを変換結果で置き換える。複数のファイルを書き換えることも可能。
      \--help
      \--version
      \--		これ以降のオプションを無視する
@@ -172,7 +173,7 @@ NLまえのCRを削除する。単独のCRは、NLに置き換えられる。
 市川  至	ichikawa@flab.fujitsu.co.jp	(was ichikawa@fujitsu.JUNET)
 河野  真治      kono@ie.u-ryukyu.acjp
 Rei FURUKAWA    furukawa@tcp-ip.or.jp
-.fl
+.fi
 
 
 .SH BUGS
