@@ -275,6 +275,7 @@ STATIC  void    w_oconv PROTO((int c2,int c1));
 STATIC  void    w_oconv16 PROTO((int c2,int c1));
 #endif
 STATIC  void    e_oconv PROTO((int c2,int c1));
+STATIC  void    e2s_conv PROTO((int c2, int c1, int *p2, int *p1));
 STATIC  void    s_oconv PROTO((int c2,int c1));
 STATIC  void    j_oconv PROTO((int c2,int c1));
 STATIC  void    fold_conv PROTO((int c2,int c1));
@@ -359,7 +360,7 @@ static int             w_oconv16_begin_f= 0;   /* utf-16 header */
 #endif
 
 
-#ifdef CAP_URL_OPTION
+#ifdef INPUT_OPTION
 static int cap_f = FALSE;
 static int (*i_cgetc)PROTO((FILE *)) = std_getc; /* input of cgetc */
 static int (*i_cungetc)PROTO((int c ,FILE *f)) = std_ungetc;
@@ -371,6 +372,12 @@ static int (*i_ugetc)PROTO((FILE *)) = std_getc; /* input of ugetc */
 static int (*i_uungetc)PROTO((int c ,FILE *f)) = std_ungetc;
 STATIC int url_getc PROTO((FILE *f));
 STATIC int url_ungetc PROTO((int c,FILE *f));
+
+static int numchar_f = FALSE;
+static int (*i_ngetc)PROTO((FILE *)) = std_getc; /* input of ugetc */
+static int (*i_nungetc)PROTO((int c ,FILE *f)) = std_ungetc;
+STATIC int numchar_getc PROTO((FILE *f));
+STATIC int numchar_ungetc PROTO((int c,FILE *f));
 #endif
 
 #ifdef CHECK_OPTION
@@ -379,6 +386,13 @@ STATIC void no_putc PROTO((int c));
 static int debug_f = FALSE;
 STATIC void debug PROTO((char *str));
 #endif
+
+#ifdef SHIFTJIS_CP932
+STATIC int cp932_f = FALSE;
+#define CP932_TABLE_BEGIN (0xfa)
+#define CP932_TABLE_END   (0xfc)
+
+#endif /* SHIFTJIS_CP932 */
 
 STATIC void e_status PROTO((struct input_code *, int));
 STATIC void s_status PROTO((struct input_code *, int));
@@ -805,13 +819,17 @@ struct {
 #ifdef OVERWRITE
     {"overwrite", ""},
 #endif
-#ifdef CAP_URL_OPTION
+#ifdef INPUT_OPTION
     {"cap-input", ""},
     {"url-input", ""},
+    {"numchar-input", ""},
 #endif
 #ifdef CHECK_OPTION
     {"no-output", ""},
     {"debug", ""},
+#endif
+#ifdef SHIFTJIS_CP932
+    {"cp932", ""},
 #endif
 };
 
@@ -851,13 +869,17 @@ options(cp)
                     continue;
                 }
 #endif
-#ifdef CAP_URL_OPTION
+#ifdef INPUT_OPTION
                 if (strcmp(long_option[i].name, "cap-input") == 0){
                     cap_f = TRUE;
                     continue;
                 }
                 if (strcmp(long_option[i].name, "url-input") == 0){
                     url_f = TRUE;
+                    continue;
+                }
+                if (strcmp(long_option[i].name, "numchar-input") == 0){
+                    numchar_f = TRUE;
                     continue;
                 }
 #endif
@@ -868,6 +890,12 @@ options(cp)
                 }
                 if (strcmp(long_option[i].name, "debug") == 0){
                     debug_f = TRUE;
+                    continue;
+                }
+#endif
+#ifdef SHIFTJIS_CP932
+                if (strcmp(long_option[i].name, "cp932") == 0){
+                    cp932_f = TRUE;
                     continue;
                 }
 #endif
@@ -1116,10 +1144,15 @@ void set_iconv(f, iconv_func)
 #endif
 }
 
-#define SCORE_KANA     (1)                      /* いわゆる半角カナ */
-#define SCORE_DEPEND   (SCORE_KANA << 1)        /* 機種依存文字 */
-#define SCORE_NO_EXIST (SCORE_DEPEND << 1)      /* 存在しない文字 */
-#define SCORE_ERROR    (SCORE_NO_EXIST << 1)    /* エラー */
+#define SCORE_KANA     (1)                   /* いわゆる半角カナ */
+#define SCORE_DEPEND   (SCORE_KANA << 1)     /* 機種依存文字 */
+#ifdef SHIFTJIS_CP932
+#define SCORE_CP932    (SCORE_DEPEND << 1)   /* CP932 による読み換え */
+#define SCORE_NO_EXIST (SCORE_CP932 << 1)    /* 存在しない文字 */
+#else
+#define SCORE_NO_EXIST (SCORE_DEPEND << 1)   /* 存在しない文字 */
+#endif
+#define SCORE_ERROR    (SCORE_NO_EXIST << 1) /* エラー */
 int score_table_A0[] = {
     0, 0, 0, 0,
     0, 0, 0, 0,
@@ -1134,27 +1167,32 @@ int score_table_F0[] = {
     SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST, SCORE_ERROR,
 };
 
+void set_code_score(ptr, score)
+     struct input_code *ptr;
+     int score;
+{
+    ptr->score |= score;
+}
+
 void code_score(ptr)
      struct input_code *ptr;
 {
-    int s = ptr->score;
     int c2 = ptr->buf[0];
     int c1 = ptr->buf[1];
     if (c2 < 0){
-        s |= SCORE_ERROR;
+        set_code_score(ptr, SCORE_ERROR);
     }else if ((c2 & 0xf0) == 0xa0){
-        s |= score_table_A0[c2 & 0x0f];
+        set_code_score(ptr, score_table_A0[c2 & 0x0f]);
     }else if ((c2 & 0xf0) == 0xf0){
-        s |= score_table_F0[c2 & 0x0f];
+        set_code_score(ptr, score_table_F0[c2 & 0x0f]);
     }else if (c2 == SSO){
-        s |= SCORE_KANA;
+        set_code_score(ptr, SCORE_KANA);
     }
 #ifdef UTF8_OUTPUT_ENABLE
     else if (!e2w_conv(c2, c1)){
-        s |= SCORE_NO_EXIST;
+        set_code_score(ptr, SCORE_NO_EXIST);
     }
 #endif
-    ptr->score = s;
 }
 
 void status_disable(ptr)
@@ -1206,9 +1244,15 @@ void s_status(ptr, c)
               status_push_ch(ptr, c);
               code_score(ptr);
               status_reset(ptr);
-          }else if ((0x81 <= c && c < 0xa0) || (0xe0 <= c && c <= 0xea)){
+          }else if ((0x81 <= c && c < 0xa0) || (0xe0 <= c && c <= 0xef)){
               ptr->stat = 1;
               status_push_ch(ptr, c);
+#ifdef SHIFTJIS_CP932
+          }else if (cp932_f
+                    && CP932_TABLE_BEGIN <= c && c <= CP932_TABLE_END){
+              ptr->stat = 2;
+              status_push_ch(ptr, c);
+#endif /* SHIFTJIS_CP932 */
           }else{
               status_disable(ptr);
           }
@@ -1223,6 +1267,19 @@ void s_status(ptr, c)
               status_disable(ptr);
           }
           break;
+#ifdef SHIFTJIS_CP932
+      case 2:
+          if ((0x40 <= c && c <= 0x7e) || (0x80 <= c && c <= 0xfc)){
+              status_push_ch(ptr, c);
+              if (s2e_conv(ptr->buf[0], ptr->buf[1], &ptr->buf[0], &ptr->buf[1]) == 0){
+                  set_code_score(ptr, SCORE_CP932);
+                  status_reset(ptr);
+                  break;
+              }
+          }
+          status_disable(ptr);
+          break;
+#endif /* SHIFTJIS_CP932 */
     }
 }
 
@@ -1410,7 +1467,7 @@ module_connection()
 
     i_getc = std_getc;
     /* input redicrection */
-#ifdef CAP_URL_OPTION
+#ifdef INPUT_OPTION
     if (cap_f){
         i_cgetc = i_getc; i_getc = cap_getc;
         i_cungetc = i_ungetc; i_ungetc= cap_ungetc;
@@ -1418,6 +1475,10 @@ module_connection()
     if (url_f){
         i_ugetc = i_getc; i_getc = url_getc;
         i_uungetc = i_ungetc; i_ungetc= url_ungetc;
+    }
+    if (numchar_f){
+        i_ngetc = i_getc; i_getc = numchar_getc;
+        i_nungetc = i_ungetc; i_ungetc= numchar_ungetc;
     }
 #endif
     if (mime_f && mimebuf_f==FIXED_MIME) {
@@ -1829,6 +1890,15 @@ int s2e_conv(c2, c1, p2, p1)
      int c2, c1;
      int *p2, *p1;
 {
+#ifdef SHIFTJIS_CP932
+    if (CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END){
+        extern unsigned short shiftjis_cp932[3][189];
+        c1 = shiftjis_cp932[c2 - CP932_TABLE_BEGIN][c1 - 0x40];
+        if (c1 == 0) return 1;
+        c2 = c1 >> 8;
+        c1 &= 0xff;
+    }
+#endif /* SHIFTJIS_CP932 */
     c2 = c2 + c2 - ((c2 <= 0x9f) ? SJ0162 : SJ6394);
     if (c1 < 0x9f)
         c1 = c1 - ((c1 > DEL) ? SPACE : 0x1f);
@@ -1838,7 +1908,7 @@ int s2e_conv(c2, c1, p2, p1)
     }
     if (p2) *p2 = c2;
     if (p1) *p1 = c1;
-    return (c2 << 8) | c1;
+    return 0;
 }
 
 int
@@ -1851,7 +1921,8 @@ s_iconv(c2, c1, c0)
     } else if ((c2 == EOF) || (c2 == 0) || c2 < SPACE) {
         /* NOP */
     } else {
-        s2e_conv(c2, c1, &c2, &c1);
+        int ret = s2e_conv(c2, c1, &c2, &c1);
+        if (ret) return ret;
     }
     (*oconv)(c2, c1);
     return 0;
@@ -1916,15 +1987,55 @@ w_iconv(c2, c1, c0)
     return ret;
 }
 
+void
+w16w_conv(val, p2, p1, p0)
+     unsigned short val;
+     int *p2, *p1, *p0;
+{
+    if (val < 0x80){
+        *p2 = val;
+        *p1 = 0;
+        *p0 = 0;
+    }else if (val < 0x800){
+	*p2 = 0xc0 | (val >> 6);
+	*p1 = 0x80 | (val & 0x3f);
+        *p0 = 0;
+    }else{
+        *p2 = 0xe0 | (val >> 12);
+        *p1 = 0x80 | ((val >> 6) & 0x3f);
+        *p0 = 0x80 | (val        & 0x3f);
+    }
+}
+
+int
+w16e_conv(val, p2, p1)
+     unsigned short val;
+     int *p2, *p1;
+{
+    extern unsigned short * utf8_to_euc_2bytes[];
+    extern unsigned short ** utf8_to_euc_3bytes[];
+    int c2, c1, c0;
+    unsigned short **pp;
+    int psize;
+
+    w16w_conv(val, &c2, &c1, &c0);
+    if (c1){
+        if (c0){
+            pp = utf8_to_euc_3bytes[c2 - 0x80];
+            psize = sizeof_utf8_to_euc_C2;
+        }else{
+            pp = utf8_to_euc_2bytes;
+            psize = sizeof_utf8_to_euc_2bytes;
+        }
+        return w_iconv_common(c1, c0, pp, psize, p2, p1);
+    }
+    return val;
+}
+
 int
 w_iconv16(c2, c1, c0)
     int    c2, c1,c0;
 {
-    extern unsigned short * utf8_to_euc_2bytes[];
-    extern unsigned short ** utf8_to_euc_3bytes[];
-    unsigned short **pp;
-    unsigned short val;
-    int psize;
     int ret;
 
     if (c2==0376 && c1==0377){
@@ -1942,25 +2053,7 @@ w_iconv16(c2, c1, c0)
 	(*oconv)(c2, c1);
 	return 0;
     }
-    val = ((c2<<8)&0xff00) + c1;
-    if (c2 < 0x8){
-	c0 = (0x80 | (c1 & 0x3f));
-	c1 = (0xc0 | (val >> 6));
-	pp = utf8_to_euc_2bytes;
-        psize = sizeof_utf8_to_euc_2bytes;
-    }else{
-	c0 = (0x80 | (c1 & 0x3f));
-	c2 = (0xe0 | (val >> 12));
-	c1 = (0x80 | ((val >> 6) & 0x3f));
-	if (c0 == 0) return -1;
-	if (0<=c2-0x80 && c2-0x80 <sizeof_utf8_to_euc_3bytes){
-	    pp = utf8_to_euc_3bytes[c2 - 0x80];
-            psize = sizeof_utf8_to_euc_C2;
-        }else{
-	    return 0;
-        }
-    }
-    ret = w_iconv_common(c1, c0, pp, psize, &c2, &c1);
+    ret = w16e_conv(((c2<<8)&0xff00) + c1, &c2, &c1);
     if (ret) return ret;
     (*oconv)(c2, c1);
     return 0;
@@ -2114,7 +2207,13 @@ e_oconv(c2, c1)
     }
 }
 
-
+void
+e2s_conv(c2, c1, p2, p1)
+     int c2, c1, *p2, *p1;
+{
+    if (p2) *p2 = ((c2 - 1) >> 1) + ((c2 <= 0x5e) ? 0x71 : 0xb1);
+    if (p1) *p1 = c1 + ((c2 & 1) ? ((c1 < 0x60) ? 0x1f : 0x20) : 0x7e);
+}
 
 void
 s_oconv(c2, c1)
@@ -2140,8 +2239,9 @@ s_oconv(c2, c1)
             return; /* too late to rescue this char */
         }
 	output_mode = SHIFT_JIS;
-        (*o_putc)((((c2 - 1) >> 1) + ((c2 <= 0x5e) ? 0x71 : 0xb1)));
-        (*o_putc)((c1 + ((c2 & 1) ? ((c1 < 0x60) ? 0x1f : 0x20) : 0x7e)));
+        e2s_conv(c2, c1, &c2, &c1);
+        (*o_putc)(c2);
+        (*o_putc)(c1);
     }
 }
 
@@ -2861,7 +2961,7 @@ void debug(str)
 }
 #endif
 
-#ifdef CAP_URL_OPTION
+#ifdef INPUT_OPTION
 int
 hex2bin(x)
      int x;
@@ -2887,12 +2987,12 @@ hex_getc(ch, f, g, u)
         return c1;
     }
     c2 = (*g)(f);
-    if (!nkf_isxdigit(c2) == EOF){
+    if (!nkf_isxdigit(c2)){
         (*u)(c2, f);
         return c1;
     }
     c3 = (*g)(f);
-    if (!nkf_isxdigit(c3) == EOF){
+    if (!nkf_isxdigit(c3)){
         (*u)(c2, f);
         (*u)(c3, f);
         return c1;
@@ -2928,6 +3028,91 @@ url_ungetc(c, f)
      FILE *f;
 {
     return (*i_uungetc)(c, f);
+}
+
+int
+numchar_getc(f)
+     FILE *f;
+{
+    int (*g)() = i_ngetc;
+    int (*u)() = i_nungetc;
+    int i = 0, j;
+    int buf[8];
+    long c = -1;
+
+    buf[i] = (*g)(f);
+    if (buf[i] == '&'){
+        buf[++i] = (*g)(f);
+        if (buf[i] == '#'){
+            c = 0;
+            buf[++i] = (*g)(f);
+            if (buf[i] == 'x' || buf[i] == 'X'){
+                for (j = 0; j < 5; j++){
+                    buf[++i] = (*g)(f);
+                    if (!nkf_isxdigit(buf[i])){
+                        if (buf[i] != ';'){
+                            c = -1;
+                        }
+                        break;
+                    }
+                    c <<= 4;
+                    c |= hex2bin(buf[i]);
+                }
+            }else{
+                for (j = 0; j < 6; j++){
+                    if (j){
+                        buf[++i] = (*g)(f);
+                    }
+                    if (!nkf_isdigit(buf[i])){
+                        if (buf[i] != ';'){
+                            c = -1;
+                        }
+                        break;
+                    }
+                    c *= 10;
+                    c += hex2bin(buf[i]);
+                }
+            }
+        }
+    }
+    if (c != -1){
+        int c2, c1, c0;
+        if (c < 0x80){
+            return c;
+        }
+        if (0x100 <= c){
+            w16w_conv(c, &c2, &c1, &c0);
+            if (iconv == w_iconv){
+                if (c0){
+                    (*u)(c0, f);
+                }
+                (*u)(c1, f);
+                return c2;
+            }
+            if (w2e_conv(c2, c1, c0, &c2, &c1) == 0){
+                c2 |= 0x80;
+                c1 |= 0x80;
+                if (iconv == s_iconv){
+                    e2s_conv(c2, c1, &c2, &c1);
+                }
+                (*u)(c1, f);
+                return c2;
+            }
+        }
+    }
+    while (i > 0){
+        (*u)(buf[i], f);
+        --i;
+    }
+    return buf[0];
+}
+
+int
+numchar_ungetc(c, f)
+     int c;
+     FILE *f;
+{
+    return (*i_nungetc)(c, f);
 }
 #endif
 

@@ -5,6 +5,9 @@
 #define UTF8_INPUT_ENABLE
 #define UTF8_OUTPUT_ENABLE
 
+/* Shift_JIS 範囲外の文字を、CP932 で同値な文字に読み換える */
+#define SHIFTJIS_CP932
+
 /* オプションで入力を指定した時に、文字コードを固定する */
 #define INPUT_CODE_FIX
 
@@ -12,8 +15,8 @@
 /* by Satoru Takabayashi <ccsatoru@vega.aichi-u.ac.jp> */
 #define OVERWRITE
 
-/* --cap-input, --url-input オプション */
-#define CAP_URL_OPTION
+/* --cap-input, --url-input, --numchar-input オプション */
+#define INPUT_OPTION
 
 /* --debug, --no-output オプション */
 #define CHECK_OPTION
