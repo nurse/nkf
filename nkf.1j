@@ -16,8 +16,8 @@ nkf \- ネットワーク用漢字コード変換フィルタ v2.0.4
 安全なものにはなっている。
 .PP
 現在、\fInkf\fPが認識できる入力の漢字コード系は、いわゆる「JISコード」(ISO-
-2022-JPに基づくもの)、MS漢字コード(シフトJIS)、日本語EUC(AT&Tコード)のい
-ずれかである。出力する漢字コード系も、この3種類である。
+2022-JPに基づくもの)、MS漢字コード(シフトJIS)、日本語EUC(AT&Tコード)、
+UTF-8、UTF-16のいずれかである。出力する漢字コード系も、これらである。
 .PP
 入力は、ファイルを指定しなければ、標準入力となる。出力は標準出力である。
 .PP
@@ -33,7 +33,21 @@ EUCコードを出力する。
 シフトJISコードを出力する。
 .TP
 .B \-w
+UTF8コードを出力する。（BOM無し）
+.B \-w8
 UTF8コードを出力する。
+.B \-w80
+UTF8コードを出力する。（BOM無し）
+.B \-w16
+UTF16コードを出力する。（Big Endian / BOM無し）
+.B \-w16B
+UTF16コードを出力する。（Big Endian / BOM有り）
+.B \-w16B0
+UTF16コードを出力する。（Big Endian / BOM無し）
+.B \-w16L
+UTF16コードを出力する。（Little Endian / BOM有り）
+.B \-w16L0
+UTF16コードを出力する。（Little Endian / BOM無し）
 .TP
 .B \-m[BQSN0]
 MIME を解読する。(デフォルト) ISO-2022-JP(base64)とISO-8859-1(Q encode)
@@ -93,6 +107,21 @@ ISO-2022-JPを仮定する。
 .B \-S
 MS漢字を仮定する。X0201仮名も仮定される。
 .TP
+.B \-W
+UTF-8を仮定する。
+.TP
+.B \-W8
+UTF-8を仮定する。
+.TP
+.B \-W16
+UTF-16(Little Endien)を仮定する。
+.TP
+.B \-W16B
+UTF-16(Big Endien)を仮定する。
+.TP
+.B \-W16L
+UTF-16(Little Endien)を仮定する。
+.TP
 .B \-X
 MS漢字中にX0201仮名があると仮定する。
 .TP
@@ -141,6 +170,9 @@ JIS漢字を指示するシーケンスとして \fBESC-'$'-\fP\fI?\fPを使用する。
 .TP
 .B \-r
 ROT13/47の変換をする。
+.TP
+.B \-g
+自動判別の結果を出力します。
 .TP
 .B \-v
 バージョンを表示する。
@@ -207,10 +239,20 @@ mac (CR)
 \--cap-input, \--url-input
 それぞれ ':', '%' に続く 16 進数を文字に変換する
 .TP
-\--overwrite
-元のファイルを変換結果で置き換える。複数のファイルを書き換えることも可能。
+\--numchar-input
+&#....; のような、Unicode文字参照を変換する
 .TP
-\--no-cp932 Shift_JIS の、FAxx-FCxx を、CP932 で同値な文字に読み換える動作を無効にする
+\--no-cp932
+Shift_JIS の、FAxx-FCxx を、CP932 で同値な文字に読み換える動作を無効にする
+.TP
+\--ms-ucs-map
+MicrosoftのUCSマッピング互換の変換を行う
+.TP
+\--overwrite
+元のファイルを変換結果で置き換える。複数のファイルを書き換えることも可能
+.TP
+\--guess
+自動判別の結果を出力する
 .TP
 \--help
 .TP
@@ -452,6 +494,13 @@ CP932 で同値な FAxx-FCxx の文字に変換します。
 --prefix=\$@ とすると、Shift_JIS の 2 文字目に $, @ が来たら、その前に \ が挿入されます
 --prefix=@@ とすると、Shift_JIS の 2 文字目に @ が来たら、その前に @ が挿入されます
 
+.PP
+-w8, -w16B, -w16L, -W8, -W16B, -W16L というオプションを追加しました。
+
+.PP
+--ms-ucs-map というオプションを付けると、
+MicrosoftのUCSマッピング互換の変換を行います。
+
 
 .SH ACKNOWLEDGE
 
@@ -540,6 +589,8 @@ hat@so-net
 成瀬ゆい
 鶴谷直樹
 中田伸悦
+わたなべひろふみ
+MoonWolf
 
 河野真治
      www.ie.u-ryukyu.ac.jp/~kono/nkf/
