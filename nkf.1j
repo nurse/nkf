@@ -1,6 +1,6 @@
 .TH NKF 2 13/Oct/2003
 .SH NAME
-nkf \- ネットワーク用漢字コード変換フィルタ v2.0
+nkf \- ネットワーク用漢字コード変換フィルタ v2.0.4
 .SH SYNOPSIS
 .B nkf
 .RI [ options ]
@@ -170,7 +170,7 @@ NLまえのCRを削除する。単独のCRは、NLに置き換えられる。
      \--		これ以降のオプションを無視する
 .fi
 .TP
-.B 次の 2 つは、config.h で EXEC_IO を define した時のみ有効
+.B 次の 2 つは、config.h で EXEC_IO を define してコンパイルした時のみ有効
 .nf
      \--exec-in  nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf の入力とする
      \--exec-out  nkf [options] --exec-out cmd args... とやると、nkf の出力を cmd の入力とする

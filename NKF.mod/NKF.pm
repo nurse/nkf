@@ -36,7 +36,7 @@ require DynaLoader;
 @EXPORT = qw(
 	nkf	nkf_continue	inputcode
 );
-$VERSION = '2.03';
+$VERSION = '2.04';
 
 bootstrap NKF $VERSION;
 

@@ -42,11 +42,11 @@
 #include "config.h"
 
 static char *CopyRight =
-      "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2003 Kono, Furukawa";
+      "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2004 Kono, Furukawa";
 static char *Version =
       "2.0";
 static char *Patchlevel =
-      "3/0310/Shinji Kono";
+      "4/0401/Shinji Kono";
 
 /*
 **

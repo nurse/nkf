@@ -5,7 +5,7 @@ SHAR = shar
 # SHAR = shar -T
 PERL = perl
 RM = rm -rf
-VERSION = 203
+VERSION = 204
 
 nkf : nkf.c config.h utf8tbl.o
 	$(CC) $(CFLAGS) -o nkf nkf.c utf8tbl.o

@@ -5,7 +5,7 @@ NKF(2)                                                     NKF(2)
 
 
 NNAAMMEE
-       nkf - ネットワーク用漢字コード変換フィルタ v2.0
+       nkf - ネットワーク用漢字コード変換フィルタ v2.0.4
 
 SSYYNNOOPPSSIISS
        nnkkff [_o_p_t_i_o_n_s] [_f_i_l_e]
@@ -179,7 +179,8 @@ NKF(2)                                                     NKF(2)
                    --version
                    --        これ以降のオプションを無視する
 
-       次次のの 22 つつはは、、ccoonnffiigg..hh でで EEXXEECC__IIOO をを ddeeffiinnee ししたた時時ののみみ有有効効
+       次次のの 22 つつはは、、ccoonnffiigg..hh でで EEXXEECC__IIOO をを ddeeffiinnee ししててココンンパパイイルル
+              ししたた時時のの みみ有有効効
                    --exec-in  nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf の入力とする
                    --exec-out  nkf [options] --exec-out cmd args... とやると、nkf の出力を cmd の入力とする
 
@@ -187,7 +188,6 @@ AAUUTTHHOORR
        市川  至  ichikawa@flab.fujitsu.co.jp   (was ichikawa@fujitsu.JUNET)
        河野  真治      kono@ie.u-ryukyu.acjp
        Rei FURUKAWA    furukawa@tcp-ip.or.jp
-
 
 
 
