@@ -25,15 +25,17 @@
 #define CHECK_OPTION
 
 /* --exec-in, --exec-out オプション
- * pipe, fork, execvp あたりが無いと動きません
+ * pipe, fork, execvp あたりが無いと動きません。
  * MS-DOS, MinGW などでは undef にしてください
+ * child process 終了時の処理がいいかげんなので、
+ * デフォルトで無効にしています。
  */
-#define EXEC_IO
+/* #define EXEC_IO */
 
 /* SunOS の cc を使うときは undef にしてください */
 #define ANSI_C_PROTOTYPE
 
-/* int が 16bit 以下の環境で NUMCHAR_OPTION を使うには、
+/* int が 32bit 未満の環境で NUMCHAR_OPTION を使うには、
  * コメントを外してください。
  */
 /* #define INT_IS_SHORT */
