@@ -2124,7 +2124,7 @@ int s2e_conv(c2, c1, p2, p1)
      int *p2, *p1;
 {
 #ifdef SHIFTJIS_CP932
-    if (CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END){
+    if (cp932_f && CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END){
         extern unsigned short shiftjis_cp932[3][189];
         c1 = shiftjis_cp932[c2 - CP932_TABLE_BEGIN][c1 - 0x40];
         if (c1 == 0) return 1;
