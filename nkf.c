@@ -46,7 +46,7 @@ static char *CopyRight =
 static char *Version =
       "2.0";
 static char *Patchlevel =
-      "3/0301/Shinji Kono";
+      "3/0310/Shinji Kono";
 
 /*
 **
@@ -95,7 +95,7 @@ static char *Patchlevel =
 **
 **/
 
-#if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C)) && !defined(MSDOS)
+#if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C) || defined(__MINGW32__)) && !defined(MSDOS)
 #define MSDOS
 #if (defined(__Win32__) || defined(_WIN32)) && !defined(__WIN32__)
 #define __WIN32__
@@ -150,7 +150,7 @@ static char *Patchlevel =
 #include <unistd.h>
 #include <utime.h>
 #else
-#if defined(_MSC_VER) /* VC++ */
+#if defined(_MSC_VER) || defined(__MINGW32__) /* VC++, MinGW */
 #include <sys/utime.h>
 #elif defined(__TURBOC__) /* BCC */
 #include <utime.h>
@@ -158,6 +158,10 @@ static char *Patchlevel =
 #endif
 #endif
 #endif 
+
+#ifdef INT_IS_SHORT
+#define int long
+#endif
 
 #define         FALSE   0
 #define         TRUE    1
@@ -269,6 +273,8 @@ struct input_code{
     int _file_stat;
 };
 
+STATIC char *input_codename;
+
 STATIC  int     noconvert PROTO((FILE *f));
 STATIC  int     kanji_convert PROTO((FILE *f));
 STATIC  int     h_conv PROTO((FILE *f,int c2,int c1));
@@ -282,6 +288,7 @@ STATIC  int     w2e_conv PROTO((int c2,int c1,int c0,int *p2,int *p1));
 STATIC  int     w_iconv PROTO((int c2,int c1,int c0));
 STATIC  int     w_iconv16 PROTO((int c2,int c1,int c0));
 STATIC  int	w_iconv_common PROTO((int c1,int c0,unsigned short **pp,int psize,int *p2,int *p1));
+STATIC  int     ww16_conv PROTO((int c2, int c1, int c0));
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
 STATIC  int     e2w_conv PROTO((int c2,int c1));
@@ -375,6 +382,12 @@ static int             w_oconv16_LE = 0;   /* utf-16 little endian */
 #endif
 
 
+#ifdef NUMCHAR_OPTION
+
+#define CLASS_MASK  0x0f000000
+#define CLASS_UTF16 0x01000000
+#endif
+
 #ifdef INPUT_OPTION
 static int cap_f = FALSE;
 static int (*i_cgetc)PROTO((FILE *)) = std_getc; /* input of cgetc */
@@ -402,8 +415,12 @@ static int debug_f = FALSE;
 STATIC void debug PROTO((char *str));
 #endif
 
+#ifdef EXEC_IO
+static int exec_f = 0;
+#endif
+
 #ifdef SHIFTJIS_CP932
-STATIC int cp932_f = FALSE;
+STATIC int cp932_f = TRUE;
 #define CP932_TABLE_BEGIN (0xfa)
 #define CP932_TABLE_END   (0xfc)
 
@@ -622,6 +639,33 @@ main(argc, argv)
     for (argc--,argv++; (argc > 0) && **argv == '-'; argc--, argv++) {
         cp = (unsigned char *)*argv;
         options(cp);
+#ifdef EXEC_IO
+        if (exec_f){
+            int fds[2], pid;
+            if (pipe(fds) < 0 || (pid = fork()) < 0){
+                abort();
+            }
+            if (pid == 0){
+                if (exec_f > 0){
+                    close(fds[0]);
+                    dup2(fds[1], 1);
+                }else{
+                    close(fds[1]);
+                    dup2(fds[0], 0);
+                }
+                execvp(argv[1], &argv[1]);
+            }
+            if (exec_f > 0){
+                close(fds[1]);
+                dup2(fds[0], 0);
+            }else{
+                close(fds[0]);
+                dup2(fds[1], 1);
+            }
+            argc = 0;
+            break;
+        }
+#endif
     }
     if(x0201_f == WISH_TRUE)
          x0201_f = ((!iso2022jp_f)? TRUE : NO_X0201);
@@ -741,7 +785,7 @@ main(argc, argv)
 #ifdef OVERWRITE
               if (overwrite) {
                   struct stat     sb;
-#ifdef MSDOS
+#if defined(MSDOS) && !defined(__MINGW32__)
                   time_t tb[2];
 #else
                   struct utimbuf  tb;
@@ -759,22 +803,23 @@ main(argc, argv)
                   if (chmod(outfname, sb.st_mode)) {
                       fprintf(stderr, "Can't set permission %s\n", outfname);
                   }
-#ifdef MSDOS
-                  tb[0] = tb[1] = sb.st_mtime;
+
                   /* タイムスタンプを復元 */
+#if defined(MSDOS) && !defined(__MINGW32__)
+                  tb[0] = tb[1] = sb.st_mtime;
                   if (utime(outfname, tb)) {
                       fprintf(stderr, "Can't set timestamp %s\n", outfname);
-                  }
-
-                  if (unlink(origfname)){
-                      perror(origfname);
                   }
 #else
                   tb.actime  = sb.st_atime;
                   tb.modtime = sb.st_mtime;
-                  /* タイムスタンプを復元 */
                   if (utime(outfname, &tb)) {
                       fprintf(stderr, "Can't set timestamp %s\n", outfname);
+                  }
+#endif
+#ifdef MSDOS
+                  if (unlink(origfname)){
+                      perror(origfname);
                   }
 #endif
                   if (rename(outfname, origfname)) {
@@ -839,6 +884,8 @@ struct {
 #ifdef INPUT_OPTION
     {"cap-input", ""},
     {"url-input", ""},
+#endif
+#ifdef NUMCHAR_OPTION
     {"numchar-input", ""},
 #endif
 #ifdef CHECK_OPTION
@@ -846,7 +893,11 @@ struct {
     {"debug", ""},
 #endif
 #ifdef SHIFTJIS_CP932
-    {"cp932", ""},
+    {"no-cp932", ""},
+#endif
+#ifdef EXEC_IO
+    {"exec-in", ""},
+    {"exec-out", ""},
 #endif
 };
 
@@ -895,6 +946,8 @@ options(cp)
                     url_f = TRUE;
                     continue;
                 }
+#endif
+#ifdef NUMCHAR_OPTION
                 if (strcmp(long_option[i].name, "numchar-input") == 0){
                     numchar_f = TRUE;
                     continue;
@@ -911,10 +964,20 @@ options(cp)
                 }
 #endif
 #ifdef SHIFTJIS_CP932
-                if (strcmp(long_option[i].name, "cp932") == 0){
+                if (strcmp(long_option[i].name, "no-cp932") == 0){
                     cp932_f = TRUE;
                     continue;
                 }
+#endif
+#ifdef EXEC_IO
+                  if (strcmp(long_option[i].name, "exec-in") == 0){
+                      exec_f = 1;
+                      return;
+                  }
+                  if (strcmp(long_option[i].name, "exec-out") == 0){
+                      exec_f = -1;
+                      return;
+                  }
 #endif
             }
             continue;
@@ -1160,11 +1223,11 @@ void set_iconv(f, iconv_func)
 #ifdef CHECK_OPTION
     if (estab_f && iconv_for_check != iconv){
 #ifdef UTF8_INPUT_ENABLE
-        if (iconv == w_iconv) debug("UTF-8\n");
-        if (iconv == w_iconv16) debug("UTF-16\n");
+        if (iconv == w_iconv) debug(input_codename = "UTF-8");
+        if (iconv == w_iconv16) debug(input_codename = "UTF-16");
 #endif
-        if (iconv == s_iconv) debug("Shift_JIS\n");
-        if (iconv == e_iconv) debug("EUC-JP\n");
+        if (iconv == s_iconv) debug(input_codename = "Shift_JIS");
+        if (iconv == e_iconv) debug(input_codename = "EUC-JP");
         iconv_for_check = iconv;
     }
 #endif
@@ -1272,6 +1335,10 @@ void s_status(ptr, c)
       case 0:
           if (c <= DEL){
               break;
+#ifdef NUMCHAR_OPTION
+          }else if ((c & CLASS_MASK) == CLASS_UTF16){
+              break;
+#endif
           }else if (0xa1 <= c && c <= 0xdf){
               status_push_ch(ptr, SSO);
               status_push_ch(ptr, c);
@@ -1327,6 +1394,10 @@ void e_status(ptr, c)
       case 0:
           if (c <= DEL){
               break;
+#ifdef NUMCHAR_OPTION
+          }else if ((c & CLASS_MASK) == CLASS_UTF16){
+              break;
+#endif
           }else if (SSO == c || (0xa1 <= c && c <= 0xfe)){
               ptr->stat = 1;
               status_push_ch(ptr, c);
@@ -1406,6 +1477,10 @@ void w_status(ptr, c)
       case 0:
           if (c <= DEL){
               break;
+#ifdef NUMCHAR_OPTION
+          }else if ((c & CLASS_MASK) == CLASS_UTF16){
+              break;
+#endif
           }else if (0xc0 <= c && c <= 0xdf){
               ptr->stat = 1;
               status_push_ch(ptr, c);
@@ -1575,6 +1650,8 @@ module_connection()
         i_ugetc = i_getc; i_getc = url_getc;
         i_uungetc = i_ungetc; i_ungetc= url_ungetc;
     }
+#endif
+#ifdef NUMCHAR_OPTION
     if (numchar_f){
         i_ngetc = i_getc; i_getc = numchar_getc;
         i_nungetc = i_ungetc; i_ungetc= numchar_ungetc;
@@ -1676,6 +1753,10 @@ kanji_convert(f)
 		c2 = c1;
 		c1 = (*i_getc)(f);
 		SEND;
+#ifdef NUMCHAR_OPTION
+            } else if ((c1 & CLASS_MASK) == CLASS_UTF16){
+                SEND;
+#endif
 	    } else if (c1 > DEL) {
                 /* 8 bit code */
                 if (!estab_f && !iso8859_f) {
@@ -1789,6 +1870,7 @@ kanji_convert(f)
                         /* This is kanji introduction */
                         input_mode = X0208;
                         shift_mode = FALSE;
+                        debug(input_codename = "ISO-2022-JP");
                         NEXT;
                     } else if (c1 == '(') {
                         if ((c1 = (*i_getc)(f)) == EOF) {
@@ -1920,6 +2002,9 @@ h_conv(f, c2, c1)
     if (!estab_f){
         struct input_code *p = input_code_list;
         struct input_code *result = p;
+        if (c1 == EOF){
+            code_status(c1);
+        }
         while (p->name){
             if (p->score < result->score){
                 result = p;
@@ -1939,10 +2024,15 @@ h_conv(f, c2, c1)
      ** Kanji codes by oconv and leave estab_f unchanged.
      **/
 
+    c3=c1;
     wc = 0;
     while (wc < hold_count){
         c2 = hold_buf[wc++];
-        if (c2 <= DEL){
+        if (c2 <= DEL
+#ifdef NUMCHAR_OPTION
+            || (c2 & CLASS_MASK) == CLASS_UTF16
+#endif
+            ){
             (*iconv)(0, c2, 0);
             continue;
         }else if (iconv == s_iconv && 0xa1 <= c2 && c2 <= 0xdf){
@@ -1953,7 +2043,10 @@ h_conv(f, c2, c1)
             c1 = hold_buf[wc++];
         }else{
             c1 = (*i_getc)(f);
-            if (c1 == EOF) break;
+            if (c1 == EOF){
+                c3 = EOF;
+                break;
+            }
             code_status(c1);
         }
         if ((*iconv)(c2, c1, 0) < 0){
@@ -1962,14 +2055,16 @@ h_conv(f, c2, c1)
                 c0 = hold_buf[wc++];
             }else{
                 c0 = (*i_getc)(f);
-                if (c0 == EOF) break;
+                if (c0 == EOF){
+                    c3 = EOF;
+                    break;
+                }
                 code_status(c0);
             }
             (*iconv)(c2, c1, c0);
             c1 = c0;
         }
     }
-    c3=c1;
     return c3;
 }
 
@@ -2055,6 +2150,7 @@ w2e_conv(c2, c1, c0, p2, p1)
 {
     extern unsigned short * utf8_to_euc_2bytes[];
     extern unsigned short ** utf8_to_euc_3bytes[];
+    int ret = 0;
 
     if (0xc0 <= c2 && c2 <= 0xef) {
         unsigned short **pp;
@@ -2062,16 +2158,24 @@ w2e_conv(c2, c1, c0, p2, p1)
         if (0xe0 <= c2) {
             if (c0 == 0) return -1;
             pp = utf8_to_euc_3bytes[c2 - 0x80];
-            return w_iconv_common(c1, c0, pp, sizeof_utf8_to_euc_C2, p2, p1);
+            ret = w_iconv_common(c1, c0, pp, sizeof_utf8_to_euc_C2, p2, p1);
         } else {
-            return w_iconv_common(c2, c1, utf8_to_euc_2bytes, sizeof_utf8_to_euc_2bytes, p2, p1);
+            ret =  w_iconv_common(c2, c1, utf8_to_euc_2bytes, sizeof_utf8_to_euc_2bytes, p2, p1);
         }
+#ifdef NUMCHAR_OPTION
+        if (ret){
+            c1 = CLASS_UTF16 | ww16_conv(c2, c1, c0);
+            c2 = 0;
+            ret = 0;
+        }
+#endif
+        return ret;
     } else if (c2 == X0201) {
         c1 &= 0x7f;
     }
     if (p2) *p2 = c2;
     if (p1) *p1 = c1;
-    return 0;
+    return ret;
 }
 
 int
@@ -2107,6 +2211,24 @@ w16w_conv(val, p2, p1, p0)
 }
 
 int
+ww16_conv(c2, c1, c0)
+     int c2, c1, c0;
+{
+    unsigned short val;
+    if (c2 >= 0xe0){
+        val = (c2 & 0x0f) << 12;
+        val |= (c1 & 0x3f) << 6;
+        val |= (c0 & 0x3f);
+    }else if (c2 >= 0xc0){
+        val = (c2 & 0x1f) << 6;
+        val |= (c1 & 0x3f) << 6;
+    }else{
+        val = c2;
+    }
+    return val;
+}
+
+int
 w16e_conv(val, p2, p1)
      unsigned short val;
      int *p2, *p1;
@@ -2116,19 +2238,28 @@ w16e_conv(val, p2, p1)
     int c2, c1, c0;
     unsigned short **pp;
     int psize;
+    int ret = 0;
 
     w16w_conv(val, &c2, &c1, &c0);
     if (c1){
         if (c0){
             pp = utf8_to_euc_3bytes[c2 - 0x80];
             psize = sizeof_utf8_to_euc_C2;
+            ret =  w_iconv_common(c1, c0, pp, psize, p2, p1);
         }else{
             pp = utf8_to_euc_2bytes;
             psize = sizeof_utf8_to_euc_2bytes;
+            ret =  w_iconv_common(c2, c1, pp, psize, p2, p1);
         }
-        return w_iconv_common(c1, c0, pp, psize, p2, p1);
+#ifdef NUMCHAR_OPTION
+        if (ret){
+            *p2 = 0;
+            *p1 = CLASS_UTF16 | val;
+            ret = 0;
+        }
+#endif
     }
-    return val;
+    return ret;
 }
 
 int
@@ -2148,7 +2279,7 @@ w_iconv16(c2, c1, c0)
 	int tmp;
 	tmp=c1; c1=c2; c2=tmp;
     }
-    if (c2==0 || c2==EOF) {
+    if ((c2==0 && c1 < 0x80) || c2==EOF) {
 	(*oconv)(c2, c1);
 	return 0;
     }
@@ -2222,6 +2353,17 @@ w_oconv(c2, c1)
     int    c2,
                     c1;
 {
+    int c0;
+#ifdef NUMCHAR_OPTION
+    if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16){
+        w16w_conv(c1, &c2, &c1, &c0);
+        (*o_putc)(c2);
+        if (c1){
+            (*o_putc)(c1);
+            if (c0) (*o_putc)(c0);
+        }
+    }
+#endif
     if (c2 == EOF) {
         (*o_putc)(EOF);
         return;
@@ -2232,18 +2374,12 @@ w_oconv(c2, c1)
 	output_mode = ISO8859_1;
         (*o_putc)(c1 | 0x080);
     } else {
-        unsigned short val = (unsigned short)e2w_conv(c2, c1);
         output_mode = UTF8;
-
-        if (0 < val && val < 0x80){
-            (*o_putc)(val);
-        }else if (val < 0x800){
-            (*o_putc)(0xc0 | (val >> 6));
-            (*o_putc)(0x80 | (val & 0x3f));
-        }else{
-            (*o_putc)(0xe0 | (val >> 12));
-            (*o_putc)(0x80 | ((val >> 6) & 0x3f));
-            (*o_putc)(0x80 | (val & 0x3f));
+        w16w_conv((unsigned short)e2w_conv(c2, c1), &c2, &c1, &c0);
+        (*o_putc)(c2);
+        if (c1){
+            (*o_putc)(c1);
+            if (c0) (*o_putc)(c0);
         }
     }
 }
@@ -2272,6 +2408,11 @@ w_oconv16(c2, c1)
     if (c2 == ISO8859_1) {
         c2 = 0;
         c1 |= 0x80;
+#ifdef NUMCHAR_OPTION
+    } else if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16) {
+        c2 = (c1 >> 8) & 0xff;
+        c1 &= 0xff;
+#endif
     } else if (c2) {
         unsigned short val = (unsigned short)e2w_conv(c2, c1);
         c2 = (val >> 8) & 0xff;
@@ -2293,6 +2434,11 @@ e_oconv(c2, c1)
     int    c2,
                     c1;
 {
+#ifdef NUMCHAR_OPTION
+    if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16){
+        w16e_conv(c1, &c2, &c1);
+    }
+#endif
     if (c2 == EOF) {
         (*o_putc)(EOF);
         return;
@@ -2330,6 +2476,11 @@ s_oconv(c2, c1)
     int    c2,
                     c1;
 {
+#ifdef NUMCHAR_OPTION
+    if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16){
+        w16e_conv(c1, &c2, &c1);
+    }
+#endif
     if (c2 == EOF) {
         (*o_putc)(EOF);
         return;
@@ -2360,6 +2511,11 @@ j_oconv(c2, c1)
     int    c2,
                     c1;
 {
+#ifdef NUMCHAR_OPTION
+    if ((c1 & CLASS_MASK) == CLASS_UTF16){
+        w16e_conv(c1, &c2, &c1);
+    }
+#endif
     if (c2 == EOF) {
         if (output_mode !=ASCII && output_mode!=ISO8859_1) {
             (*o_putc)(ESC);
@@ -3067,12 +3223,12 @@ void debug(str)
      char *str;
 {
     if (debug_f){
-        fputs(str, stderr);
+        fprintf(stderr, "%s\n", str);
     }
 }
 #endif
 
-#ifdef INPUT_OPTION
+#ifdef INPUT_OPTION 
 int
 hex2bin(x)
      int x;
@@ -3140,7 +3296,9 @@ url_ungetc(c, f)
 {
     return (*i_uungetc)(c, f);
 }
+#endif
 
+#ifdef NUMCHAR_OPTION
 int
 numchar_getc(f)
      FILE *f;
@@ -3187,29 +3345,7 @@ numchar_getc(f)
         }
     }
     if (c != -1){
-        int c2, c1, c0;
-        if (c < 0x80){
-            return c;
-        }
-        if (0x100 <= c){
-            w16w_conv(c, &c2, &c1, &c0);
-            if (iconv == w_iconv){
-                if (c0){
-                    (*u)(c0, f);
-                }
-                (*u)(c1, f);
-                return c2;
-            }
-            if (w2e_conv(c2, c1, c0, &c2, &c1) == 0){
-                c2 |= 0x80;
-                c1 |= 0x80;
-                if (iconv == s_iconv){
-                    e2s_conv(c2, c1, &c2, &c1);
-                }
-                (*u)(c1, f);
-                return c2;
-            }
-        }
+        return CLASS_UTF16 | c;
     }
     while (i > 0){
         (*u)(buf[i], f);
@@ -3706,6 +3842,9 @@ usage()
     fprintf(stderr,"d,c      Delete \\r in line feed and \\032, Add \\r in line feed\n");
     fprintf(stderr,"I        Convert non ISO-2022-JP charactor to GETA\n");
     fprintf(stderr,"-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n");
+#ifdef OVERWRITE
+    fprintf(stderr," --overwrite          Overwrite original listed files by filtered result\n");
+#endif
     fprintf(stderr,"long name options\n");
     fprintf(stderr," --fj,--unix,--mac,--windows                convert for the system\n");
     fprintf(stderr," --jis,--euc,--sjis,--utf8,--utf16,--mime,--base64  convert for the code\n");

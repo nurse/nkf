@@ -11,18 +11,31 @@
 /* オプションで入力を指定した時に、文字コードを固定する */
 #define INPUT_CODE_FIX
 
-/* -OW オプション */
+/* --overwrite オプション */
 /* by Satoru Takabayashi <ccsatoru@vega.aichi-u.ac.jp> */
 #define OVERWRITE
 
-/* --cap-input, --url-input, --numchar-input オプション */
+/* --cap-input, --url-input オプション */
 #define INPUT_OPTION
+
+/* --numchar-input オプション */
+#define NUMCHAR_OPTION
 
 /* --debug, --no-output オプション */
 #define CHECK_OPTION
 
+/* --exec-in, --exec-out オプション
+ * pipe, fork, execvp あたりが無いと動きません
+ */
+#define EXEC_IO
+
 /* SunOS の cc を使うときは undef にしてください */
 #define ANSI_C_PROTOTYPE
+
+/* int が 16bit 以下の環境で NUMCHAR_OPTION を使うには、
+ * コメントを外してください。
+ */
+/* #define INT_IS_SHORT */
 
 /******************************/
 /* デフォルトの出力コード選択 */
