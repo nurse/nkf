@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.48 2004/12/18 10:33:53 rei_furukawa Exp $ */
+/* $Id: nkf.c,v 1.49 2004/12/23 22:49:38 rei_furukawa Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2004-12-01"
 #include "config.h"
@@ -2817,19 +2817,23 @@ e2s_conv(c2, c1, p2, p1)
 {
     int val = 0;
     unsigned short *ptr;
+    int ndx;
+    extern unsigned short *x0212_shiftjis[];
 #ifdef X0212_ENABLE
     if ((c2 & 0xff00) == 0x8f00){
-        extern unsigned short *x0212_shiftjis[];
-        ptr = x0212_shiftjis[(c2 & 0x7f) - 0x21];
-        if (ptr){
-            val = ptr[(c1 & 0x7f) - 0x21];
-        }
-        if (val){
-            c2 = val >> 8;
-            c1 = val & 0xff;
-            if (p2) *p2 = c2;
-            if (p1) *p1 = c1;
-            return 0;
+        ndx = c2 & 0x7f;
+        if (0x21 <= ndx && ndx <= 0x7e){
+            ptr = x0212_shiftjis[ndx - 0x21];
+            if (ptr){
+                val = ptr[(c1 & 0x7f) - 0x21];
+            }
+            if (val){
+                c2 = val >> 8;
+                c1 = val & 0xff;
+                if (p2) *p2 = c2;
+                if (p1) *p1 = c1;
+                return 0;
+            }
         }
         c2 = x0212_shift(c2);
     }
