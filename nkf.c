@@ -266,6 +266,7 @@ struct input_code{
     int buf[3];
     void (*status_func)PROTO((struct input_code *, int));
     int (*iconv_func)PROTO((int c2, int c1, int c0));
+    int _file_stat;
 };
 
 STATIC  int     noconvert PROTO((FILE *f));
@@ -370,6 +371,7 @@ static int             x0201_f = NO_X0201;     /* Assume NO JISX0201 */
 static int             iso2022jp_f = FALSE;    /* convert ISO-2022-JP */
 #ifdef UTF8_OUTPUT_ENABLE
 static int             w_oconv16_begin_f= 0;   /* utf-16 header */
+static int             w_oconv16_LE = 0;   /* utf-16 little endian */
 #endif
 
 
@@ -412,13 +414,15 @@ STATIC void s_status PROTO((struct input_code *, int));
 
 #ifdef UTF8_INPUT_ENABLE
 STATIC void w_status PROTO((struct input_code *, int));
+STATIC void w16_status PROTO((struct input_code *, int));
 static int             utf16_mode = UTF16_INPUT;
 #endif
 
 struct input_code input_code_list[] = {
-    {"EUC-JP",    0, 0, 0, {0, 0, 0}, e_status, e_iconv},
-    {"Shift_JIS", 0, 0, 0, {0, 0, 0}, s_status, s_iconv},
-    {"UTF-8",     0, 0, 0, {0, 0, 0}, w_status, w_iconv},
+    {"EUC-JP",    0, 0, 0, {0, 0, 0}, e_status, e_iconv, 0},
+    {"Shift_JIS", 0, 0, 0, {0, 0, 0}, s_status, s_iconv, 0},
+    {"UTF-8",     0, 0, 0, {0, 0, 0}, w_status, w_iconv, 0},
+    {"UTF-16",     0, 0, 0, {0, 0, 0}, w16_status, w_iconv16, 0},
     {0}
 };
 
@@ -979,7 +983,16 @@ options(cp)
 		output_conv = w_oconv16; cp+=2;
 		if (cp[0]=='L') {
 		    w_oconv16_begin_f=2; cp++;
-		}
+		    w_oconv16_LE = 1;
+                    if (cp[0] == '0'){
+                        w_oconv16_begin_f=1; cp++;
+                    }
+		} else if (cp[0] == 'B') {
+		    w_oconv16_begin_f=2; cp++;
+                    if (cp[0] == '0'){
+                        w_oconv16_begin_f=1; cp++;
+                    }
+                }
 	    } else
                 output_conv = w_oconv;
             continue;
@@ -1232,6 +1245,13 @@ void status_reset(ptr)
     ptr->index = 0;
 }
 
+void status_reinit(ptr)
+     struct input_code *ptr;
+{
+    status_reset(ptr);
+    ptr->_file_stat = 0;
+}
+
 void status_check(ptr, c)
      struct input_code *ptr;
      int c;
@@ -1327,6 +1347,54 @@ void e_status(ptr, c)
 }
 
 #ifdef UTF8_INPUT_ENABLE
+void w16_status(ptr, c)
+     struct input_code *ptr;
+     int c;
+{
+    switch (ptr->stat){
+      case -1:
+          break;
+      case 0:
+          if (ptr->_file_stat == 0){
+              if (c == 0xfe || c == 0xff){
+                  ptr->stat = c;
+                  status_push_ch(ptr, c);
+                  ptr->_file_stat = 1;
+              }else{
+                  status_disable(ptr);
+                  ptr->_file_stat = -1;
+              }
+          }else if (ptr->_file_stat > 0){
+              ptr->stat = 1;
+              status_push_ch(ptr, c);
+          }else if (ptr->_file_stat < 0){
+              status_disable(ptr);
+          }
+          break;
+
+      case 1:
+          if (c == EOF){
+              status_disable(ptr);
+              ptr->_file_stat = -1;
+          }else{
+              status_push_ch(ptr, c);
+              status_reset(ptr);
+          }
+          break;
+
+      case 0xfe:
+      case 0xff:
+          if (ptr->stat != c && (c == 0xfe || c == 0xff)){
+              status_push_ch(ptr, c);
+              status_reset(ptr);
+          }else{
+              status_disable(ptr);
+              ptr->_file_stat = -1;
+          }
+          break;
+    }
+}
+
 void w_status(ptr, c)
      struct input_code *ptr;
      int c;
@@ -1388,7 +1456,7 @@ code_status(c)
     }
 
     if (action_flag){
-        if (result){
+        if (result && !estab_f){
             set_iconv(TRUE, result->iconv_func);
         }else if (c <= DEL){
             struct input_code *ptr = input_code_list;
@@ -1537,7 +1605,7 @@ module_connection()
     {
         struct input_code *p = input_code_list;
         while (p->name){
-            status_reset(p++);
+            status_reinit(p++);
         }
     }
 }
@@ -2185,25 +2253,36 @@ w_oconv16(c2, c1)
     int    c2,
                     c1;
 {
-    
-    if (w_oconv16_begin_f==2) {
-	(*o_putc)('\376');
-	(*o_putc)('\377');
-	w_oconv16_begin_f=1;
-    }
     if (c2 == EOF) {
         (*o_putc)(EOF);
         return;
-    } else if (c2 == 0) { 
-        (*o_putc)(0);
-        (*o_putc)(c1);
-    } else if (c2 == ISO8859_1) {
-        (*o_putc)(0);
-        (*o_putc)(c1 | 0x080);
-    } else {
+    }    
+
+    if (w_oconv16_begin_f==2) {
+        if (w_oconv16_LE){
+            (*o_putc)((unsigned char)'\377');
+            (*o_putc)('\376');
+        }else{
+            (*o_putc)('\376');
+            (*o_putc)((unsigned char)'\377');
+        }
+	w_oconv16_begin_f=1;
+    }
+
+    if (c2 == ISO8859_1) {
+        c2 = 0;
+        c1 |= 0x80;
+    } else if (c2) {
         unsigned short val = (unsigned short)e2w_conv(c2, c1);
-        (*o_putc)((val&0xff00)>>8);
-        (*o_putc)(val&0xff);
+        c2 = (val >> 8) & 0xff;
+        c1 = val & 0xff;
+    }
+    if (w_oconv16_LE){
+        (*o_putc)(c1);
+        (*o_putc)(c2);
+    }else{
+        (*o_putc)(c2);
+        (*o_putc)(c1);
     }
 }
 
@@ -3550,7 +3629,7 @@ reinit()
     {
         struct input_code *p = input_code_list;
         while (p->name){
-            status_reset(p++);
+            status_reinit(p++);
         }
     }
 #ifdef UTF8_OUTPUT_ENABLE
