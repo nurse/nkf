@@ -1,3 +1,20 @@
+2002-10-06  Rei FURUKAWA  <furukawa@tcp-ip.or.jp>
+
+	* INSTALL, INSTALL.j, make_test.pl を追加
+
+2002-10-04  Rei FURUKAWA  <furukawa@tcp-ip.or.jp>
+
+	* 入力文字コードが確定する前に h_conv を抜ける場合の
+	判定精度を上げた
+
+2002-09-29  Rei FURUKAWA  <furukawa@tcp-ip.or.jp>
+
+	* デフォルトの出力コード選択を config.h に移動
+	* SunOS の cc でコンパイルできるようにした
+	* -OW をやめて、代わりに --overwrite にした
+	* [sw]_iconv から変換部分を別関数に分離した
+
+
 
 Date: Thu Sep 26 23:12:03 JST 2002
 
