@@ -1250,7 +1250,8 @@ void set_iconv(f, iconv_func)
 #endif
 }
 
-#define SCORE_KANA     (1)                   /* いわゆる半角カナ */
+#define SCORE_L2       (1)                   /* 第2水準漢字 */
+#define SCORE_KANA     (SCORE_L2 << 1)       /* いわゆる半角カナ */
 #define SCORE_DEPEND   (SCORE_KANA << 1)     /* 機種依存文字 */
 #ifdef SHIFTJIS_CP932
 #define SCORE_CP932    (SCORE_DEPEND << 1)   /* CP932 による読み換え */
@@ -1271,8 +1272,8 @@ int score_table_A0[] = {
 };
 
 int score_table_F0[] = {
-    0, 0, 0, 0,
-    0, SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST,
+    SCORE_L2, SCORE_L2, SCORE_L2, SCORE_L2,
+    SCORE_L2, SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST,
     SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND,
     SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST, SCORE_ERROR,
 };
@@ -1302,18 +1303,19 @@ void code_score(ptr)
     int c1 = ptr->buf[1];
     if (c2 < 0){
         set_code_score(ptr, SCORE_ERROR);
-    }else if ((c2 & 0xf0) == 0xa0){
-        set_code_score(ptr, score_table_A0[c2 & 0x0f]);
-    }else if ((c2 & 0xf0) == 0xf0){
-        set_code_score(ptr, score_table_F0[c2 & 0x0f]);
     }else if (c2 == SSO){
         set_code_score(ptr, SCORE_KANA);
-    }
 #ifdef UTF8_OUTPUT_ENABLE
-    else if (!e2w_conv(c2, c1)){
+    }else if (!e2w_conv(c2, c1)){
         set_code_score(ptr, SCORE_NO_EXIST);
-    }
 #endif
+    }else if ((c2 & 0x70) == 0x20){
+        set_code_score(ptr, score_table_A0[c2 & 0x0f]);
+    }else if ((c2 & 0x70) == 0x70){
+        set_code_score(ptr, score_table_F0[c2 & 0x0f]);
+    }else if ((c2 & 0x70) >= 0x50){
+        set_code_score(ptr, SCORE_L2);
+    }
 }
 
 void status_disable(ptr)
@@ -1336,7 +1338,6 @@ void status_clear(ptr)
      struct input_code *ptr;
 {
     ptr->stat = 0;
-    ptr->score &= SCORE_INIT;
     ptr->index = 0;
 }
 
@@ -1679,6 +1680,7 @@ module_connection()
     }
 
     i_getc = std_getc;
+    i_ungetc = std_ungetc;
     /* input redicrection */
 #ifdef INPUT_OPTION
     if (cap_f){
@@ -2491,8 +2493,8 @@ e_oconv(c2, c1)
 	output_mode = ISO8859_1;
         (*o_putc)(c1 | 0x080);
     } else {
-        if ((c1<0x20 || 0x7e<c1) ||
-           (c2<0x20 || 0x7e<c2)) {
+        if ((c1<0x21 || 0x7e<c1) ||
+           (c2<0x21 || 0x7e<c2)) {
             set_iconv(FALSE, 0);
             return; /* too late to rescue this char */
         }
