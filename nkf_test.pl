@@ -1,8 +1,8 @@
 #!/usr/local/bin/perl
 #
-# nkf test program for nkf 2.0
+# nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.6 2004/11/05 06:39:32 naruse Exp $
+# $Id: nkf_test.pl,v 1.7 2004/11/08 13:54:17 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -240,6 +240,45 @@ print "Broken JIS is safe on Normal JIS? ";
     $input = $example{'jis'};
     &test("$nkf -Be",$input,$example{'euc'});
 
+# test_data/cp932
+
+$example{'test_data/cp932'} = unpack('u',<<'eofeof');
+%^D`@_$L`
+eofeof
+
+$example{'test_data/cp932.ans'} = unpack('u',<<'eofeof');
+%_/$@_.X`
+eofeof
+
+print "test_data/cp932    ";
+    &test("$nkf -eS",$example{'test_data/cp932'},$example{'test_data/cp932.ans'});
+
+# test_data/cp932inv
+print "test_data/cp932inv    ";
+    &test("$nkf -sE --cp932inv",$example{'test_data/cp932.ans'},$example{'test_data/cp932'});
+
+# test_data/no-cp932inv
+
+$example{'test_data/no-cp932inv.ans'} = unpack('u',<<'eofeof');
+%[N\@[NP`
+eofeof
+
+print "test_data/no-cp932inv    ";
+    &test("$nkf -sE",$example{'test_data/cp932.ans'},$example{'test_data/no-cp932inv.ans'});
+
+# test_data/irv
+
+# $example{'test_data/irv'} = unpack('u',<<'eofeof');
+# %#B`/(!L`
+# eofeof
+# 
+# $example{'test_data/irv.ans'} = unpack('u',<<'eofeof');
+# %#B`/(!L`
+# eofeof
+# 
+# print "test_data/irv    ";
+#    &test("$nkf -wE",$example{'test_data/irv'},$example{'test_data/irv.ans'});
+
 
 # UCS Mapping Test
 print "\n\nUCS Mapping Test\n";
@@ -432,7 +471,8 @@ print "MIME decode (unbuf)    ";
     $tmp = &test("$nkf -jmNu",$example{'mime.iso2022'},$example{'mime.unbuf'},$example{'mime.unbuf.alt'});
     # open(OUT,">tmp2");print OUT pack('u',$tmp);close(OUT);
 print "MIME decode (base64)   ";
-    &test("$nkf -jTmB",$example{'mime.base64'},$example{'mime.base64.ans'});
+    &test("$nkf -jmB",$example{'mime.base64'},$example{'mime.base64.ans'});
+#MIME BASE64 must be LF?
 
 # MIME ISO-8859-1
 
@@ -505,7 +545,7 @@ M4B`;)$(D3CE4(2,;*$(*"ALD0B0S)#,D3QLH0B!,1B`;)$(D3CE4(2,;*$(*
 eofeof
 
 print "test_data/long-fold-1    ";
-    &test("$nkf -jTF60",$example{'test_data/long-fold-1'},$example{'test_data/long-fold-1.ans'});
+    &test("$nkf -jF60",$example{'test_data/long-fold-1'},$example{'test_data/long-fold-1.ans'});
 # test_data/long-fold
 
 $example{'test_data/long-fold'} = unpack('u',<<'eofeof');
@@ -523,7 +563,7 @@ M)&\D:R0D)#<A(B1()$$D920F)$<D021G)',D+B1L)&LD*R1B)#<D<QLH0@H;
 eofeof
 
 print "test_data/long-fold    ";
-    &test("$nkf -jTf60",$example{'test_data/long-fold'},$example{'test_data/long-fold.ans'});
+    &test("$nkf -jf60",$example{'test_data/long-fold'},$example{'test_data/long-fold.ans'});
 # test_data/mime_out
 
 $example{'test_data/mime_out'} = unpack('u',<<'eofeof');
@@ -618,7 +658,7 @@ M&R1")$8D)"0_)$`D)"1&)%XD.2$C&RA"#0H-"ALD0CMD)$\[?B$Y)6PE.21+
 eofeof
 
 print "test_data/non-strict-mime    ";
-    &test("$nkf -jTmN",$example{'test_data/non-strict-mime'},$example{'test_data/non-strict-mime.ans'});
+    &test("$nkf -jmN",$example{'test_data/non-strict-mime'},$example{'test_data/non-strict-mime.ans'});
 # test_data/q-encode-softrap
 
 $example{'test_data/q-encode-softrap'} = unpack('u',<<'eofeof');
@@ -630,7 +670,7 @@ $example{'test_data/q-encode-softrap.ans'} = unpack('u',<<'eofeof');
 eofeof
 
 print "test_data/q-encode-softrap    ";
-    &test("$nkf -jTmQ",$example{'test_data/q-encode-softrap'},$example{'test_data/q-encode-softrap.ans'});
+    &test("$nkf -jmQ",$example{'test_data/q-encode-softrap'},$example{'test_data/q-encode-softrap.ans'});
 # test_data/rot13
 
 $example{'test_data/rot13'} = unpack('u',<<'eofeof');
