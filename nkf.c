@@ -198,7 +198,7 @@ static char *Patchlevel =
 
 #define		UTF8           12
 #define		UTF8_INPUT     13
-#define		UTF16_INPUT    14
+#define		UTF16LE_INPUT  14
 #define		UTF16BE_INPUT  15
 
 #define         WISH_TRUE      15
@@ -376,7 +376,7 @@ static int             x0201_f = NO_X0201;     /* Assume NO JISX0201 */
 #endif
 static int             iso2022jp_f = FALSE;    /* convert ISO-2022-JP */
 #ifdef UTF8_OUTPUT_ENABLE
-static int             w_oconv16_begin_f= 0;   /* utf-16 header */
+static int             unicode_bom_f= 0;   /* Output Unicode BOM */
 static int             w_oconv16_LE = 0;   /* utf-16 little endian */
 #endif
 
@@ -443,7 +443,7 @@ STATIC void s_status PROTO((struct input_code *, int));
 #ifdef UTF8_INPUT_ENABLE
 STATIC void w_status PROTO((struct input_code *, int));
 STATIC void w16_status PROTO((struct input_code *, int));
-static int             utf16_mode = UTF16_INPUT;
+static int             utf16_mode = UTF16LE_INPUT;
 #endif
 
 struct input_code input_code_list[] = {
@@ -1082,17 +1082,23 @@ options(cp)
             if ('1'== cp[0] && '6'==cp[1]) {
 		output_conv = w_oconv16; cp+=2;
 		if (cp[0]=='L') {
-		    w_oconv16_begin_f=2; cp++;
+		    unicode_bom_f=2; cp++;
 		    w_oconv16_LE = 1;
                     if (cp[0] == '0'){
-                        w_oconv16_begin_f=1; cp++;
+                        unicode_bom_f=1; cp++;
                     }
 		} else if (cp[0] == 'B') {
-		    w_oconv16_begin_f=2; cp++;
+		    unicode_bom_f=2; cp++;
                     if (cp[0] == '0'){
-                        w_oconv16_begin_f=1; cp++;
+                        unicode_bom_f=1; cp++;
                     }
                 }
+	    } else if (cp[0] == '8') {
+		output_conv = w_oconv; cp++;
+		unicode_bom_f=2;
+		if (cp[0] == '0'){
+		    unicode_bom_f=1; cp++;
+		}
 	    } else
                 output_conv = w_oconv;
             continue;
@@ -1100,7 +1106,13 @@ options(cp)
 #ifdef UTF8_INPUT_ENABLE
         case 'W':           /* UTF-8 input */
             if ('1'== cp[0] && '6'==cp[1]) {
-		input_f = UTF16_INPUT;
+		input_f = UTF16LE_INPUT;
+		if (cp[0]=='L') {
+		    cp++;
+		} else if (cp[0] == 'B') {
+		    cp++;
+		    input_f = UTF16BE_INPUT;
+		}
 	    } else
                 input_f = UTF8_INPUT;
             continue;
@@ -1760,7 +1772,7 @@ module_connection()
 #ifdef UTF8_INPUT_ENABLE
     } else if (input_f == UTF8_INPUT) {
         set_iconv(-TRUE, w_iconv);
-    } else if (input_f == UTF16_INPUT) {
+    } else if (input_f == UTF16LE_INPUT) {
         set_iconv(-TRUE, w_iconv16);
 #endif
     } else {
@@ -2364,7 +2376,7 @@ w_iconv16(c2, c1, c0)
     int ret;
 
     if (c2==0376 && c1==0377){
-	utf16_mode = UTF16_INPUT;
+	utf16_mode = UTF16LE_INPUT;
 	return 0;    
     } else if (c2==0377 && c1==0376){
 	utf16_mode = UTF16BE_INPUT;
@@ -2462,7 +2474,16 @@ w_oconv(c2, c1)
     if (c2 == EOF) {
         (*o_putc)(EOF);
         return;
-    } else if (c2 == 0) { 
+    }
+
+    if (unicode_bom_f==2) {
+	(*o_putc)('\357');
+	(*o_putc)('\273');
+	(*o_putc)('\277');
+	unicode_bom_f=1;
+    }
+
+    if (c2 == 0) { 
 	output_mode = ASCII;
         (*o_putc)(c1);
     } else if (c2 == ISO8859_1) {
@@ -2489,7 +2510,7 @@ w_oconv16(c2, c1)
         return;
     }    
 
-    if (w_oconv16_begin_f==2) {
+    if (unicode_bom_f==2) {
         if (w_oconv16_LE){
             (*o_putc)((unsigned char)'\377');
             (*o_putc)('\376');
@@ -2497,7 +2518,7 @@ w_oconv16(c2, c1)
             (*o_putc)('\376');
             (*o_putc)((unsigned char)'\377');
         }
-	w_oconv16_begin_f=1;
+	unicode_bom_f=1;
     }
 
     if (c2 == ISO8859_1) {
@@ -3930,8 +3951,8 @@ reinit()
         }
     }
 #ifdef UTF8_OUTPUT_ENABLE
-    if (w_oconv16_begin_f) {
-	w_oconv16_begin_f = 2;
+    if (unicode_bom_f) {
+	unicode_bom_f = 2;
     }
 #endif
     f_line = 0;    
