@@ -109,7 +109,6 @@ static char *Patchlevel =
 
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #if defined(MSDOS) || defined(__OS2__) 
 #include <fcntl.h>
@@ -252,6 +251,7 @@ STATIC  int     h_conv PROTO((FILE *f,int c2,int c1));
 STATIC  int     push_hold_buf PROTO((int c2));
 STATIC  void    set_iconv PROTO((int f, int (*iconv_func)()));
 STATIC  int     s_iconv PROTO((int c2,int c1,int c0));
+STATIC  int     s2e_conv PROTO((int c2, int c1, int *p2, int *p1));
 STATIC  int     e_iconv PROTO((int c2,int c1,int c0));
 #ifdef UTF8_INPUT_ENABLE
 STATIC  int     w2e_conv PROTO((int c2,int c1,int c0,int *p2,int *p1));
@@ -277,6 +277,7 @@ STATIC  void    iso2022jp_check_conv PROTO((int c2,int c1));
 STATIC  void    no_connection PROTO((int c2,int c1));
 STATIC  int     no_connection2 PROTO((int c2,int c1,int c0));
 
+STATIC  int     code_score PROTO((int c2,int c1,int s));
 STATIC  void    code_status PROTO((int c));
 
 STATIC  void    std_putc PROTO((int c));
@@ -370,9 +371,15 @@ STATIC void debug PROTO((char *str));
 #endif
 
 static int             e_stat = 0;
+static int             e_score = 0;
+static int             e_buf[2];
 static int             s_stat = 0;
+static int             s_score = 0;
+static int             s_buf[2];
 #ifdef UTF8_INPUT_ENABLE
 static int             w_stat = 0;
+static int             w_score = 0;
+static int             w_buf[2];
 static int             utf16_mode = UTF16_INPUT;
 #else
 static int             w_stat = -1;
@@ -786,15 +793,15 @@ struct {
     {"utf16-input", "W16"},
 #endif
 #ifdef OVERWRITE
-    {"overwrite", "\0"},
+    {"overwrite", ""},
 #endif
 #ifdef CAP_URL_OPTION
-    {"cap-input", "\0"},
-    {"url-input", "\0"},
+    {"cap-input", ""},
+    {"url-input", ""},
 #endif
 #ifdef CHECK_OPTION
-    {"no-output", "\0"},
-    {"debug", "\0"},
+    {"no-output", ""},
+    {"debug", ""},
 #endif
 };
 
@@ -1099,6 +1106,41 @@ void set_iconv(f, iconv_func)
 #endif
 }
 
+#define SCORE_DEPEND   (1)                      /* 機種依存文字 */
+#define SCORE_NO_EXIST (SCORE_DEPEND << 1)      /* 存在しない文字 */
+#define SCORE_ERROR    (SCORE_NO_EXIST << 1)    /* エラー */
+int score_table_A0[] = {
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND,
+    SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND, SCORE_NO_EXIST,
+};
+
+int score_table_F0[] = {
+    0, 0, 0, 0,
+    0, SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST,
+    SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND,
+    SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST, SCORE_ERROR,
+};
+
+int code_score(c2, c1, s)
+     int c2, c1, s;
+{
+    if (c2 < 0){
+        s |= SCORE_ERROR;
+    }else if ((c2 & 0xf0) == 0xa0){
+        s |= score_table_A0[c2 & 0x0f];
+    }else if ((c2 & 0xf0) == 0xf0){
+        s |= score_table_F0[c2 & 0x0f];
+    }
+#ifdef UTF8_OUTPUT_ENABLE
+    else if (!e2w_conv(c2, c1)){
+        s |= SCORE_NO_EXIST;
+    }
+#endif
+    return s;
+}
+
 void
 code_status(c)
      int c;
@@ -1107,6 +1149,7 @@ code_status(c)
       case -1:
           if (c <= DEL && estab_f){
               s_stat = 0;
+              s_score = 0;
           }
           break;
       case 0:
@@ -1115,16 +1158,22 @@ code_status(c)
               break;
           }else if ((0x81 <= c && c < 0xa0) || (0xe0 <= c && c <= 0xea)){
               s_stat = 1;
+              s_buf[1] = c;
           }else{
               s_stat = -1;
+              s_score = code_score(-1, 0, s_score);
               if (iconv == s_iconv) set_iconv(FALSE, 0);
           }
           break;
       case 1:
           if ((0x40 <= c && c <= 0x7e) || (0x80 <= c && c <= 0xfd)){
               s_stat = 0;
+              s_buf[0] = c;
+              s2e_conv(s_buf[1], s_buf[0], &s_buf[1], &s_buf[0]);
+              s_score = code_score(s_buf[1], s_buf[0], s_score);
           }else{
               s_stat = -1;
+              s_score = code_score(-1, 0, s_score);
               if (iconv == s_iconv) set_iconv(FALSE, 0);
           }
           break;
@@ -1133,6 +1182,7 @@ code_status(c)
       case -1:
           if (c <= DEL && estab_f){
               e_stat = 0;
+              e_score = 0;
           }
           break;
       case 0:
@@ -1140,17 +1190,22 @@ code_status(c)
               break;
           }else if (SSO == c || (0xa1 <= c && c <= 0xfe)){
               e_stat = 1;
+              e_buf[1] = c;
           }else{
               e_stat = -1;
+              e_score = code_score(-1, 0, e_score);
               if (iconv == e_iconv) set_iconv(FALSE, 0);
           }
           break;
       case 1:
           if (0xa1 <= c && c <= 0xfe){
               e_stat = 0;
+              e_buf[0] = c;
+              e_score = code_score(e_buf[1], e_buf[0], e_score);
           }else{
               e_stat = -1;
               if (iconv == e_iconv) set_iconv(FALSE, 0);
+              e_score = code_score(-1, 0, e_score);
           }
           break;
     }
@@ -1159,17 +1214,22 @@ code_status(c)
       case -1:
           if (c <= DEL && estab_f){
               w_stat = 0;
+              w_score = 0;
           }
           break;
       case 0:
           if (c <= DEL){
               break;
           }else if (0xc0 <= c && c <= 0xdf){
+              w_buf[2] = 0;
               w_stat = 1;
+              w_buf[1] = c;
           }else if (0xe0 <= c && c <= 0xef){
               w_stat = 2;
+              w_buf[2] = c;
           }else{
               w_stat = -1;
+              w_score = code_score(-1, 0, w_score);
               if (iconv == w_iconv) set_iconv(FALSE, 0);
           }
           break;
@@ -1177,8 +1237,20 @@ code_status(c)
       case 2:
           if (0x80 <= c && c <= 0xbf){
               --w_stat;
+              w_buf[w_stat] = c;
+              if (w_stat == 0){
+                  if (w_buf[2]){
+                      w2e_conv(w_buf[2], w_buf[1], w_buf[0],
+                               &w_buf[1], &w_buf[0]);
+                  }else{
+                      w2e_conv(w_buf[1], w_buf[0], 0,
+                               &w_buf[1], &w_buf[0]);
+                  }
+                  w_score = code_score(w_buf[1], w_buf[0], w_score);
+              }
           }else{
               w_stat = -1;
+              w_score = code_score(-1, 0, w_score);
               if (iconv == w_iconv) set_iconv(FALSE, 0);
           }
           break;
@@ -1624,6 +1696,29 @@ h_conv(f, c2, c1)
             break;
         }
     }
+
+    if (!estab_f){
+        if (e_score <= s_score
+#ifdef UTF8_INPUT_ENABLE
+            && e_score <= w_score
+#endif
+            ){
+            set_iconv(FALSE, e_iconv);
+        }
+        else if (s_score <= e_score
+#ifdef UTF8_INPUT_ENABLE
+                 && s_score <= w_score
+#endif
+                 ){
+            set_iconv(FALSE, s_iconv);
+        }
+#ifdef UTF8_INPUT_ENABLE
+        else{
+            set_iconv(FALSE, w_iconv);
+        }
+#endif
+    }
+
 
     /** now,
      ** 1) EOF is detected, or
@@ -2530,6 +2625,8 @@ int      mime_encode_method[] = {
 
 /* I don't trust portablity of toupper */
 #define nkf_toupper(c)  (('a'<=c && c<='z')?(c-('a'-'A')):c)
+#define nkf_isdigit(c)  ('0'<=c && c<='9')
+#define nkf_isxdigit(c)  (nkf_isdigit(c) || ('a'<=c && c<='f') || ('A'<=c && c <= 'F'))
 
 void
 switch_mime_getc()
@@ -2703,7 +2800,7 @@ int
 hex2bin(x)
      int x;
 {
-    if (isdigit(x)) return x - '0';
+    if (nkf_isdigit(x)) return x - '0';
     return nkf_toupper(x) - 'A' + 10;
 }
 
@@ -2724,12 +2821,12 @@ hex_getc(ch, f, g, u)
         return c1;
     }
     c2 = (*g)(f);
-    if (!isxdigit(c2) == EOF){
+    if (!nkf_isxdigit(c2) == EOF){
         (*u)(c2, f);
         return c1;
     }
     c3 = (*g)(f);
-    if (!isxdigit(c3) == EOF){
+    if (!nkf_isxdigit(c3) == EOF){
         (*u)(c2, f);
         (*u)(c3, f);
         return c1;
