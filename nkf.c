@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.37 2004/11/08 14:15:14 naruse Exp $ */
+/* $Id: nkf.c,v 1.38 2004/11/09 13:08:39 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
-#define NKF_RELEASE_DATE "2004-11-08"
+#define NKF_RELEASE_DATE "2004-11-09"
 #include "config.h"
 
 static char *CopyRight =
@@ -938,6 +938,10 @@ options(cp)
     if (*cp++ != '-') 
 	return;
     while (*cp) {
+	if (p && !*cp) {
+	    cp = p;
+	    p = 0;
+	}
         switch (*cp++) {
         case '-':  /* literal options */
 	    if (!*cp) {        /* ignore the rest of arguments */
@@ -948,9 +952,9 @@ options(cp)
 		int j;
                 p = (unsigned char *)long_option[i].name;
                 for (j=0;*p && (*p != '=') && *p == cp[j];p++, j++);
-		if (*p == cp[j]){
-		  p = &cp[j];
-		  break;
+		if (!*p || *p == cp[j]){
+		    p = &cp[j];
+		    break;
 		}
 		p = 0;
             }
