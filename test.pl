@@ -16,7 +16,7 @@
 # nkf PDS version passes Basic Conversion tests  using "nkf -iB -oB "
 #
 
-$nkf = "./nkf";
+$nkf = 'MSWin32' eq $^O ? ".\\nkf" : "./nkf";
 # $nkf = "doscmd nkf.exe";
 
 # If you want to see the testing process, set next flag.
@@ -43,12 +43,13 @@ sub command_test {
     while(<IN>) {
 	$result .= $_;
     }
-    if( $nkf =~ /-m/) {
+
+    if( $nkf =~ /-\S*m/) {
 	$result =~ s/ //g;
     }
     $i = 0;
     foreach $ans (@ans) {
-	if( $nkf =~ /-m/) {
+	if( $nkf =~ /-\S*m/) {
 	    $ans =~ s/ //g;
 	}
         if ($result eq $ans) {

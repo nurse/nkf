@@ -43,12 +43,12 @@ sub library_test {
     $result = NKF::nkf(@nkf,$in);
     print "\nGOT:\n",$result if ($detail || $detail_all);
 
-    if( $nkf =~ /-m/) {
+    if( $nkf =~ /-\S*m/) {
         $result =~ s/ //g;
     }
     $i = 0;
     foreach $ans (@ans) {
-        if( $nkf =~ /-m/) {
+        if( $nkf =~ /-\S*m/) {
             $ans =~ s/ //g;
         }
         last if ($result eq $ans) ;
