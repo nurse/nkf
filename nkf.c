@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.42 2004/11/20 23:30:26 rei_furukawa Exp $ */
+/* $Id: nkf.c,v 1.43 2004/11/21 00:46:53 rei_furukawa Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2004-11-15"
 #include "config.h"
@@ -4233,6 +4233,7 @@ reinit()
 #ifdef UTF8_INPUT_ENABLE
     utf16_mode = UTF16LE_INPUT;
 #endif
+    mimeout_buf_count = 0;
     mimeout_mode = 0;
     base64_count = 0;
     f_line = 0;
