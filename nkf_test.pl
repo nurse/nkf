@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.9 2004/12/01 01:59:28 naruse Exp $
+# $Id: nkf_test.pl,v 1.10 2005/01/02 05:46:25 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -577,23 +577,36 @@ eofeof
 
 $example{'test_data/mime_out.ans'} = unpack('u',<<'eofeof');
 M"BTM+2T*4W5B:F5C=#H@86%A82!A86%A(&%A86$@86%A82!A86%A(&%A86$@
-M86%A82!A86%A(&%A86$@86%A80H@86%A82!A86%A(&%A86$@86%A82!A86%A
-M"BTM+2T*4W5B:F5C=#H@/3])4T\M,C`R,BU*4#]"/T=Y4D-*0TEK2D-1;4I#
-M9VM+:5%R2D,P:TQY47A*1$UK3E-1,T=Y:$,_/0H@/3])4T\M,C`R,BU*4#]"
-M/T=Y4D-*1&MK3WE1.4I$.&M14U)%2D59:U-#4DM*17-K5$-23DI%-&M4>5)3
-M2D95:U=#4F)'>6A#/ST*(#T_25-/+3(P,C(M2E`_0C]'>5)#2D8T:UAY4F=*
-M1T5K66E2:TI#46M::5%O2D=G8DM%23T_/0HM+2TM"E-U8FIE8W0Z(&%A86$@
-M86%A82!A86%A(&%A86$@86%A82!A86%A(&%A86$*(#T_25-/+3(P,C(M2E`_
-M0C]'>5)#2D-):TI#46U*0V=K2VAS;U%G/3T_/2!A86%A(&%A86$@86%A82!A
-086%A"B!A86%A"BTM+2T*"@``
+M86%A82!A86%A(&%A86$@86%A82!A86%A(&%A86$@86%A80H@86%A80HM+2TM
+M"E-U8FIE8W0Z(#T_25-/+3(P,C(M2E`_0C]'>5)#2D-):TI#46U*0V=K2VE1
+M<DI#,&M,>5%X2D1-:TY343-*1&MB2T5)/3\]"B`]/TE33RTR,#(R+4I0/T(_
+M1WE20TI$<VM04U$O2D5%:U)#4D=*16=K4VE23$I%=VM44U)/2D4X:U5I4E9*
+M1F=B2T5)/3\]"B`]/TE33RTR,#(R+4I0/T(_1WE20TI&<VM8:5)F2D=!:UE3
+M4FE*1U%K2D-2;4I#9VMA0G-O46<]/3\]"BTM+2T*4W5B:F5C=#H@86%A82!A
+M86%A(&%A86$@86%A82!A86%A(&%A86$@86%A80H@/3])4T\M,C`R,BU*4#]"
+M/T=Y4D-*0TEK2D-1;4I#9VM+:'-O46<]/3\](&%A86$@86%A82!A86%A(&%A
+)86$*+2TM+0H*
+eofeof
+
+$example{'test_data/mime_out.ans.alt'} = unpack('u',<<'eofeof');
+M"BTM+2T*4W5B:F5C=#H@86%A82!A86%A(&%A86$@86%A82!A86%A(&%A86$@
+M86%A82!A86%A(&%A86$*(&%A86$@86%A82!A86%A(&%A86$@86%A80HM+2TM
+M"E-U8FIE8W0Z(#T_25-/+3(P,C(M2E`_0C]'>5)#2D-):TI#46U*0V=K2VE1
+M<DI#,&M,>5%X2D1-:TY343-'>6A#/ST*(#T_25-/+3(P,C(M2E`_0C]'>5)#
+M2D1K:T]Y43E*1#AK45-214I%66M30U)+2D5S:U1#4DY*131K5'E24TI&56M7
+M0U)B1WEH0S\]"B`]/TE33RTR,#(R+4I0/T(_1WE20TI&-&M8>5)G2D=%:UEI
+M4FM*0U%K6FE1;TI'9V)+14D]/ST*+2TM+0I3=6)J96-T.B!A86%A(&%A86$@
+M86%A82!A86%A(&%A86$@86%A82!A86%A"B`]/TE33RTR,#(R+4I0/T(_1WE2
+M0TI#26M*0U%M2D-G:TMH<V]19ST]/ST@86%A82!A86%A(&%A86$*(&%A86$*
+&+2TM+0H*
 eofeof
 
 print "test_data/mime_out    ";
-    &test("$nkf -jM",$example{'test_data/mime_out'},$example{'test_data/mime_out.ans'});
+    &test("$nkf -jM",$example{'test_data/mime_out'},$example{'test_data/mime_out.ans'},$example{'test_data/mime_out.ans.alt'});
 # test_data/mime_out2
 
 $example{'test_data/mime_out2'} = unpack('u',<<'eofeof');
-M5&AI<R!M96UO(&1E<V-R:6)E<R!S:6UI;&%R('1E8VAN:7%U97,@=&\@86QL
+M5&AI<R!M96UO(&1E<V-R:6)E<R!S:6UI;&%R('1E8VAN:7%U97,@=&\@86QL\
 M;W<@=&AE(&5N8V]D:6YG(&]F(&YO;BU!4T-)22!T97AT(&EN('9A<FEO=7,@
 M<&]R=&EO;G,@;V8@82!21D,@.#(R(%LR72!M97-S86=E(&AE861E<BP@:6X@
 M82!M86YN97(@=VAI8V@@:7,@=6YL:6ME;'D@=&\@8V]N9G5S92!E>&ES=&EN
@@ -608,35 +621,64 @@ eofeof
 
 $example{'test_data/mime_out2.ans'} = unpack('u',<<'eofeof');
 M5&AI<R!M96UO(&1E<V-R:6)E<R!S:6UI;&%R('1E8VAN:7%U97,@=&\@86QL
-M;W<@=&AE(&5N8V]D:6YG(&5N8V]D:6YG"B!O9B!N;VXM05-#24D@=&5X="!I
-M;B!V87)I;W5S('!O<G1I;VYS(&]F(&$@80H@4D9#(#@R,B!;,ET@;65S<V%G
-M92!H96%D97(L(&EN(&$@;6%N;F5R('=H:6-H(&ES('5N;&EK96QY('5N;&EK
-M96QY"B!T;R!C;VYF=7-E(&5X:7-T:6YG(&UE<W-A9V4@:&%N9&QI;F<@<V]F
-M='=A<F4N"@I3=6)J96-T.B!T97-T,2!T97-T,B`]/TE33RTR,#(R+4I0/T(_
-M1WE20TI%66M/4U))2D-K8DM%23T_/2!T97-T,PH@/3])4T\M,C`R,BU*4#]"
-M/T=Y4D-*15EK3U-224I(36)+14D]/ST@=&5S=#0*"E-U8FIE8W0Z('1E<W0Q
-M("!T97-T,B`]/TE33RTR,#(R+4I0/T(_1WE20TI%66)+14EG1WE20TI$:V)+
-M14EG1WE20TI%9V)+14D]/ST*(#T_25-/+3(P,C(M2E`_0C]'>5)#1WEH0TE"
-M<VM1:5%P1WEH0S\]('1E<W0S(`H@/3])4T\M,C`R,BU*4#]"/T=Y4D-*15EK
-M3U-224I(36)+14D]/ST@('1E<W0T"@I!4T-)22`]/TE33RTR,#(R+4I0/T(_
-M1WE20U)N>$Q81&AS1WEH0S\]($%30TE)($%30TE)"B`]/TE33RTR,#(R+4I0
-M/T(_1WE20U)N>$Q81&AS1WEH0TE"<VM1:UHX4S%W-&)"<V]19ST]/ST@05-#
-M24D*(#T_25-/+3(P,C(M2E`_0C]15DY$4U5K8DI%2D=F171C3T=W8DM%23T_
-M/2!!4T-)20H*/3])4T\M,C`R,BU*4#]"/T=Y4D-*0TEB2T5)9T=Y4D-*0U%B
-M2T5)9T=Y4D-*0UEB2T5)9T=Y4D-*0V=B2T5)/3\]"B`]/TE33RTR,#(R+4I0
-M/T(_24)S:U%I47%'>6A#24)S:U%I47)'>6A#24)S:U%I471'>6A#24)S:U%I
-M479'>6A#/ST*(#T_25-/+3(P,C(M2E`_0C])0G-K46E1>$=Y:$-)0G-K46E1
-M>D=Y:$-)0G-K46E1,4=Y:$-)0G-K46E1,T=Y:$,_/0H@/3])4T\M,C`R,BU*
-M4#]"/TE"<VM1:5$U1WEH0TE"<VM1:5$W1WEH0TE"<VM1:5$Y1WEH0TE"<VM1
-M:5$O1WEH0S\]"B`]/TE33RTR,#(R+4I0/T(_24)S:U%I4D)'>6A#24)S:U%I
-M4D5'>6A#24)S:U%I4D='>6A#24)S:U%I4DE'>6A#/ST*(#T_25-/+3(P,C(M
-M2E`_0C])0G-K46E22T=Y:$-)0G-K46E23$=Y:$-)0G-K46E234=Y:$-)0G-K
-M46E23D=Y:$,_/0H@/3])4T\M,C`R,BU*4#]"/TE"<VM1:5)/1WEH0S\]"@H*
--"@H*"@H*"@H*"@H*"@``
+M;W<@=&AE(&5N8V]D:6YG(&]F(&YO;BU!4T-)20H@=&5X="!I;B!V87)I;W5S
+M('!O<G1I;VYS(&]F(&$@4D9#(#@R,B!;,ET@;65S<V%G92!H96%D97(L(&EN
+M(&$@;6%N;F5R"B!W:&EC:"!I<R!U;FQI:V5L>2!T;R!C;VYF=7-E(&5X:7-T
+M:6YG(&UE<W-A9V4@:&%N9&QI;F<@<V]F='=A<F4N"@I3=6)J96-T.B!T97-T
+M,2!T97-T,B`]/TE33RTR,#(R+4I0/T(_1WE20TI%66M/4U))2D-K8DM%23T_
+M/2!T97-T,PH@/3])4T\M,C`R,BU*4#]"/T=Y4D-*15EK3U-224I(36)+14D]
+M/ST@=&5S=#0*"E-U8FIE8W0Z('1E<W0Q("!T97-T,B`]/TE33RTR,#(R+4I0
+M/T(_1WE20TI%66)+14EG1WE20TI$:V)+14D]/ST*(#T_25-/+3(P,C(M2E`_
+M0C]'>5)#2D5G8DM%26='>5)#2D-K8DM%23T_/2!T97-T,R`*(#T_25-/+3(P
+M,C(M2E`_0C]'>5)#2D59:T]34DE*2$UB2T5)/3\]("!T97-T-`H*05-#24D@
+M/3])4T\M,C`R,BU*4#]"/T=Y4D-2;GA,6$1H<T=Y:$,_/2!!4T-)22!!4T-)
+M20H@/3])4T\M,C`R,BU*4#]"/T=Y4D-2;GA,6$1H<T=Y:$-)0G-K46M:.%,Q
+M=S1B0G-O46<]/3\]($%30TE)"B`]/TE33RTR,#(R+4I0/T(_459.1%-5:V)*
+M14I'9D5T8T]'=V)+14D]/ST@05-#24D*"CT_25-/+3(P,C(M2E`_0C]'>5)#
+M2D-)8DM%26='>5)#2D-18DM%26='>5)#2D-98DM%26='>5)#2D-G8DM%26<_
+M/0H@/3])4T\M,C`R,BU*4#]"/T=Y4D-*0V]B2T5)9T=Y4D-*0W-B2T5)9T=Y
+M4D-*0S!B2T5)9T=Y4D-*0SAB2T5)9S\]"B`]/TE33RTR,#(R+4I0/T(_1WE2
+M0TI$16)+14EG1WE20TI$36)+14EG1WE20TI$56)+14EG1WE20TI$8V)+14EG
+M/ST*(#T_25-/+3(P,C(M2E`_0C]'>5)#2D1K8DM%26='>5)#2D1S8DM%26='
+M>5)#2D0P8DM%26='>5)#2D0X8DM%26<_/0H@/3])4T\M,C`R,BU*4#]"/T=Y
+M4D-*145B2T5)9T=Y4D-*15%B2T5)9T=Y4D-*15EB2T5)9T=Y4D-*16=B2T5)
+M9S\]"B`]/TE33RTR,#(R+4I0/T(_1WE20TI%;V)+14EG1WE20TI%<V)+14EG
+M1WE20TI%=V)+14EG1WE20TI%,&)+14EG/ST*(#T_25-/+3(P,C(M2E`_0C]'
+=>5)#2D4T8DM%23T_/0H*"@H*"@H*"@H*"@H*"@H`
+eofeof
+
+$example{'test_data/mime_out2.ans.alt'} = unpack('u',<<'eofeof');
+M5&AI<R!M96UO(&1E<V-R:6)E<R!S:6UI;&%R('1E8VAN:7%U97,@=&\@86QL
+M;W<@=&AE(&5N8V]D:6YG"B!O9B!N;VXM05-#24D@=&5X="!I;B!V87)I;W5S
+M('!O<G1I;VYS(&]F(&$@4D9#(#@R,B!;,ET*(&UE<W-A9V4@:&5A9&5R+"!I
+M;B!A(&UA;FYE<B!W:&EC:"!I<R!U;FQI:V5L>2!T;R!C;VYF=7-E(&5X:7-T
+M:6YG"B!M97-S86=E(&AA;F1L:6YG('-O9G1W87)E+@H*4W5B:F5C=#H@=&5S
+M=#$@=&5S=#(@/3])4T\M,C`R,BU*4#]"/T=Y4D-*15EK3U-224I#:V)+14D]
+M/ST@=&5S=#,*(#T_25-/+3(P,C(M2E`_0C]'>5)#2D59:T]34DE*2$UB2T5)
+M/3\]('1E<W0T"@I3=6)J96-T.B!T97-T,2`@=&5S=#(@/3])4T\M,C`R,BU*
+M4#]"/T=Y4D-*15EB2T5)9T=Y4D-*1&MB2T5)9T=Y4D-*16=B2T5)/3\]"B`]
+M/TE33RTR,#(R+4I0/T(_1WE20T=Y:$-)0G-K46E1<$=Y:$,_/2!T97-T,R`*
+M(#T_25-/+3(P,C(M2E`_0C]'>5)#2D59:T]34DE*2$UB2T5)/3\]("!T97-T
+M-`H*05-#24D@/3])4T\M,C`R,BU*4#]"/T=Y4D-2;GA,6$1H<T=Y:$,_/2!!
+M4T-)22!!4T-)20H@/3])4T\M,C`R,BU*4#]"/T=Y4D-2;GA,6$1H<T=Y:$-)
+M0G-K46M:.%,Q=S1B0G-O46<]/3\]($%30TE)"B`]/TE33RTR,#(R+4I0/T(_
+M459.1%-5:V)*14I'9D5T8T]'=V)+14D]/ST@05-#24D*"CT_25-/+3(P,C(M
+M2E`_0C]'>5)#2D-)8DM%26='>5)#2D-18DM%26='>5)#2D-98DM%26='>5)#
+M2D-G8DM%26='>5)#2D-O8DM%23T_/0H@/3])4T\M,C`R,BU*4#]"/T=Y4D-'
+M>6A#24)S:U%I47)'>6A#24)S:U%I471'>6A#24)S:U%I479'>6A#24)S:U%I
+M47A'>6A#/ST*(#T_25-/+3(P,C(M2E`_0C]'>5)#1WEH0TE"<VM1:5%Z1WEH
+M0TE"<VM1:5$Q1WEH0TE"<VM1:5$S1WEH0TE"<VM1:5$U1WEH0S\]"B`]/TE3
+M3RTR,#(R+4I0/T(_1WE20T=Y:$-)0G-K46E1-T=Y:$-)0G-K46E1.4=Y:$-)
+M0G-K46E1+T=Y:$-)0G-K46E20D=Y:$,_/0H@/3])4T\M,C`R,BU*4#]"/T=Y
+M4D-'>6A#24)S:U%I4D5'>6A#24)S:U%I4D='>6A#24)S:U%I4DE'>6A#24)S
+M:U%I4DM'>6A#/ST*(#T_25-/+3(P,C(M2E`_0C]'>5)#1WEH0TE"<VM1:5),
+M1WEH0TE"<VM1:5)-1WEH0TE"<VM1:5).1WEH0TE"<VM1:5)/1WEH0S\]"B`]
+I/TE33RTR,#(R+4I0/T(_1WE20T=Y:$,_/0H*"@H*"@H*"@H*"@H*"@H`
 eofeof
 
 print "test_data/mime_out2    ";
-    &test("$nkf -jM",$example{'test_data/mime_out2'},$example{'test_data/mime_out2.ans'});# test_data/multi-line
+    &test("$nkf -jM",$example{'test_data/mime_out2'},$example{'test_data/mime_out2.ans'},$example{'test_data/mime_out2.ans.alt'});
+# test_data/multi-line
 
 $example{'test_data/multi-line'} = unpack('u',<<'eofeof');
 MI,JDK*2DI,JDK*2DI,JDK*'!I*2DKJ3GI*:DK*2BI.JDWJ2WI,:AH@"DLZ3L
