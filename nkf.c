@@ -2320,19 +2320,27 @@ int c2,c1;
     int prev0;
     int fold_state=0;
 
-    if (c1== '\r') {
-    	fold_state=0;  /* ignroe cr */
+    if (c1== '\r' && !fold_preserve_f) {
+    	fold_state=0;  /* ignore cr */
+    }else if (c1== '\n'&&f_prev=='\r' && fold_preserve_f) {
+        f_prev = '\n';
+     	fold_state=0;  /* ignore cr */
     } else if (c1== BS) {
         if (f_line>0) f_line--;
         fold_state =  1;
     } else if (c2==EOF && f_line != 0) {    /* close open last line */
             fold_state = '\n';
-    } else if (c1=='\n') {
+    } else if ((c1=='\n' && !fold_preserve_f)
+               || ((c1=='\r'||(c1=='\n'&&f_prev!='\r'))
+                   && fold_preserve_f)) {
         /* new line */
         if (fold_preserve_f) { 
-                f_line = 0;
-                fold_state =  '\r';
-	} else if (f_prev == c1) {        /* duplicate newline */
+            f_prev = c1;
+            f_line = 0;
+            fold_state =  '\r';
+	} else if ((f_prev == c1 && !fold_preserve_f)
+                   || (f_prev == '\n' && fold_preserve_f)
+                   ) {        /* duplicate newline */
             if (f_line) {
                 f_line = 0;
                 fold_state =  '\n';    /* output two newline */
