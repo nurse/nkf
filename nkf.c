@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.56 2005/02/02 17:52:31 naruse Exp $ */
+/* $Id: nkf.c,v 1.57 2005/02/02 18:10:11 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
-#define NKF_RELEASE_DATE "2005-01-01"
+#define NKF_RELEASE_DATE "2005-02-02"
 #include "config.h"
 
 static char *CopyRight =
@@ -4629,7 +4629,8 @@ usage()
     fprintf(stderr," --fj,--unix,--mac,--windows                        convert for the system\n");
     fprintf(stderr," --jis,--euc,--sjis,--utf8,--utf16,--mime,--base64  convert for the code\n");
     fprintf(stderr," --hiragana, --katakana    Hiragana/Katakana Conversion\n");
-    fprintf(stderr," --cp932, --no-cp932       CP932 compatible\n");
+    fprintf(stderr," --x0212                   Convert JISX0212\n");
+    fprintf(stderr," --cp932, --no-cp932       CP932 compatibility\n");
 #ifdef INPUT_OPTION
     fprintf(stderr," --cap-input, --url-input  Convert hex after ':' or '%%'\n");
 #endif
