@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.40 2004/11/19 15:18:43 naruse Exp $ */
+/* $Id: nkf.c,v 1.41 2004/11/20 08:14:44 rei_furukawa Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2004-11-15"
 #include "config.h"
@@ -1660,21 +1660,17 @@ code_status(c)
     }
 }
 
-#ifdef PERL_XS
 #define STD_GC_BUFSIZE (256)
 int std_gc_buf[STD_GC_BUFSIZE];
 int std_gc_ndx;
-#endif
 
 int 
 std_getc(f)
 FILE *f;
 {
-#ifdef PERL_XS
     if (std_gc_ndx){
         return std_gc_buf[--std_gc_ndx];
     }
-#endif
     return getc(f);
 }
 
@@ -1683,14 +1679,11 @@ std_ungetc(c,f)
 int c;
 FILE *f;
 {
-#ifdef PERL_XS
     if (std_gc_ndx == STD_GC_BUFSIZE){
         return EOF;
     }
     std_gc_buf[std_gc_ndx++] = c;
     return c;
-#endif
-    return ungetc(c,f);
 }
 
 void 
