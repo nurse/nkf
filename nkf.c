@@ -39,6 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
+/* $Id */
+#define NKF_VERSION "2.0.4"
+#define NKF_RELEASE_DATE "2004-11-06"
 #include "config.h"
 
 static char *CopyRight =
@@ -468,8 +471,8 @@ static int             fold_f  = FALSE;
 static int             fold_len  = 0;
 
 /* options */
-static unsigned char   kanji_intro = DEFAULT_J,
-                       ascii_intro = DEFAULT_R;
+static unsigned char   kanji_intro = DEFAULT_J;
+static unsigned char   ascii_intro = DEFAULT_R;
 
 /* Folding */
 
@@ -924,7 +927,7 @@ struct {
     {"prefix=", ""},
 };
 
-static int option_mode;
+static int option_mode = 0;
 
 void
 options(cp) 
@@ -3895,97 +3898,104 @@ mime_putc(c)
 void 
 reinit()
 {
-    unbuf_f = FALSE;
-    estab_f = FALSE;
-    nop_f = FALSE;
-    binmode_f = TRUE;       
-    rot_f = FALSE;         
-    hira_f = FALSE;         
-    input_f = FALSE;      
-    alpha_f = FALSE;     
-    mime_f = STRICT_MIME; 
-    mimebuf_f = FALSE; 
-    broken_f = FALSE;  
-    iso8859_f = FALSE; 
-#if defined(MSDOS) || defined(__OS2__) 
-     x0201_f = TRUE;   
-#else
-     x0201_f = NO_X0201;
-#endif
-    iso2022jp_f = FALSE;
-
-    kanji_intro = DEFAULT_J;
-    ascii_intro = DEFAULT_R;
-
-    output_conv = DEFAULT_CONV; 
-    oconv = DEFAULT_CONV; 
-
-    i_mgetc  = std_getc; 
-    i_mungetc  = std_ungetc;
-    i_mgetc_buf = std_getc; 
-    i_mungetc_buf = std_ungetc;
-
-    i_getc= std_getc; 
-    i_ungetc=std_ungetc;
-
-    i_bgetc= std_getc;
-    i_bungetc= std_ungetc;
-
-    o_putc = std_putc;
-    o_mputc = std_putc;
-    o_crconv = no_connection; 
-    o_rot_conv = no_connection; 
-    o_iso2022jp_check_conv = no_connection;
-    o_hira_conv = no_connection; 
-    o_fconv = no_connection; 
-    o_zconv = no_connection;
-
-    i_getc = std_getc;
-    i_ungetc = std_ungetc;
-    i_mgetc = std_getc; 
-    i_mungetc = std_ungetc; 
-
-    output_mode = ASCII;
-    input_mode =  ASCII;
-    shift_mode =  FALSE;
-    mime_decode_mode =   FALSE;
-    file_out = FALSE;
-    mimeout_mode = 0;
-    mimeout_f = FALSE;
-    base64_count = 0;
-    option_mode = 0;
-    crmode_f = 0;
-
     {
         struct input_code *p = input_code_list;
         while (p->name){
             status_reinit(p++);
         }
     }
-#ifdef UTF8_OUTPUT_ENABLE
-    if (unicode_bom_f) {
-	unicode_bom_f = 2;
-    }
+    unbuf_f = FALSE;
+    estab_f = FALSE;
+    nop_f = FALSE;
+    binmode_f = TRUE;
+    rot_f = FALSE;
+    hira_f = FALSE;
+    input_f = FALSE;
+    alpha_f = FALSE;
+    mime_f = STRICT_MIME;
+    mimebuf_f = FALSE;
+    broken_f = FALSE;
+    iso8859_f = FALSE;
+    mimeout_f = FALSE;
+#if defined(MSDOS) || defined(__OS2__)
+     x0201_f = TRUE;
+#else
+     x0201_f = NO_X0201;
 #endif
-    f_line = 0;    
-    f_prev = 0;
-    fold_preserve_f = FALSE; 
-    fold_f  = FALSE;
-    fold_len  = 0;
-    fold_margin  = FOLD_MARGIN;
-    broken_counter = 0;
-    broken_last = 0;
-    z_prev2=0,z_prev1=0;
-
+    iso2022jp_f = FALSE;
+#ifdef UTF8_OUTPUT_ENABLE
+    unicode_bom_f = 0;
+    w_oconv16_LE = 0;
+    ms_ucs_map_f = FALSE;
+#endif
+#ifdef INPUT_OPTION
+    cap_f = FALSE;
+    url_f = FALSE;
+    numchar_f = FALSE;
+#endif
+#ifdef CHECK_OPTION
+    noout_f = FALSE;
+    debug_f = FALSE;
+#endif
+    guess_f = FALSE;
+    is_inputcode_mixed = FALSE;
+    is_inputcode_set   = FALSE;
+#ifdef EXEC_IO
+    exec_f = 0;
+#endif
+#ifdef SHIFTJIS_CP932
+    cp932_f = TRUE;
+    cp932inv_f = FALSE;
+#endif
     {
         int i;
         for (i = 0; i < 256; i++){
             prefix_table[i] = 0;
         }
     }
-    input_codename = "";
-    is_inputcode_mixed = FALSE;
-    is_inputcode_set   = FALSE;
+#ifdef UTF8_INPUT_ENABLE
+    utf16_mode = UTF16LE_INPUT;
+#endif
+    mimeout_mode = 0;
+    base64_count = 0;
+    f_line = 0;
+    f_prev = 0;
+    fold_preserve_f = FALSE;
+    fold_f = FALSE;
+    fold_len = 0;
+    kanji_intro = DEFAULT_J;
+    ascii_intro = DEFAULT_R;
+    fold_margin  = FOLD_MARGIN;
+    output_conv = DEFAULT_CONV;
+    oconv = DEFAULT_CONV;
+    o_zconv = no_connection;
+    o_fconv = no_connection;
+    o_crconv = no_connection;
+    o_rot_conv = no_connection;
+    o_hira_conv = no_connection;
+    o_base64conv = no_connection;
+    o_iso2022jp_check_conv = no_connection;
+    o_putc = std_putc;
+    i_getc = std_getc;
+    i_ungetc = std_ungetc;
+    i_bgetc = std_getc;
+    i_bungetc = std_ungetc;
+    o_mputc = std_putc;
+    i_mgetc = std_getc;
+    i_mungetc  = std_ungetc;
+    i_mgetc_buf = std_getc;
+    i_mungetc_buf = std_ungetc;
+    output_mode = ASCII;
+    input_mode =  ASCII;
+    shift_mode =  FALSE;
+    mime_decode_mode = FALSE;
+    file_out = FALSE;
+    crmode_f = 0;
+    option_mode = 0;
+    broken_counter = 0;
+    broken_last = 0;
+    z_prev2=0,z_prev1=0;
+
 }
 #endif
 
