@@ -83,7 +83,7 @@ eofeof
 
 # From JIS
 
-print "JIS  to JIS ... ";&test("$nkf   ",$example{'jis'},$example{'jis'});
+print "JIS  to JIS ... ";&test("$nkf -j",$example{'jis'},$example{'jis'});
 print "JIS  to SJIS... ";&test("$nkf -s",$example{'jis'},$example{'sjis'});
 print "JIS  to EUC ... ";&test("$nkf -e",$example{'jis'},$example{'euc'});
 print "JIS  to UTF8... ";&test("$nkf -w",$example{'jis'},$example{'utf'});
@@ -97,14 +97,14 @@ print "SJIS to UTF8... ";&test("$nkf -w",$example{'sjis'},$example{'utf'});
 
 # From EUC
 
-print "EUC  to JIS ... ";&test("$nkf   ",$example{'euc'},$example{'jis'});
+print "EUC  to JIS ... ";&test("$nkf -j",$example{'euc'},$example{'jis'});
 print "EUC  to SJIS... ";&test("$nkf -s",$example{'euc'},$example{'sjis'});
 print "EUC  to EUC ... ";&test("$nkf -e",$example{'euc'},$example{'euc'});
 print "EUC  to UTF8... ";&test("$nkf -w",$example{'euc'},$example{'utf'});
 
 # From UTF8
 
-print "UTF8 to JIS ... ";&test("$nkf   ",$example{'utf'},$example{'jis'});
+print "UTF8 to JIS ... ";&test("$nkf -j",$example{'utf'},$example{'jis'});
 print "UTF8 to SJIS... ";&test("$nkf -s",$example{'utf'},$example{'sjis'});
 print "UTF8 to EUC ... ";&test("$nkf -e",$example{'utf'},$example{'euc'});
 print "UTF8 to UTF8... ";&test("$nkf -w",$example{'utf'},$example{'utf'});
@@ -113,7 +113,7 @@ print "UTF8 to UTF8... ";&test("$nkf -w",$example{'utf'},$example{'utf'});
 
 # From JIS
 
-print "JIS  to JIS ... ";&test("$nkf   ",$example{'jis1'},$example{'jis1'});
+print "JIS  to JIS ... ";&test("$nkf -j",$example{'jis1'},$example{'jis1'});
 print "JIS  to SJIS... ";&test("$nkf -s",$example{'jis1'},$example{'sjis1'});
 print "JIS  to EUC ... ";&test("$nkf -e",$example{'jis1'},$example{'euc1'});
 print "JIS  to UTF8... ";&test("$nkf -w",$example{'jis1'},$example{'utf1'});
@@ -127,14 +127,14 @@ print "SJIS to UTF8... ";&test("$nkf -w",$example{'sjis1'},$example{'utf1'});
 
 # From EUC
 
-print "EUC  to JIS ... ";&test("$nkf   ",$example{'euc1'},$example{'jis1'});
+print "EUC  to JIS ... ";&test("$nkf -j",$example{'euc1'},$example{'jis1'});
 print "EUC  to SJIS... ";&test("$nkf -s",$example{'euc1'},$example{'sjis1'});
 print "EUC  to EUC ... ";&test("$nkf -e",$example{'euc1'},$example{'euc1'});
 print "EUC  to UTF8... ";&test("$nkf -w",$example{'euc1'},$example{'utf1'});
 
 # From UTF8
 
-print "UTF8 to JIS ... ";&test("$nkf   ",$example{'utf1'},$example{'jis1'});
+print "UTF8 to JIS ... ";&test("$nkf -j",$example{'utf1'},$example{'jis1'});
 print "UTF8 to SJIS... ";&test("$nkf -s",$example{'utf1'},$example{'sjis1'});
 print "UTF8 to EUC ... ";&test("$nkf -e",$example{'utf1'},$example{'euc1'});
 print "UTF8 to UTF8... ";&test("$nkf -w",$example{'utf1'},$example{'utf1'});
@@ -174,12 +174,12 @@ M)4(;*$(*&RA))4(P,25",#$E0C`Q)4(P,25",#$E0C`Q)4(P,25",#$E0C`Q
 eofeof
 
 print "Ambiguous Case. ";
-    &test("$nkf",$example{'amb'},$example{'amb.euc'});
+    &test("$nkf -j",$example{'amb'},$example{'amb.euc'});
 
 # Input assumption
 
 print "SJIS  Input assumption ";
-    &test("$nkf -Sx",$example{'amb'},$example{'amb.sjis'});
+    &test("$nkf -jSx",$example{'amb'},$example{'amb.sjis'});
 
 # Broken JIS
 
@@ -256,15 +256,15 @@ eofeof
 # -X is necessary to allow X0201 in SJIS
 # -Z convert X0208 alphabet to ASCII
 print "X0201 conversion: SJIS ";
-    &test("$nkf -XZ",$example{'x0201.sjis'},$example{'x0201.x0208'});
+    &test("$nkf -jXZ",$example{'x0201.sjis'},$example{'x0201.x0208'});
 print "X0201 conversion: JIS  ";
-    &test("$nkf -Z",$example{'x0201.jis'},$example{'x0201.x0208'});
+    &test("$nkf -jZ",$example{'x0201.jis'},$example{'x0201.x0208'});
 print "X0201 conversion:SI/SO ";
-    &test("$nkf -Z",$example{'x0201.sosi'},$example{'x0201.x0208'});
+    &test("$nkf -jZ",$example{'x0201.sosi'},$example{'x0201.x0208'});
 print "X0201 conversion: EUC  ";
-    &test("$nkf -Z",$example{'x0201.euc'},$example{'x0201.x0208'});
+    &test("$nkf -jZ",$example{'x0201.euc'},$example{'x0201.x0208'});
 print "X0201 conversion: UTF8 ";
-    &test("$nkf -Z",$example{'x0201.utf'},$example{'x0201.x0208'});
+    &test("$nkf -jZ",$example{'x0201.utf'},$example{'x0201.x0208'});
 # -x means X0201 output
 print "X0201 output: SJIS     ";
     &test("$nkf -xs",$example{'x0201.euc'},$example{'x0201.sjis'});
@@ -342,7 +342,7 @@ eofeof
 
 # print "Next test is expected to Fail.\n";
 print "MIME decode (strict)   ";
-    $tmp = &test("$nkf -mS",$example{'mime.iso2022'},$example{'mime.ans.strict'});
+    $tmp = &test("$nkf -jmS",$example{'mime.iso2022'},$example{'mime.ans.strict'});
 
 $example{'mime.ans.alt'} = unpack('u',<<'eofeof');
 M&R1"-$$[>B1.)48E.25(&RA""ALD0C1!.WHD3B5&)3DE2!LH0@H;)$(D1B11
@@ -359,14 +359,14 @@ H.WHD3C\I.W8T03MZ)$X_*3MV&RA""ALD0C1!.WHD3B5&)3DE)!LH0@``
 eofeof
 
 print "MIME decode (nonstrict)";
-    $tmp = &test("$nkf -mN",$example{'mime.iso2022'},$example{'mime.ans'},$example{'mime.ans.alt'});
+    $tmp = &test("$nkf -jmN",$example{'mime.iso2022'},$example{'mime.ans'},$example{'mime.ans.alt'});
     # open(OUT,">tmp1");print OUT pack('u',$tmp);close(OUT);
 # unbuf mode implies more pessimistic decode
 print "MIME decode (unbuf)    ";
-    $tmp = &test("$nkf -mNu",$example{'mime.iso2022'},$example{'mime.unbuf'},$example{'mime.unbuf.alt'});
+    $tmp = &test("$nkf -jmNu",$example{'mime.iso2022'},$example{'mime.unbuf'},$example{'mime.unbuf.alt'});
     # open(OUT,">tmp2");print OUT pack('u',$tmp);close(OUT);
 print "MIME decode (base64)   ";
-    &test("$nkf -mB",$example{'mime.base64'},$example{'mime.base64.ans'});
+    &test("$nkf -jTmB",$example{'mime.base64'},$example{'mime.base64.ans'});
 
 # MIME ISO-8859-1
 
@@ -404,7 +404,7 @@ $example{'test_data/cr.ans'} = unpack('u',<<'eofeof');
 eofeof
 
 print "test_data/cr    ";
-    &test("$nkf -d",$example{'test_data/cr'},$example{'test_data/cr.ans'});
+    &test("$nkf -jd",$example{'test_data/cr'},$example{'test_data/cr.ans'});
 # test_data/fixed-qencode
 
 $example{'test_data/fixed-qencode'} = unpack('u',<<'eofeof');
@@ -417,7 +417,7 @@ F("`@("`@("`;)$(^93\]&RA""B`@("`@("`@&R1"/F4_/1LH0@H`
 eofeof
 
 print "test_data/fixed-qencode    ";
-    &test("$nkf -mQ",$example{'test_data/fixed-qencode'},$example{'test_data/fixed-qencode.ans'});
+    &test("$nkf -jmQ",$example{'test_data/fixed-qencode'},$example{'test_data/fixed-qencode.ans'});
 # test_data/long-fold-1
 
 $example{'test_data/long-fold-1'} = unpack('u',<<'eofeof');
@@ -439,7 +439,7 @@ M4B`;)$(D3CE4(2,;*$(*"ALD0B0S)#,D3QLH0B!,1B`;)$(D3CE4(2,;*$(*
 eofeof
 
 print "test_data/long-fold-1    ";
-    &test("$nkf -F60",$example{'test_data/long-fold-1'},$example{'test_data/long-fold-1.ans'});
+    &test("$nkf -jTF60",$example{'test_data/long-fold-1'},$example{'test_data/long-fold-1.ans'});
 # test_data/long-fold
 
 $example{'test_data/long-fold'} = unpack('u',<<'eofeof');
@@ -457,7 +457,7 @@ M)&\D:R0D)#<A(B1()$$D920F)$<D021G)',D+B1L)&LD*R1B)#<D<QLH0@H;
 eofeof
 
 print "test_data/long-fold    ";
-    &test("$nkf -f60",$example{'test_data/long-fold'},$example{'test_data/long-fold.ans'});
+    &test("$nkf -jTf60",$example{'test_data/long-fold'},$example{'test_data/long-fold.ans'});
 # test_data/mime_out
 
 $example{'test_data/mime_out'} = unpack('u',<<'eofeof');
@@ -483,7 +483,7 @@ J:5%O2D-O8DM%23T_/2`@86%A80H@86%A82!A86%A(&%A86$*+2TM+0H*
 eofeof
 
 print "test_data/mime_out    ";
-    &test("$nkf -M",$example{'test_data/mime_out'},$example{'test_data/mime_out.ans'});
+    &test("$nkf -jM",$example{'test_data/mime_out'},$example{'test_data/mime_out.ans'});
 # test_data/multi-line
 
 $example{'test_data/multi-line'} = unpack('u',<<'eofeof');
@@ -552,7 +552,7 @@ M&R1")$8D)"0_)$`D)"1&)%XD.2$C&RA"#0H-"ALD0CMD)$\[?B$Y)6PE.21+
 eofeof
 
 print "test_data/non-strict-mime    ";
-    &test("$nkf -mN",$example{'test_data/non-strict-mime'},$example{'test_data/non-strict-mime.ans'});
+    &test("$nkf -jTmN",$example{'test_data/non-strict-mime'},$example{'test_data/non-strict-mime.ans'});
 # test_data/q-encode-softrap
 
 $example{'test_data/q-encode-softrap'} = unpack('u',<<'eofeof');
@@ -564,7 +564,7 @@ $example{'test_data/q-encode-softrap.ans'} = unpack('u',<<'eofeof');
 eofeof
 
 print "test_data/q-encode-softrap    ";
-    &test("$nkf -mQ",$example{'test_data/q-encode-softrap'},$example{'test_data/q-encode-softrap.ans'});
+    &test("$nkf -jTmQ",$example{'test_data/q-encode-softrap'},$example{'test_data/q-encode-softrap.ans'});
 # test_data/rot13
 
 $example{'test_data/rot13'} = unpack('u',<<'eofeof');
@@ -584,7 +584,7 @@ A&RA""@HE(')P=6(@)W5B='(G('P@87AS("UE"G5B='(*
 eofeof
 
 print "test_data/rot13    ";
-    &test("$nkf -r",$example{'test_data/rot13'},$example{'test_data/rot13.ans'});
+    &test("$nkf -jr",$example{'test_data/rot13'},$example{'test_data/rot13.ans'});
 # test_data/slash
 
 $example{'test_data/slash'} = unpack('u',<<'eofeof');
