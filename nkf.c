@@ -55,8 +55,8 @@ static char *Patchlevel =
 ** USAGE:       nkf [flags] [file] 
 **
 ** Flags:
-** b    Output is bufferred             (DEFAULT)
-** u    Output is unbufferred
+** b    Output is buffered             (DEFAULT)
+** u    Output is unbuffered
 **
 ** t    no operation
 **
@@ -3876,7 +3876,7 @@ usage()
 {
     fprintf(stderr,"USAGE:  nkf(nkf32,wnkf,nkf2) -[flags] [in file] .. [out file for -O flag]\n");
     fprintf(stderr,"Flags:\n");
-    fprintf(stderr,"b,u      Output is bufferred (DEFAULT),Output is unbufferred\n");
+    fprintf(stderr,"b,u      Output is buffered (DEFAULT),Output is unbuffered\n");
 #ifdef DEFAULT_CODE_SJIS
     fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS (DEFAULT), AT&T JIS (EUC), UTF-8\n");
 #endif
