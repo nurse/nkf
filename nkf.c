@@ -245,6 +245,16 @@ extern POINT _BufferSize;
 #define STATIC
 #endif
 
+struct input_code{
+    char *name;
+    int stat;
+    int score;
+    int index;
+    int buf[3];
+    void (*status_func)PROTO((struct input_code *, int));
+    int (*iconv_func)PROTO((int c2, int c1, int c0));
+};
+
 STATIC  int     noconvert PROTO((FILE *f));
 STATIC  int     kanji_convert PROTO((FILE *f));
 STATIC  int     h_conv PROTO((FILE *f,int c2,int c1));
@@ -277,7 +287,7 @@ STATIC  void    iso2022jp_check_conv PROTO((int c2,int c1));
 STATIC  void    no_connection PROTO((int c2,int c1));
 STATIC  int     no_connection2 PROTO((int c2,int c1,int c0));
 
-STATIC  int     code_score PROTO((int c2,int c1,int s));
+STATIC  void    code_score PROTO((struct input_code *ptr));
 STATIC  void    code_status PROTO((int c));
 
 STATIC  void    std_putc PROTO((int c));
@@ -370,20 +380,20 @@ static int debug_f = FALSE;
 STATIC void debug PROTO((char *str));
 #endif
 
-static int             e_stat = 0;
-static int             e_score = 0;
-static int             e_buf[2];
-static int             s_stat = 0;
-static int             s_score = 0;
-static int             s_buf[2];
+STATIC void e_status PROTO((struct input_code *, int));
+STATIC void s_status PROTO((struct input_code *, int));
+
 #ifdef UTF8_INPUT_ENABLE
-static int             w_stat = 0;
-static int             w_score = 0;
-static int             w_buf[2];
+STATIC void w_status PROTO((struct input_code *, int));
 static int             utf16_mode = UTF16_INPUT;
-#else
-static int             w_stat = -1;
 #endif
+
+struct input_code input_code_list[] = {
+    {"EUC-JP",    0, 0, 0, {0, 0, 0}, e_status, e_iconv},
+    {"Shift_JIS", 0, 0, 0, {0, 0, 0}, s_status, s_iconv},
+    {"UTF-8",     0, 0, 0, {0, 0, 0}, w_status, w_iconv},
+    {0}
+};
 
 static int              mimeout_mode = 0;
 static int              base64_count = 0;
@@ -1106,7 +1116,8 @@ void set_iconv(f, iconv_func)
 #endif
 }
 
-#define SCORE_DEPEND   (1)                      /* 機種依存文字 */
+#define SCORE_KANA     (1)                      /* いわゆる半角カナ */
+#define SCORE_DEPEND   (SCORE_KANA << 1)        /* 機種依存文字 */
 #define SCORE_NO_EXIST (SCORE_DEPEND << 1)      /* 存在しない文字 */
 #define SCORE_ERROR    (SCORE_NO_EXIST << 1)    /* エラー */
 int score_table_A0[] = {
@@ -1123,155 +1134,198 @@ int score_table_F0[] = {
     SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST, SCORE_ERROR,
 };
 
-int code_score(c2, c1, s)
-     int c2, c1, s;
+void code_score(ptr)
+     struct input_code *ptr;
 {
+    int s = ptr->score;
+    int c2 = ptr->buf[0];
+    int c1 = ptr->buf[1];
     if (c2 < 0){
         s |= SCORE_ERROR;
     }else if ((c2 & 0xf0) == 0xa0){
         s |= score_table_A0[c2 & 0x0f];
     }else if ((c2 & 0xf0) == 0xf0){
         s |= score_table_F0[c2 & 0x0f];
+    }else if (c2 == SSO){
+        s |= SCORE_KANA;
     }
 #ifdef UTF8_OUTPUT_ENABLE
     else if (!e2w_conv(c2, c1)){
         s |= SCORE_NO_EXIST;
     }
 #endif
-    return s;
+    ptr->score = s;
 }
 
-void
-code_status(c)
+void status_disable(ptr)
+struct input_code *ptr;
+{
+    ptr->stat = -1;
+    ptr->buf[0] = -1;
+    code_score(ptr);
+    if (iconv == ptr->iconv_func) set_iconv(FALSE, 0);
+}
+
+void status_push_ch(ptr, c)
+     struct input_code *ptr;
      int c;
 {
-    switch (s_stat){
+    ptr->buf[ptr->index++] = c;
+}
+
+void status_reset(ptr)
+     struct input_code *ptr;
+{
+    ptr->stat = 0;
+    ptr->score = 0;
+    ptr->index = 0;
+}
+
+void status_check(ptr, c)
+     struct input_code *ptr;
+     int c;
+{
+    if (c <= DEL && estab_f){
+        status_reset(ptr);
+    }
+}
+
+void s_status(ptr, c)
+     struct input_code *ptr;
+     int c;
+{
+    switch(ptr->stat){
       case -1:
-          if (c <= DEL && estab_f){
-              s_stat = 0;
-              s_score = 0;
-          }
+          status_check(ptr, c);
           break;
       case 0:
-          if (c <= DEL
-              || (0xa1 <= c && c <= 0xef && iconv == s_iconv)){
+          if (c <= DEL){
               break;
+          }else if (0xa1 <= c && c <= 0xef){
+              status_push_ch(ptr, SSO);
+              status_push_ch(ptr, c);
+              code_score(ptr);
+              status_reset(ptr);
           }else if ((0x81 <= c && c < 0xa0) || (0xe0 <= c && c <= 0xea)){
-              s_stat = 1;
-              s_buf[1] = c;
+              ptr->stat = 1;
+              status_push_ch(ptr, c);
           }else{
-              s_stat = -1;
-              s_score = code_score(-1, 0, s_score);
-              if (iconv == s_iconv) set_iconv(FALSE, 0);
+              status_disable(ptr);
           }
           break;
       case 1:
           if ((0x40 <= c && c <= 0x7e) || (0x80 <= c && c <= 0xfd)){
-              s_stat = 0;
-              s_buf[0] = c;
-              s2e_conv(s_buf[1], s_buf[0], &s_buf[1], &s_buf[0]);
-              s_score = code_score(s_buf[1], s_buf[0], s_score);
+              status_push_ch(ptr, c);
+              s2e_conv(ptr->buf[0], ptr->buf[1], &ptr->buf[0], &ptr->buf[1]);
+              code_score(ptr);
+              status_reset(ptr);
           }else{
-              s_stat = -1;
-              s_score = code_score(-1, 0, s_score);
-              if (iconv == s_iconv) set_iconv(FALSE, 0);
+              status_disable(ptr);
           }
           break;
     }
-    switch (e_stat){
+}
+
+void e_status(ptr, c)
+     struct input_code *ptr;
+     int c;
+{
+    switch (ptr->stat){
       case -1:
-          if (c <= DEL && estab_f){
-              e_stat = 0;
-              e_score = 0;
-          }
+          status_check(ptr, c);
           break;
       case 0:
           if (c <= DEL){
               break;
           }else if (SSO == c || (0xa1 <= c && c <= 0xfe)){
-              e_stat = 1;
-              e_buf[1] = c;
+              ptr->stat = 1;
+              status_push_ch(ptr, c);
           }else{
-              e_stat = -1;
-              e_score = code_score(-1, 0, e_score);
-              if (iconv == e_iconv) set_iconv(FALSE, 0);
+              status_disable(ptr);
           }
           break;
       case 1:
           if (0xa1 <= c && c <= 0xfe){
-              e_stat = 0;
-              e_buf[0] = c;
-              e_score = code_score(e_buf[1], e_buf[0], e_score);
+              status_push_ch(ptr, c);
+              code_score(ptr);
+              status_reset(ptr);
           }else{
-              e_stat = -1;
-              if (iconv == e_iconv) set_iconv(FALSE, 0);
-              e_score = code_score(-1, 0, e_score);
+              status_disable(ptr);
           }
           break;
     }
+}
+
 #ifdef UTF8_INPUT_ENABLE
-    switch (w_stat){
+void w_status(ptr, c)
+     struct input_code *ptr;
+     int c;
+{
+    switch (ptr->stat){
       case -1:
-          if (c <= DEL && estab_f){
-              w_stat = 0;
-              w_score = 0;
-          }
+          status_check(ptr, c);
           break;
       case 0:
           if (c <= DEL){
               break;
           }else if (0xc0 <= c && c <= 0xdf){
-              w_buf[2] = 0;
-              w_stat = 1;
-              w_buf[1] = c;
+              ptr->stat = 1;
+              status_push_ch(ptr, c);
           }else if (0xe0 <= c && c <= 0xef){
-              w_stat = 2;
-              w_buf[2] = c;
+              ptr->stat = 2;
+              status_push_ch(ptr, c);
           }else{
-              w_stat = -1;
-              w_score = code_score(-1, 0, w_score);
-              if (iconv == w_iconv) set_iconv(FALSE, 0);
+              status_disable(ptr);
           }
           break;
       case 1:
       case 2:
           if (0x80 <= c && c <= 0xbf){
-              --w_stat;
-              w_buf[w_stat] = c;
-              if (w_stat == 0){
-                  if (w_buf[2]){
-                      w2e_conv(w_buf[2], w_buf[1], w_buf[0],
-                               &w_buf[1], &w_buf[0]);
-                  }else{
-                      w2e_conv(w_buf[1], w_buf[0], 0,
-                               &w_buf[1], &w_buf[0]);
-                  }
-                  w_score = code_score(w_buf[1], w_buf[0], w_score);
+              status_push_ch(ptr, c);
+              if (ptr->index > ptr->stat){
+                  w2e_conv(ptr->buf[0], ptr->buf[1], ptr->buf[2],
+                           &ptr->buf[0], &ptr->buf[1]);
+                  code_score(ptr);
+                  status_reset(ptr);
               }
           }else{
-              w_stat = -1;
-              w_score = code_score(-1, 0, w_score);
-              if (iconv == w_iconv) set_iconv(FALSE, 0);
+              status_disable(ptr);
           }
           break;
     }
+}
+#endif
 
-    if (s_stat < 0 && e_stat < 0 && w_stat == 0){
-        set_iconv(TRUE, w_iconv);
+void
+code_status(c)
+     int c;
+{
+    int action_flag = 1;
+    struct input_code *result = 0;
+    struct input_code *p = input_code_list;
+    while (p->name){
+        (p->status_func)(p, c);
+        if (p->stat > 0){
+            action_flag = 0;
+        }else if(p->stat == 0){
+            if (result){
+                action_flag = 0;
+            }else{
+                result = p;
+            }
+        }
+        ++p;
     }
-#endif
-    if (s_stat == 0 && e_stat < 0 && w_stat < 0){
-        set_iconv(TRUE, s_iconv);
-    }
-    if (s_stat < 0 && e_stat == 0 && w_stat < 0){
-        set_iconv(TRUE, e_iconv);
-    }
-    if (s_stat < 0 && e_stat < 0 && w_stat < 0){
-        if (c <= DEL){
-            s_stat = e_stat = 0;
-#ifdef UTF8_INPUT_ENABLE
-            w_stat = 0;
-#endif
+
+    if (action_flag){
+        if (result){
+            set_iconv(TRUE, result->iconv_func);
+        }else if (c <= DEL){
+            struct input_code *ptr = input_code_list;
+            while (ptr->name){
+                status_reset(ptr);
+                ++ptr;
+            }
         }
     }
 }
@@ -1388,13 +1442,12 @@ module_connection()
         set_iconv(FALSE, e_iconv);
     }
 
-    e_stat = 0;
-    s_stat = 0;
-#ifdef UTF8_INPUT_ENABLE
-    w_stat = 0;
-#else
-    w_stat = -1;
-#endif
+    {
+        struct input_code *p = input_code_list;
+        while (p->name){
+            status_reset(p++);
+        }
+    }
 }
 
 /*
@@ -1705,25 +1758,15 @@ h_conv(f, c2, c1)
     }
 
     if (!estab_f){
-        if (e_score <= s_score
-#ifdef UTF8_INPUT_ENABLE
-            && e_score <= w_score
-#endif
-            ){
-            set_iconv(FALSE, e_iconv);
+        struct input_code *p = input_code_list;
+        struct input_code *result = p;
+        while (p->name){
+            if (p->score < result->score){
+                result = p;
+            }
+            ++p;
         }
-        else if (s_score <= e_score
-#ifdef UTF8_INPUT_ENABLE
-                 && s_score <= w_score
-#endif
-                 ){
-            set_iconv(FALSE, s_iconv);
-        }
-#ifdef UTF8_INPUT_ENABLE
-        else{
-            set_iconv(FALSE, w_iconv);
-        }
-#endif
+        set_iconv(FALSE, p->iconv_func);
     }
 
 
