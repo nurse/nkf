@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.46 2004/12/01 01:59:28 naruse Exp $ */
+/* $Id: nkf.c,v 1.47 2004/12/01 04:18:04 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
-#define NKF_RELEASE_DATE __DATE__
+#define NKF_RELEASE_DATE "2004-12-01"
 #include "config.h"
 
 static char *CopyRight =
