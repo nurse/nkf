@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf 2.0
 #
-# $Id: nkf_test.pl,v 1.5 2004/11/04 02:47:37 naruse Exp $
+# $Id: nkf_test.pl,v 1.6 2004/11/05 06:39:32 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -239,6 +239,23 @@ print "Broken JIS ";
 print "Broken JIS is safe on Normal JIS? ";
     $input = $example{'jis'};
     &test("$nkf -Be",$input,$example{'euc'});
+
+
+# UCS Mapping Test
+print "\n\nUCS Mapping Test\n";
+
+print "Shift_JIS to UTF-16\n";
+$example{'ms_ucs_map_1_sjis'} = "\x81\x60\x81\x61\x81\x7C\x81\x91\x81\x92\x81\xCA";
+$example{'ms_ucs_map_1_utf16'} = "\x30\x1C\x20\x16\x22\x12\x00\xA2\x00\xA3\x00\xAC";
+$example{'ms_ucs_map_1_utf16_ms'} = "\xFF\x5E\x22\x25\xFF\x0D\xFF\xE0\xFF\xE1\xFF\xE2";
+
+print "Normal UCS Mapping : ";
+    &test("$nkf -w16B0 -S",$example{'ms_ucs_map_1_sjis'},$example{'ms_ucs_map_1_utf16'});
+
+print "Microsoft UCS Mapping : ";
+    &test("$nkf -w16B0 -S --ms-ucs-map",$example{'ms_ucs_map_1_sjis'},$example{'ms_ucs_map_1_utf16_ms'});
+
+print"\n";
 
 # X0201 仮名
 # X0201->X0208 conversion
