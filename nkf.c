@@ -3785,6 +3785,7 @@ reinit()
     broken_last = 0;
     z_prev2=0,z_prev1=0;
 
+    input_codename = "";
 }
 #endif
 
