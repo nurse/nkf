@@ -965,7 +965,7 @@ options(cp)
 #endif
 #ifdef SHIFTJIS_CP932
                 if (strcmp(long_option[i].name, "no-cp932") == 0){
-                    cp932_f = TRUE;
+                    cp932_f = FALSE;
                     continue;
                 }
 #endif
