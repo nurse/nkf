@@ -3328,13 +3328,12 @@ reinit()
     option_mode = 0;
     crmode_f = 0;
 
-    e_stat = 0;
-    s_stat = 0;
-#ifdef UTF8_INPUT_ENABLE
-    w_stat = 0;
-#else
-    w_stat = -1;
-#endif
+    {
+        struct input_code *p = input_code_list;
+        while (p->name){
+            status_reset(p++);
+        }
+    }
 #ifdef UTF8_OUTPUT_ENABLE
     if (w_oconv16_begin_f) {
 	w_oconv16_begin_f = 2;
