@@ -1,4 +1,4 @@
-.TH NKF 1 13/Oct/2003
+.TH NKF 1 07/Feb/2004
 .SH NAME
 nkf \- ネットワーク用漢字コード変換フィルタ v2.0.4
 .SH SYNOPSIS
@@ -408,7 +408,7 @@ hiragana/katakana 変換ができるようになりました。
 
 \--overwrite で、引数のファイルを直接、置き換えることができます。
 
-.SH nkf 2.0.4 (予定)
+.SH nkf 2.0.4
 
 .PP
 Shift_JIS の FAxx-FCxx について、普通の式では euc に変換できませんが、CP932 で同値な文字に読み換えて変換します。この動作を無効にするには、--no-cp932 をつけてください。
@@ -424,13 +424,33 @@ perl module に
     mhonarc など、日本語を UTF-16 の &#....; のパターンで出力するものを変換します。
 
 .PP
-\--exec-in, \--exec-out オプションを新設
+\--exec-in, \--exec-out オプションを新設 (config.h で EXEC_IO を define してコンパイルした時のみ有効)
 
     nkf -e \--exec-in cmd args...
     とやると、cmd の出力を nkf の入力とします。
 
     nkf -e \--exec-out cmd args...
     とやると、nkf の出力を cmd の入力とします。
+
+
+.SH nkf 2.0.5
+
+.PP
+--cp932inv というオプションをつけると Shift_JIS への変換の際、EDxx-EFxx については、
+CP932 で同値な FAxx-FCxx の文字に変換します。
+
+.PP
+--guess または -g というオプションをつけると自動判別の結果を出力します。
+
+.PP
+--prefix= というオプションをつけると、EUC-JP から Shift_JIS への変換の際、2 バイト目
+に現れた文字の前にエスケープ文字をつけることができます。
+引数の 1 文字目がエスケープ文字、2文字目以降にエスケープされるべき文字を指定します。
+
+例えば、
+
+--prefix=\$@ とすると、Shift_JIS の 2 文字目に $, @ が来たら、その前に \ が挿入されます
+--prefix=@@ とすると、Shift_JIS の 2 文字目に @ が来たら、その前に @ が挿入されます
 
 
 .SH ACKNOWLEDGE
@@ -519,6 +539,7 @@ hat@so-net
 木下 雄介
 成瀬ゆい
 鶴谷直樹
+中田伸悦
 
 河野真治
      www.ie.u-ryukyu.ac.jp/~kono/nkf/
