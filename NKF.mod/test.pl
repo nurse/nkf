@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# nkf test program for nkf 1.7
+# nkf test program for nkf 2.0
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
 # Sun Nov  8 00:16:06 JST 1998
@@ -46,23 +46,25 @@ sub library_test {
     if( $nkf =~ /-\S*m/) {
         $result =~ s/ //g;
     }
-    $i = 0;
+    $i = -1;
     foreach $ans (@ans) {
+        $i++;
         if( $nkf =~ /-\S*m/) {
             $ans =~ s/ //g;
         }
-        last if ($result eq $ans) ;
-        $i++;
+        if ($result eq $ans){
+	    print "Ok\n";
+	    return $result;
+        }
     }
     $ans = @ans[$i];
 
-    print (($result eq $ans)?"Ok\n":"Fail\n");
+    print "Fail\n";
     if ($diff) {
-	if ($result ne $ans) {
-            open(R,"|od -c >tmp.result.bad"); print R $result; close(R);
-            open(R,"|od -c >tmp.expect.bad"); print R $ans; close(R);
-            system "diff -c tmp.result.bad tmp.expect.bad";
-        }
+	open(R,"|od -c >tmp.result.bad"); binmode R; print R $result; close(R);
+	open(R,"|od -c >tmp.expect.bad"); binmode R; print R $ans; close(R);
+	print"$i\n;$result\n;$ans\n" if $nkf[0] eq'-w16B';
+	system "diff -c tmp.result.bad tmp.expect.bad";
     }
     return $result;
 }
