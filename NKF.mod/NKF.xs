@@ -166,3 +166,54 @@ nkf(...)
     OUTPUT:
     RETVAL
 
+SV *
+nkf_continue(...)
+    PROTOTYPE: @
+    PREINIT:
+    char *data;
+    STRLEN rlen;
+    CODE:
+
+    /* Get input data pointer from the last variable. */
+    data = SvPV(ST(0),i_len);
+    input_ctr = 0;
+
+    if(x0201_f == WISH_TRUE)
+         x0201_f = ((!iso2022jp_f)? TRUE : NO_X0201);
+
+    /* allocate the result buffer */
+
+    /* During conversion, stirngs length may grow. This is the unit */
+    /* of growth */
+    incsize = INCSIZE; 
+    rlen = i_len+INCSIZE;
+    result = newSV(rlen);
+    input  = data;
+
+    /* SvPV(result,o_len) does not work here. */
+    output = SvPVX(result);
+    o_len = rlen;
+    output_ctr = 0;
+
+    /* Convestion */
+    kanji_convert(NULL);
+    nkf_putchar(0);     /* Null terminator */
+
+    RETVAL = result;
+    SvPOK_on(RETVAL);       
+    /* We cannot use 
+	   SvCUR_set(RETVAL, strlen(output)); 
+       because output can contain \0. 
+     */
+    SvCUR_set(RETVAL, output_ctr - 1);
+
+    OUTPUT:
+    RETVAL
+
+SV*
+inputcode(...)
+    CODE:
+    RETVAL = newSV(strlen(input_codename) + 1);
+    sv_setpv(RETVAL, input_codename);
+    OUTPUT:
+    RETVAL
