@@ -339,7 +339,7 @@ hiragana/katakana 変換ができるようになりました。
    \-h2   \--hirakana かたかな->ひらがな
    \-h3   \--hirakana-katakana かたかな<->ひらがな
 
-\-OW で、引数のファイルを直接、置き換えることができます。
+\--overwrite で、引数のファイルを直接、置き換えることができます。
 
 
 .SH ACKNOWLEDGE
