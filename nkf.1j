@@ -245,6 +245,9 @@ mac (CR)
 \--no-cp932
 Shift_JIS の、FAxx-FCxx を、CP932 で同値な文字に読み換える動作を無効にする
 .TP
+\--cp932inv
+Shift_JIS への変換の際、EDxx-EFxx を、CP932 で同値な FAxx-FCxx の文字に変換する
+.TP
 \--ms-ucs-map
 MicrosoftのUCSマッピング互換の変換を行う
 .TP
@@ -543,7 +546,6 @@ Tsutomu Sakai
 YAMASHITA Junji (山下 純司)
 Yasuyuki Sato 
 Yoshiaki Yanagihara
-Yoshiaki Yanagihara 
 hat@so-net
 ＤＣＣ技術部渡辺
 かとぺ / 加藤 貴司
