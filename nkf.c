@@ -1221,7 +1221,9 @@ options(cp)
             }
             continue;
         case 'g':
+#ifndef PERL_XS
             guess_f = TRUE;
+#endif
             continue;
         case ' ':    
         /* module muliple options in a string are allowed for Perl moudle  */
@@ -2368,7 +2370,7 @@ w_iconv16(c2, c1, c0)
 	utf16_mode = UTF16BE_INPUT;
 	return 0;    
     }
-    if (utf16_mode == UTF16BE_INPUT) {
+    if (c2 != EOF && utf16_mode == UTF16BE_INPUT) {
 	int tmp;
 	tmp=c1; c1=c2; c2=tmp;
     }
