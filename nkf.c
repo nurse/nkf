@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.45 2004/11/30 22:33:10 naruse Exp $ */
+/* $Id: nkf.c,v 1.46 2004/12/01 01:59:28 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE __DATE__
 #include "config.h"
@@ -433,7 +433,7 @@ STATIC int cp932_f = TRUE;
 #define CP932_TABLE_BEGIN (0xfa)
 #define CP932_TABLE_END   (0xfc)
 
-STATIC int cp932inv_f = FALSE;
+STATIC int cp932inv_f = TRUE;
 #define CP932INV_TABLE_BEGIN (0xed)
 #define CP932INV_TABLE_END   (0xee)
 
@@ -647,7 +647,7 @@ main(argc, argv)
     FILE  *fin;
     unsigned char  *cp;
 
-    char *outfname;
+    char *outfname = NULL;
     char *origfname;
 
 #ifdef EASYWIN /*Easy Win */
@@ -723,8 +723,8 @@ main(argc, argv)
               return(-1);
           } else {
 #ifdef OVERWRITE
-              int fd;
-              int fd_backup;
+              int fd = 0;
+              int fd_backup = 0;
 #endif
 
 /* reopen file for stdout */
@@ -893,6 +893,8 @@ struct {
     {"katakana","h2"},
     {"katakana-hiragana","h3"},
     {"guess", "g"},
+    {"cp932", ""},
+    {"no-cp932", ""},
 #ifdef UTF8_OUTPUT_ENABLE
     {"utf8", "w"},
     {"utf16", "w16"},
@@ -917,7 +919,6 @@ struct {
     {"debug", ""},
 #endif
 #ifdef SHIFTJIS_CP932
-    {"no-cp932", ""},
     {"cp932inv", ""},
 #endif
 #ifdef EXEC_IO
@@ -934,7 +935,7 @@ options(cp)
      unsigned char *cp;
 {
     int i;
-    unsigned char *p;
+    unsigned char *p = NULL;
 
     if (option_mode==1)
 	return;
@@ -997,11 +998,27 @@ options(cp)
                     continue;
                 }
 #endif
+                if (strcmp(long_option[i].name, "cp932") == 0){
 #ifdef SHIFTJIS_CP932
-                if (strcmp(long_option[i].name, "no-cp932") == 0){
-                    cp932_f = FALSE;
+                    cp932_f = TRUE;
+                    cp932inv_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+                    ms_ucs_map_f = TRUE;
+#endif
                     continue;
                 }
+                if (strcmp(long_option[i].name, "no-cp932") == 0){
+#ifdef SHIFTJIS_CP932
+                    cp932_f = FALSE;
+                    cp932inv_f = FALSE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+                    ms_ucs_map_f = FALSE;
+#endif
+                    continue;
+                }
+#ifdef SHIFTJIS_CP932
                 if (strcmp(long_option[i].name, "cp932inv") == 0){
                     cp932inv_f = TRUE;
                     continue;
@@ -4224,7 +4241,7 @@ reinit()
 #endif
 #ifdef SHIFTJIS_CP932
     cp932_f = TRUE;
-    cp932inv_f = FALSE;
+    cp932inv_f = TRUE;
 #endif
     {
         int i;
@@ -4344,15 +4361,12 @@ usage()
     fprintf(stderr," --fj,--unix,--mac,--windows                        convert for the system\n");
     fprintf(stderr," --jis,--euc,--sjis,--utf8,--utf16,--mime,--base64  convert for the code\n");
     fprintf(stderr," --hiragana, --katakana    Hiragana/Katakana Conversion\n");
+    fprintf(stderr," --cp932, --no-cp932       CP932 compatible\n");
 #ifdef INPUT_OPTION
     fprintf(stderr," --cap-input, --url-input  Convert hex after ':' or '%%'\n");
 #endif
 #ifdef NUMCHAR_OPTION
     fprintf(stderr," --numchar-input   Convert Unicode Character Reference\n");
-#endif
-#ifdef SHIFTJIS_CP932
-    fprintf(stderr," --no-cp932        Don't convert Shift_JIS FAxx-FCxx to equivalnet CP932\n");
-    fprintf(stderr," --cp932inv        convert Shift_JIS EDxx-EFxx to equivalnet CP932 FAxx-FCxx\n");
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
     fprintf(stderr," --ms-ucs-map      Microsoft UCS Mapping Compatible\n");

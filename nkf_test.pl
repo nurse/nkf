@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.8 2004/11/19 15:27:39 naruse Exp $
+# $Id: nkf_test.pl,v 1.9 2004/12/01 01:59:28 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -264,7 +264,7 @@ $example{'test_data/no-cp932inv.ans'} = unpack('u',<<'eofeof');
 eofeof
 
 print "test_data/no-cp932inv    ";
-    &test("$nkf -sE",$example{'test_data/cp932.ans'},$example{'test_data/no-cp932inv.ans'});
+    &test("$nkf -sE --no-cp932",$example{'test_data/cp932.ans'},$example{'test_data/no-cp932inv.ans'});
 
 # test_data/irv
 
