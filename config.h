@@ -43,6 +43,7 @@
  */
 /* #define INT_IS_SHORT */
 
+#ifndef WIN32DLL
 /******************************/
 /* デフォルトの出力コード選択 */
 /* Select DEFAULT_CODE */
@@ -51,5 +52,8 @@
 /* #define DEFAULT_CODE_EUC */
 /* #define DEFAULT_CODE_UTF8 */
 /******************************/
+#else
+#define DEFAULT_CODE_SJIS
+#endif
 
 #endif /* _CONFIG_H_ */

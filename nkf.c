@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.60 2005/02/19 05:54:23 naruse Exp $ */
+/* $Id: nkf.c,v 1.61 2005/02/20 11:57:53 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
-#define NKF_RELEASE_DATE "2005-02-19"
+#define NKF_RELEASE_DATE "2005-02-20"
 #include "config.h"
 
 static char *CopyRight =
@@ -149,12 +149,20 @@ static char *CopyRight =
 #ifndef MSDOS /* UNIX, OS/2 */
 #include <unistd.h>
 #include <utime.h>
-#else
+#else /* defined(MSDOS) */
+#ifdef __WIN32__
+#ifdef __BORLANDC__ /* BCC32 */
+#include <utime.h>
+#else /* !defined(__BORLANDC__) */
+#include <sys/utime.h>
+#endif /* (__BORLANDC__) */
+#else /* !defined(__WIN32__) */
 #if defined(_MSC_VER) || defined(__MINGW32__) /* VC++, MinGW */
 #include <sys/utime.h>
 #elif defined(__TURBOC__) /* BCC */
 #include <utime.h>
 #elif defined(LSI_C) /* LSI C */
+#endif /* (__WIN32__) */
 #endif
 #endif
 #endif 
@@ -282,7 +290,7 @@ STATIC  int     noconvert PROTO((FILE *f));
 STATIC  int     kanji_convert PROTO((FILE *f));
 STATIC  int     h_conv PROTO((FILE *f,int c2,int c1));
 STATIC  int     push_hold_buf PROTO((int c2));
-STATIC  void    set_iconv PROTO((int f, int (*iconv_func)()));
+STATIC  void    set_iconv PROTO((int f, int (*iconv_func)(int c2,int c1,int c0)));
 STATIC  int     s_iconv PROTO((int c2,int c1,int c0));
 STATIC  int     s2e_conv PROTO((int c2, int c1, int *p2, int *p1));
 STATIC  int     e_iconv PROTO((int c2,int c1,int c0));
@@ -339,7 +347,7 @@ STATIC  void    close_mime PROTO(());
 STATIC  void    usage PROTO(());
 STATIC  void    version PROTO(());
 STATIC  void    options PROTO((unsigned char *c));
-#ifdef PERL_XS
+#if defined(PERL_XS) || defined(WIN32DLL)
 STATIC  void    reinit PROTO(());
 #endif
 
@@ -648,7 +656,14 @@ static int             crmode_f = 0;   /* CR, NL, CRLF */
 static int             end_check;
 #endif /*Easy Win */
 
-#ifndef PERL_XS
+#define STD_GC_BUFSIZE (256)
+int std_gc_buf[STD_GC_BUFSIZE];
+int std_gc_ndx;
+
+#ifdef WIN32DLL
+#include "nkf32dll.c"
+#elif defined(PERL_XS)
+#else /* WIN32DLL */
 int
 main(argc, argv)
     int             argc;
@@ -817,7 +832,7 @@ main(argc, argv)
 #ifdef OVERWRITE
               if (overwrite) {
                   struct stat     sb;
-#if defined(MSDOS) && !defined(__MINGW32__)
+#if defined(MSDOS) && !defined(__MINGW32__) && !defined(__WIN32__)
                   time_t tb[2];
 #else
                   struct utimbuf  tb;
@@ -837,7 +852,7 @@ main(argc, argv)
                   }
 
                   /* タイムスタンプを復元 */
-#if defined(MSDOS) && !defined(__MINGW32__)
+#if defined(MSDOS) && !defined(__MINGW32__) && !defined(__WIN32__)
                   tb[0] = tb[1] = sb.st_mtime;
                   if (utime(outfname, tb)) {
                       fprintf(stderr, "Can't set timestamp %s\n", outfname);
@@ -873,10 +888,10 @@ main(argc, argv)
 #else /* for Other OS */
     if (file_out == TRUE) 
         fclose(stdout);
-#endif 
+#endif /*Easy Win */
     return (0);
 }
-#endif
+#endif /* WIN32DLL */
 
 static 
 struct {
@@ -1721,10 +1736,7 @@ code_status(c)
     }
 }
 
-#define STD_GC_BUFSIZE (256)
-int std_gc_buf[STD_GC_BUFSIZE];
-int std_gc_ndx;
-
+#ifndef WIN32DLL
 int 
 std_getc(f)
 FILE *f;
@@ -1734,6 +1746,7 @@ FILE *f;
     }
     return getc(f);
 }
+#endif /*WIN32DLL*/
 
 int 
 std_ungetc(c,f)
@@ -1747,6 +1760,7 @@ FILE *f;
     return c;
 }
 
+#ifndef WIN32DLL
 void 
 std_putc(c)
 int c;
@@ -1754,6 +1768,7 @@ int c;
     if(c!=EOF)
       putchar(c);
 }
+#endif /*WIN32DLL*/
 
 int
 noconvert(f)
@@ -3672,6 +3687,7 @@ set_input_codename (codename)
     is_inputcode_set = TRUE;
 }
 
+#ifndef WIN32DLL
 void
 print_guessed_code (filename)
     char *filename;
@@ -3687,6 +3703,7 @@ print_guessed_code (filename)
     if (filename != NULL) printf("%s:", filename);
     printf("%s\n", codename);
 }
+#endif /*WIN32DLL*/
 
 int
 hex2bin(x)
@@ -4521,7 +4538,7 @@ mime_putc(c)
 }
 
 
-#ifdef PERL_XS
+#if defined(PERL_XS) || defined(WIN32DLL)
 void 
 reinit()
 {
@@ -4627,6 +4644,10 @@ reinit()
 #ifdef CHECK_OPTION
     iconv_for_check = 0;
 #endif
+    input_codename = "";
+#ifdef WIN32DLL
+    reinitdll();
+#endif /*WIN32DLL*/
 }
 #endif
 
@@ -4643,9 +4664,13 @@ int c2,c1,c0;
 {
     fprintf(stderr,"nkf internal module connection failure.\n");
     exit(1);
+    return 0; /* LINT */
 }
 
 #ifndef PERL_XS
+#ifdef WIN32DLL
+#define fprintf dllprintf
+#endif
 void 
 usage()   
 {
@@ -4733,7 +4758,7 @@ version()
                   ,NKF_VERSION,NKF_RELEASE_DATE);
     fprintf(stderr,"\n%s\n",CopyRight);
 }
-#endif
+#endif /*PERL_XS*/
 
 /**
  ** パッチ制作者
