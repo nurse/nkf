@@ -273,7 +273,7 @@ struct input_code{
     int _file_stat;
 };
 
-STATIC char *input_codename;
+STATIC char *input_codename = "";
 
 STATIC  int     noconvert PROTO((FILE *f));
 STATIC  int     kanji_convert PROTO((FILE *f));
