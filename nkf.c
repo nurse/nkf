@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.65 2005/03/05 07:05:20 naruse Exp $ */
+/* $Id: nkf.c,v 1.66 2005/03/07 16:16:50 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2005-03-05"
 #include "config.h"
@@ -1249,7 +1249,7 @@ options(cp)
 	    }
             continue;
         case 'm':   /* MIME support */
-            mime_decode_f = TRUE;
+            /* mime_decode_f = TRUE; */ /* this has too large side effects... */
             if (*cp=='B'||*cp=='Q') {
                 mime_decode_mode = *cp++;
                 mimebuf_f = FIXED_MIME;
@@ -1258,6 +1258,7 @@ options(cp)
             } else if (*cp=='S') {
                 mime_f = STRICT_MIME; cp++;
             } else if (*cp=='0') {
+                mime_decode_f = FALSE;
                 mime_f = FALSE; cp++;
             }
             continue;
