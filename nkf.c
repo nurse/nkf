@@ -414,6 +414,12 @@ static int debug_f = FALSE;
 STATIC void debug PROTO((char *str));
 #endif
 
+static int guess_f = FALSE;
+STATIC  void    print_guessed_code PROTO((char *filename));
+STATIC  void    set_input_codename PROTO((char *codename));
+static int is_inputcode_mixed = FALSE;
+static int is_inputcode_set   = FALSE;
+
 #ifdef EXEC_IO
 static int exec_f = 0;
 #endif
@@ -423,7 +429,13 @@ STATIC int cp932_f = TRUE;
 #define CP932_TABLE_BEGIN (0xfa)
 #define CP932_TABLE_END   (0xfc)
 
+STATIC int cp932inv_f = FALSE;
+#define CP932INV_TABLE_BEGIN (0xed)
+#define CP932INV_TABLE_END   (0xee)
+
 #endif /* SHIFTJIS_CP932 */
+
+STATIC unsigned char prefix_table[256];
 
 STATIC void e_status PROTO((struct input_code *, int));
 STATIC void s_status PROTO((struct input_code *, int));
@@ -695,9 +707,12 @@ main(argc, argv)
       setvbuffer(stdin, stdibuf, IOBUF_SIZE);
       if (nop_f)
           noconvert(stdin);
-      else
+      else {
           kanji_convert(stdin);
+          if (guess_f) print_guessed_code(NULL);
+      }
     } else {
+      int nfiles = argc;
       while (argc--) {
           if ((fin = fopen((origfname = *argv++), "r")) == NULL) {
               perror(*--argv);
@@ -778,8 +793,12 @@ main(argc, argv)
               setvbuffer(fin, stdibuf, IOBUF_SIZE);
               if (nop_f)
                   noconvert(fin);
-              else
+              else {
+                  char *filename = NULL;
                   kanji_convert(fin);
+                  if (nfiles > 1) filename = origfname;
+                  if (guess_f) print_guessed_code(filename);
+              }
               fclose(fin);
 #ifdef OVERWRITE
               if (overwrite) {
@@ -869,6 +888,7 @@ struct {
     {"hiragana","h1"},
     {"katakana","h2"},
     {"katakana-hiragana","h3"},
+    {"guess", "g"},
 #ifdef UTF8_OUTPUT_ENABLE
     {"utf8", "w"},
     {"utf16", "w16"},
@@ -893,11 +913,13 @@ struct {
 #endif
 #ifdef SHIFTJIS_CP932
     {"no-cp932", ""},
+    {"cp932inv", ""},
 #endif
 #ifdef EXEC_IO
     {"exec-in", ""},
     {"exec-out", ""},
 #endif
+    {"prefix=", ""},
 };
 
 static int option_mode;
@@ -923,10 +945,14 @@ options(cp)
             for (i=0;i<sizeof(long_option)/sizeof(long_option[0]);i++) {
 		int j;
                 p = (unsigned char *)long_option[i].name;
-                for (j=0;*p && *p++ == cp[j];j++);
-                if (! *p && !cp[j]) break;
+                for (j=0;*p && (*p != '=') && *p == cp[j];p++, j++);
+		if (*p == cp[j]){
+		  p = &cp[j];
+		  break;
+		}
+		p = 0;
             }
-	    if (*p) return;
+	    if (p == 0) return;
             cp = (unsigned char *)long_option[i].alias;
             if (!*cp){
 #ifdef OVERWRITE
@@ -967,6 +993,10 @@ options(cp)
                     cp932_f = FALSE;
                     continue;
                 }
+                if (strcmp(long_option[i].name, "cp932inv") == 0){
+                    cp932inv_f = TRUE;
+                    continue;
+                }
 #endif
 #ifdef EXEC_IO
                   if (strcmp(long_option[i].name, "exec-in") == 0){
@@ -978,6 +1008,14 @@ options(cp)
                       return;
                   }
 #endif
+                if (strcmp(long_option[i].name, "prefix=") == 0){
+                    if (*p == '=' && ' ' < p[1] && p[1] < 128){
+                        for (i = 2; ' ' < p[i] && p[i] < 128; i++){
+                            prefix_table[p[i]] = p[1];
+                        }
+                    }
+                    continue;
+                }
             }
             continue;
         case 'b':           /* buffered mode */
@@ -1182,6 +1220,9 @@ options(cp)
                 crmode_f = 0; cp++;
             }
             continue;
+        case 'g':
+            guess_f = TRUE;
+            continue;
         case ' ':    
         /* module muliple options in a string are allowed for Perl moudle  */
 	    while(*cp && *cp!='-') cp++;
@@ -1242,7 +1283,8 @@ void set_iconv(f, iconv_func)
     if (estab_f && iconv_for_check != iconv){
         struct input_code *p = find_inputcode_byfunc(iconv);
         if (p){
-            debug(input_codename = p->name);
+            set_input_codename(p->name);
+            debug(input_codename);
         }
         iconv_for_check = iconv;
     }
@@ -1649,7 +1691,7 @@ module_connection()
 
     /* output redicrection */
 #ifdef CHECK_OPTION
-    if (noout_f){
+    if (noout_f || guess_f){
         o_putc = no_putc;
     }
 #endif
@@ -1914,7 +1956,8 @@ kanji_convert(f)
                         /* This is kanji introduction */
                         input_mode = X0208;
                         shift_mode = FALSE;
-                        debug(input_codename = "ISO-2022-JP");
+                        set_input_codename("ISO-2022-JP");
+                        debug(input_codename);
                         NEXT;
                     } else if (c1 == '(') {
                         if ((c1 = (*i_getc)(f)) == EOF) {
@@ -2551,7 +2594,23 @@ s_oconv(c2, c1)
         }
 	output_mode = SHIFT_JIS;
         e2s_conv(c2, c1, &c2, &c1);
+
+#ifdef SHIFTJIS_CP932
+        if (cp932inv_f
+            && CP932INV_TABLE_BEGIN <= c2 && c2 <= CP932INV_TABLE_END){
+            extern unsigned short cp932inv[2][189];
+            int c = cp932inv[c2 - CP932INV_TABLE_BEGIN][c1 - 0x40];
+            if (c){
+                c2 = c >> 8;
+                c1 = c & 0xff;
+            }
+        }
+#endif /* SHIFTJIS_CP932 */
+
         (*o_putc)(c2);
+	if (prefix_table[(unsigned char)c1]){
+            (*o_putc)(prefix_table[(unsigned char)c1]);
+	}
         (*o_putc)(c1);
     }
 }
@@ -3294,6 +3353,37 @@ void debug(str)
 }
 #endif
 
+void
+set_input_codename (codename)
+    char *codename;
+{
+    if (guess_f && 
+        is_inputcode_set &&
+        strcmp(codename, "") != 0 && 
+        strcmp(codename, input_codename) != 0)
+    {
+        is_inputcode_mixed = TRUE;
+    }
+    input_codename = codename;
+    is_inputcode_set = TRUE;
+}
+
+void
+print_guessed_code (filename)
+    char *filename;
+{
+    char *codename = "BINARY";
+    if (!is_inputcode_mixed) {
+        if (strcmp(input_codename, "") == 0) {
+            codename = "ASCII";
+        } else {
+            codename = input_codename;
+        }
+    }
+    if (filename != NULL) printf("%s:", filename);
+    printf("%s\n", codename);
+}
+
 int
 hex2bin(x)
      int x;
@@ -3851,7 +3941,15 @@ reinit()
     broken_last = 0;
     z_prev2=0,z_prev1=0;
 
+    {
+        int i;
+        for (i = 0; i < 256; i++){
+            prefix_table[i] = 0;
+        }
+    }
     input_codename = "";
+    is_inputcode_mixed = FALSE;
+    is_inputcode_set   = FALSE;
 }
 #endif
 
@@ -3916,6 +4014,7 @@ usage()
 #ifdef OVERWRITE
     fprintf(stderr," --overwrite          Overwrite original listed files by filtered result\n");
 #endif
+    fprintf(stderr," -g, --guess          Guess the input code\n");
     fprintf(stderr," --help,--version\n");
     version();
 }
