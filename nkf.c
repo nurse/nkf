@@ -1864,6 +1864,9 @@ e_iconv(c2, c1, c0)
 {
     if (c2 == X0201) {
 	c1 &= 0x7f;
+    } else if (c2 == SSO){
+        c2 = X0201;
+        c1 &= 0x7f;
     } else if ((c2 == EOF) || (c2 == 0) || c2 < SPACE) {
         /* NOP */
     } else {
