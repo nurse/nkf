@@ -1,0 +1,27 @@
+INSTALL
+
+	    Sun Sep  8 14:11:16 JST 2002
+
+See Makefile, check
+    CC
+    CFLAGS
+    PERL
+are correct. Then do
+    make
+It should work on Linux, Solaris, Mac OS X.
+
+If mkstemp is not in the library, comment out
+#define OVERWRITE in config.h
+
+To make Perl module, do
+    make perl
+it creates NKF.mod. Or you can perform standard 
+     perl Makefile.PL; make
+in NKF.mod. It should work above Perl 5. Perl 5.6 or Perl 5.8
+is checked.
+
+You can do test,
+  make test 
+both in here and NKF.mod.
+
+Shinji KONO kono@ie.u-ryukyu.ac.jp
