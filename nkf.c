@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.57 2005/02/02 18:10:11 naruse Exp $ */
+/* $Id: nkf.c,v 1.58 2005/02/17 16:48:48 rei_furukawa Exp $ */
 #define NKF_VERSION "2.0.4"
 #define NKF_RELEASE_DATE "2005-02-02"
 #include "config.h"
@@ -332,6 +332,7 @@ STATIC  int     mime_ungetc_buf  PROTO((int c,FILE *f));
 STATIC  int     mime_integrity PROTO((FILE *f,unsigned char *p));
 
 STATIC  int     base64decode PROTO((int c));
+STATIC  void    mime_prechar PROTO((int c2, int c1));
 STATIC  void    mime_putc PROTO((int c));
 STATIC  void    open_mime PROTO((int c));
 STATIC  void    close_mime PROTO(());
@@ -2979,14 +2980,7 @@ base64_conv(c2, c1)
     int    c2,
                     c1;
 {
-    if (base64_count>50 && !mimeout_mode && c2==0 && c1==SPACE) {
-	(*o_putc)(EOF);
-	(*o_putc)(NL);
-    } else if (base64_count>66 && mimeout_mode) {
-	(*o_base64conv)(EOF,0);
-	(*o_base64conv)(NL,0);
-	(*o_base64conv)(SPACE,0);
-    }
+    mime_prechar(c2, c1);
     (*o_base64conv)(c2,c1);
 }
 
@@ -3487,6 +3481,10 @@ int      mime_encode_method[] = {
 #define nkf_toupper(c)  (('a'<=c && c<='z')?(c-('a'-'A')):c)
 #define nkf_isdigit(c)  ('0'<=c && c<='9')
 #define nkf_isxdigit(c)  (nkf_isdigit(c) || ('a'<=c && c<='f') || ('A'<=c && c <= 'F'))
+#define nkf_isblank(c) (c == SPACE || c == TAB)
+#define nkf_isspace(c) (nkf_isblank(c) || c == CR || c == NL)
+#define nkf_isalpha(c) (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'))
+#define nkf_isalnum(c) (nkf_isdigit(c) || nkf_isalpha(c))
 
 void
 switch_mime_getc()
@@ -4304,127 +4302,76 @@ mimeout_addchar(c)
     }
 }
 
+int mime_lastchar2, mime_lastchar1;
+
+void mime_prechar(c2, c1)
+     int c2, c1;
+{
+    if (mimeout_mode){
+        if (c2){
+            if (base64_count + mimeout_buf_count/3*4> 66){
+                (*o_base64conv)(EOF,0);
+                (*o_base64conv)(0,NL);
+                (*o_base64conv)(0,SPACE);
+            }
+        }else if (mime_lastchar2){
+            if (c1 <=DEL && !nkf_isspace(c1)){
+                (*o_base64conv)(0,SPACE);
+            }
+        }
+    }else{
+        if (c2 && mime_lastchar2 == 0
+            && mime_lastchar1 && !nkf_isspace(mime_lastchar1)){
+            (*o_base64conv)(0,SPACE);
+        }
+    }
+    mime_lastchar2 = c2;
+    mime_lastchar1 = c1;
+}
+
 void
 mime_putc(c)
     int            c;
 {
     int i = 0;
     int j = 0;
-    
-    if (mimeout_f==FIXED_MIME && base64_count>71) {
-	if (mimeout_mode=='Q') {
-	    if (c!=CR && c!=NL) {
-		(*o_mputc)('=');
-		(*o_mputc)(NL);
-	    }
-	} else {
-	    eof_mime();
-	    (*o_mputc)(NL);
-	}
-	base64_count=0;
-    } else if (mimeout_f!=FIXED_MIME && !mimeout_mode && (c==CR||c==NL)) {
-	base64_count=0;
-    }
-    if (c!=EOF && mimeout_f!=FIXED_MIME) {
-        if ( c<=DEL &&(output_mode==ASCII ||output_mode == ISO8859_1 ) ) {
-	    if (mimeout_mode=='Q') {
-		if (c<=SPACE) {
-		    close_mime();
-		    (*o_mputc)(SPACE);
-		    base64_count++;
-		}
-		(*o_mputc)(c);
-		base64_count++;
-		return;
-	    } else if (mimeout_mode) {
-		if (mimeout_buf_count>0
-		    && (mimeout_buf[mimeout_buf_count-1]==CR || mimeout_buf[mimeout_buf_count-1]==NL)) {
-		    if (c==SPACE || c==TAB) {
-			for (i=0;i<mimeout_buf_count;i++) {
-			    mimeout_addchar(mimeout_buf[i]);
-			}
-			mimeout_buf_count = 0;
-		    } else if (SPACE<c && c<DEL) {
-			eof_mime();
-			for (i=0;i<mimeout_buf_count;i++) {
-			    (*o_mputc)(mimeout_buf[i]);
-			}
-			base64_count = 0;
-			mimeout_buf_count = 0;
-		    }
-		}
-		if (c==SPACE || c==TAB || c==CR || c==NL) {
-		    for (i=0;i<mimeout_buf_count;i++) {
-			if (SPACE<mimeout_buf[i] && mimeout_buf[i]<DEL) {
-			    eof_mime();
-			    for (i=0;i<mimeout_buf_count;i++) {
-				(*o_mputc)(mimeout_buf[i]);
-				base64_count++;
-			    }
-			    mimeout_buf_count = 0;
-			}
-		    }
-		    mimeout_buf[mimeout_buf_count++] = c;
-		    if (mimeout_buf_count>MIMEOUT_BUF_LENGTH) {
-		    	eof_mime();
-			for (i=0;i<mimeout_buf_count;i++) {
-			    (*o_mputc)(mimeout_buf[i]);
-			    base64_count++;
-			}
-			mimeout_buf_count = 0;
-		    }
-		    return;
-		}
-		
-		if (mimeout_buf_count>0 && SPACE<c && c!='=') {
-		    mimeout_buf[mimeout_buf_count++] = c;
-		    if (mimeout_buf_count>MIMEOUT_BUF_LENGTH) {
-			j = mimeout_buf_count;
-			mimeout_buf_count = 0;
-			for (i=0;i<j;i++) {
-			    mimeout_addchar(mimeout_buf[i]);
-			}
-		    }
-		    return;
-		}
-	    } else if (!mimeout_mode) {
-		if (c==SPACE || c==TAB || c==CR || c==NL) {
-		    if ((c==CR || c==NL)
-			&&(mimeout_buf[mimeout_buf_count-1]==SPACE
-			   || mimeout_buf[mimeout_buf_count-1]==TAB)) {
-			mimeout_buf_count--;
-		    }
-		    for (i=0;i<mimeout_buf_count;i++) {
-			(*o_mputc)(mimeout_buf[i]);
-			base64_count++;
-		    }
-		    mimeout_buf_count = 0;
-		}
-		mimeout_buf[mimeout_buf_count++] = c;
-		if (mimeout_buf_count>MIMEOUT_BUF_LENGTH) {
-		    open_mime(output_mode);
-		}
-		return;
-	    }
-        } else if (!mimeout_mode) {
-	    if (mimeout_buf_count>0 && mimeout_buf[mimeout_buf_count-1]==SPACE) {
-		for (i=0;i<mimeout_buf_count-1;i++) {
-		    (*o_mputc)(mimeout_buf[i]);
-		    base64_count++;
-		}
-		mimeout_buf[0] = SPACE;
-		mimeout_buf_count = 1;
-	    }
-	    open_mime(output_mode);
+    int lastchar;
+
+    if (mimeout_f == FIXED_MIME){
+        if (mimeout_mode == 'Q'){
+            if (base64_count > 71){
+                if (c!=CR && c!=NL) {
+                    (*o_mputc)('=');
+                    (*o_mputc)(NL);
+                }
+                base64_count = 0;
+            }
+        }else{
+            if (base64_count > 71){
+                eof_mime();
+                (*o_mputc)(NL);
+                base64_count = 0;
+            }
+            if (c == EOF) { /* c==EOF */
+                eof_mime();
+            }
         }
-    } else if (c == EOF) { /* c==EOF */
+        if (c != EOF) { /* c==EOF */
+            mimeout_addchar(c);
+        }
+        return;
+    }
+    
+    /* mimeout_f != FIXED_MIME */
+
+    if (c == EOF) { /* c==EOF */
 	j = mimeout_buf_count;
 	mimeout_buf_count = 0;
 	i = 0;
 	for (;i<j;i++) {
-	    if (mimeout_buf[i]==SPACE || mimeout_buf[i]==TAB
-		|| mimeout_buf[i]==CR || mimeout_buf[i]==NL)
+	    if (nkf_isspace(mimeout_buf[i])){
 		break;
+            }
 	    mimeout_addchar(mimeout_buf[i]);
 	}
         eof_mime();
@@ -4434,7 +4381,125 @@ mime_putc(c)
 	}
         return;
     }
-    
+
+    if (mimeout_mode=='Q') {
+        if (c <= DEL && (output_mode==ASCII ||output_mode == ISO8859_1 ) ) {
+            if (c <= SPACE) {
+                close_mime();
+                (*o_mputc)(SPACE);
+                base64_count++;
+            }
+            (*o_mputc)(c);
+            base64_count++;
+        }
+        return;
+    }
+
+    if (mimeout_buf_count > 0){
+        lastchar = mimeout_buf[mimeout_buf_count - 1];
+    }else{
+        lastchar = -1;
+    }
+
+    if (!mimeout_mode) {
+        if (c <= DEL && (output_mode==ASCII ||output_mode == ISO8859_1)) {
+            if (nkf_isspace(c)) {
+                if (c==CR || c==NL) {
+                    base64_count=0;
+                }
+                for (i=0;i<mimeout_buf_count;i++) {
+                    (*o_mputc)(mimeout_buf[i]);
+                    base64_count++;
+                }
+                mimeout_buf[0] = c;
+                mimeout_buf_count = 1;
+            }else{
+                if (base64_count > 1
+                    && base64_count + mimeout_buf_count > 76){
+                    (*o_mputc)(NL);
+                    base64_count = 0;
+                    if (!nkf_isspace(mimeout_buf[0])){
+                        (*o_mputc)(SPACE);
+                        base64_count++;
+                    }
+                }
+                mimeout_buf[mimeout_buf_count++] = c;
+                if (mimeout_buf_count>MIMEOUT_BUF_LENGTH) {
+                    open_mime(output_mode);
+                }
+            }
+            return;
+        }else{
+            if (lastchar==CR || lastchar == NL){
+                for (i=0;i<mimeout_buf_count;i++) {
+                    (*o_mputc)(mimeout_buf[i]);
+                }
+                base64_count = 0;
+                mimeout_buf_count = 0;
+            }
+            if (lastchar==SPACE) {
+                for (i=0;i<mimeout_buf_count-1;i++) {
+                    (*o_mputc)(mimeout_buf[i]);
+                    base64_count++;
+                }
+                mimeout_buf[0] = SPACE;
+                mimeout_buf_count = 1;
+            }
+            open_mime(output_mode);
+        }
+    }else{
+        /* mimeout_mode == 'B', 1, 2 */
+        if ( c<=DEL && (output_mode==ASCII ||output_mode == ISO8859_1 ) ) {
+            if (lastchar == CR || lastchar == NL){
+                if (nkf_isblank(c)) {
+                    for (i=0;i<mimeout_buf_count;i++) {
+                        mimeout_addchar(mimeout_buf[i]);
+                    }
+                    mimeout_buf_count = 0;
+                } else if (SPACE<c && c<DEL) {
+                    eof_mime();
+                    for (i=0;i<mimeout_buf_count;i++) {
+                        (*o_mputc)(mimeout_buf[i]);
+                    }
+                    base64_count = 0;
+                    mimeout_buf_count = 0;
+                }
+            }
+            if (c==SPACE || c==TAB || c==CR || c==NL) {
+                for (i=0;i<mimeout_buf_count;i++) {
+                    if (SPACE<mimeout_buf[i] && mimeout_buf[i]<DEL) {
+                        eof_mime();
+                        for (i=0;i<mimeout_buf_count;i++) {
+                            (*o_mputc)(mimeout_buf[i]);
+                            base64_count++;
+                        }
+                        mimeout_buf_count = 0;
+                    }
+                }
+                mimeout_buf[mimeout_buf_count++] = c;
+                if (mimeout_buf_count>MIMEOUT_BUF_LENGTH) {
+                    eof_mime();
+                    for (i=0;i<mimeout_buf_count;i++) {
+                        (*o_mputc)(mimeout_buf[i]);
+                        base64_count++;
+                    }
+                    mimeout_buf_count = 0;
+                }
+                return;
+            }
+            if (mimeout_buf_count>0 && SPACE<c && c!='=') {
+                mimeout_buf[mimeout_buf_count++] = c;
+                if (mimeout_buf_count>MIMEOUT_BUF_LENGTH) {
+                    j = mimeout_buf_count;
+                    mimeout_buf_count = 0;
+                    for (i=0;i<j;i++) {
+                        mimeout_addchar(mimeout_buf[i]);
+                    }
+                }
+                return;
+            }
+        }
+    }
     if (mimeout_buf_count>0) {
 	j = mimeout_buf_count;
 	mimeout_buf_count = 0;
