@@ -18,4 +18,16 @@
 /* --debug, --no-output オプション */
 #define CHECK_OPTION
 
+/* SunOS の cc を使うときは undef にしてください */
+#define ANSI_C_PROTOTYPE
+
+/******************************/
+/* デフォルトの出力コード選択 */
+/* Select DEFAULT_CODE */
+#define DEFAULT_CODE_JIS
+/* #define DEFAULT_CODE_SJIS */
+/* #define DEFAULT_CODE_EUC */
+/* #define DEFAULT_CODE_UTF8 */
+/******************************/
+
 #endif /* _CONFIG_H_ */
