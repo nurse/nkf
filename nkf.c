@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.38 2004/11/09 13:08:39 naruse Exp $ */
+/* $Id: nkf.c,v 1.39 2004/11/15 14:44:49 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
-#define NKF_RELEASE_DATE "2004-11-09"
+#define NKF_RELEASE_DATE "2004-11-15"
 #include "config.h"
 
 static char *CopyRight =
@@ -110,6 +110,8 @@ static char *CopyRight =
 #include <stdio.h>
 #endif
 
+#include <stdlib.h>
+
 #if defined(MSDOS) || defined(__OS2__) 
 #include <fcntl.h>
 #include <io.h>
@@ -142,7 +144,6 @@ static char *CopyRight =
 
 #ifdef OVERWRITE
 /* added by satoru@isoternet.org */
-#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #ifndef MSDOS /* UNIX, OS/2 */
@@ -206,6 +207,7 @@ static char *CopyRight =
 /* ASCII CODE */
 
 #define         BS      0x08
+#define         TAB     0x09
 #define         NL      0x0a
 #define         CR      0x0d
 #define         ESC     0x1b
@@ -216,6 +218,7 @@ static char *CopyRight =
 #define         SI      0x0f
 #define         SO      0x0e
 #define         SSO     0x8e
+#define         SS3     0x8f
 
 #define		is_alnum(c)  \
             (('a'<=c && c<='z')||('A'<= c && c<='Z')||('0'<=c && c<='9'))
@@ -2066,6 +2069,20 @@ kanji_convert(f)
             } else if ((c1 == NL || c1 == CR) && broken_f&4) {
                 input_mode = ASCII; set_iconv(FALSE, 0);
                 SEND;
+	    } else if (c1 == CR && mime_f && !mime_decode_mode ) {
+		if ((c1=(*i_getc)(f))!=EOF && c1 == NL) {
+		    if ((c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
+			i_ungetc(SPACE,f);
+			continue;
+		    } else {
+			i_ungetc(c1,f);
+		    }
+		    i_ungetc(NL,f);
+		} else {
+		    i_ungetc(c1,f);
+		}
+		c1 = CR;
+		SEND;
 	    } else 
                 SEND;
         }
@@ -3567,6 +3584,10 @@ FILE *f;
 {
     int c1, c2, c3, c4, cc;
     int t1, t2, t3, t4, mode, exit_mode;
+    int lwsp_count;
+    char *lwsp_buf;
+    char *lwsp_buf_new;
+    int lwsp_size = 128;
 
     if (mime_top != mime_last) {  /* Something is in FIFO */
         return  Fifo(mime_top++);
@@ -3595,8 +3616,54 @@ restart_mime_q:
         if (c1=='?'&&c2=='=' && mimebuf_f != FIXED_MIME) {
             /* end Q encoding */
             input_mode = exit_mode;
-            while((c1=(*i_getc)(f))!=EOF && c1==SPACE 
-                        /* && (c1==NL||c1==TAB||c1=='\r') */ ) ;
+	    lwsp_count = 0;
+	    lwsp_buf = malloc((lwsp_size+5)*sizeof(char));
+	    if (lwsp_buf==NULL) {
+		perror("can't malloc");
+		return -1;
+	    }
+	    while ((c1=(*i_getc)(f))!=EOF) {
+		switch (c1) {
+		case CR:
+		    if ((c1=(*i_getc)(f))!=EOF && c1 == NL) {
+			if ((c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
+			    i_ungetc(SPACE,f);
+			    continue;
+			} else {
+			    i_ungetc(c1,f);
+			}
+			i_ungetc(NL,f);
+		    } else {
+			i_ungetc(c1,f);
+		    }
+		    c1 = CR;
+		    break;
+		case SPACE:
+		case TAB:
+		    lwsp_buf[lwsp_count] = c1;
+		    if (lwsp_count++>lwsp_size){
+			lwsp_size *= 2;
+			lwsp_buf_new = realloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
+			if (lwsp_buf_new==NULL) {
+			    free(lwsp_buf);
+			    lwsp_buf = NULL;
+			    perror("can't realloc");
+			    return -1;
+			}
+			lwsp_buf = lwsp_buf_new;
+		    }
+		    continue;
+		}
+		break;
+	    }
+	    if (lwsp_count > 0 && c1!='=' && c1!=')') {
+		i_ungetc(c1,f);
+		for(lwsp_count--;lwsp_count>0;lwsp_count--)
+		    i_ungetc(lwsp_buf[lwsp_count],f);
+		c1 = lwsp_buf[lwsp_count];
+	    }
+	    free(lwsp_buf);
+	    lwsp_buf = NULL;
             return c1;
         }
         if (c1=='='&&c2<' ') { /* this is soft wrap */
@@ -3650,8 +3717,54 @@ mime_c2_retry:
     }
     if ((c1 == '?') && (c2 == '=')) {
         input_mode = ASCII;
-        while((c1=(*i_getc)(f))!=EOF && c1==SPACE 
-                    /* && (c1==NL||c1==TAB||c1=='\r') */ ) ;
+	lwsp_count = 0;
+	lwsp_buf = malloc((lwsp_size+5)*sizeof(char));
+	if (lwsp_buf==NULL) {
+	    perror("can't malloc");
+	    return -1;
+	}
+	while ((c1=(*i_getc)(f))!=EOF) {
+	    switch (c1) {
+	    case CR:
+		if ((c1=(*i_getc)(f))!=EOF && c1 == NL) {
+		    if ((c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
+			i_ungetc(SPACE,f);
+			continue;
+		    } else {
+			i_ungetc(c1,f);
+		    }
+		    i_ungetc(NL,f);
+		} else {
+		    i_ungetc(c1,f);
+		}
+		c1 = CR;
+		break;
+	    case SPACE:
+	    case TAB:
+		lwsp_buf[lwsp_count] = c1;
+		if (lwsp_count++>lwsp_size){
+		    lwsp_size *= 2;
+		    lwsp_buf_new = realloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
+		    if (lwsp_buf_new==NULL) {
+			free(lwsp_buf);
+			lwsp_buf = NULL;
+			perror("can't realloc");
+			return -1;
+		    }
+		    lwsp_buf = lwsp_buf_new;
+		}
+		continue;
+	    }
+	    break;
+	}
+	if (lwsp_count > 0 && c1!='=' && c1!=')') {
+	    i_ungetc(c1,f);
+	    for(lwsp_count--;lwsp_count>0;lwsp_count--)
+		i_ungetc(lwsp_buf[lwsp_count],f);
+	    c1 = lwsp_buf[lwsp_count];
+	}
+	free(lwsp_buf);
+	lwsp_buf = NULL;
         return c1;
     }
 mime_c3_retry:
