@@ -1,7 +1,7 @@
 
 
 
-NKF(2)                                                     NKF(2)
+NKF(1)                                                     NKF(1)
 
 
 NNAAMMEE
@@ -47,17 +47,17 @@ DDEESSCCRRIIPPTTIIOONN
               ラ グ も 必要である。-m0 ではMIMEを解読しない。-mQ,
               -mBでは、 Q encode, B encode されているものとして処
               理する。
-                -mB   MIME base64 stream を解読する。ヘッダなどは取り除くこと。
-                -mQ   MIME quoted stream を解読する。
-                -mS   MIME のチェックを厳しくする (デフォルト)
-                -mN   MIME のチェックを緩くする
-                -m0   MIME を解読しない。
+                 -mB MIME  base64 stream を解読する。ヘッダなどは
+                     取り除くこと。
+                 -mQ MIME quoted stream を解読する。
+                 -mS MIME のチェックを厳しくする (デフォルト)
+                 -mN MIME のチェックを緩くする
+                 -m0 MIME を解読しない。
+              -mS は、宣言の内容と、その後に続くbase64の整合性 を
+              チェックする。 -mN は、改行で切られたMIMEなども解読
+              する。解読が止まらないこともある。
 
-                -mS は、宣言の内容と、その後に続くbase64の整合性をチェックする。
-                -mN は、改行で切られたMIMEなども解読する。解読が止まらないこともある。
-
-       --MM[[BBQQ]] MIME  に変換する。JISにコード変換してからbase64され
-              る。
+       --MM[[BBQQ]] MIME に変換する。JISにコード変換してからbase64さ れ
 
 
 
@@ -67,12 +67,13 @@ DDEESSCCRRIIPPTTIIOONN
 
 
 
-NKF(2)                                                     NKF(2)
+NKF(1)                                                     NKF(1)
 
 
-                -M    ヘッダ形式に変換する
-                -MB   base64 stream に変換する
-                -MQ   Quoted stream に変換する
+              る。
+               -M     ヘッダ形式に変換する
+               -MB    base64 stream に変換する
+               -MQ    Quoted stream に変換する
 
        --JJ --EE --SS --XX --BB
               期待される入力コードの性質を指定する。
@@ -96,14 +97,14 @@ NKF(2)                                                     NKF(2)
        --ff_?    一行_?文字になるように簡単な整形をおこなう。デフォル
               トは 60文字である。
 
-       --ZZ     X0208中 の 英数字と若干の記号をASCIIに変換する。-Z1
-              はX0208間隔をASCII spaceに変換する。-Z2はX0208間 隔
-              をASCII  space 二つに変換する。趣味によって使い分け
+       --ZZ     X0208中の英数字と若干の記号をASCIIに変換 す る。-Z1
+              はX0208間 隔をASCII spaceに変換する。-Z2はX0208間隔
+              をASCII space 二つに変換する。趣味によって使い分 け
               てほしい。
 
        --bb     バッファリング出力を行う。(デフォルト)
 
-       --uu     出力時に、バッファリングしない。  ssh  localhost  |
+       --uu     出 力 時 に、バッファリングしない。 ssh localhost |
               nkf -u というように使う。
 
        --tt     何もしない。
@@ -113,17 +114,16 @@ NKF(2)                                                     NKF(2)
        --ii_?    JIS漢字を指示するシーケンスとして EESSCC--''$$''--_?を使用す
               る。 (デフォルトは、ESC-'$'-'B')
 
-       --oo_?    1バイト英数文字セットを指示するシ ー ケ ン ス と し
-              て、EESSCC--''((''--_?を  使  用  す  る。   (デ  フォ ル ト
+       --oo_?    1バ イ ト 英 数 文 字セットを指示するシーケンスとし
+              て、EESSCC--''((''--_?を 使 用  す  る。   (デ  フォ  ル  ト
               は、ESC-'('-'B')
 
        --rr     ROT13/47の変換をする。
 
        --vv     バージョンを表示する。
 
-       --TT     テキストモードで出力する。(MS-DOS上でのみ効力 を 持
+       --TT     テ キ ストモードで出力する。(MS-DOS上でのみ効力を持
               つ)
-
 
 
 
@@ -133,62 +133,62 @@ NKF(2)                                                     NKF(2)
 
 
 
-NKF(2)                                                     NKF(2)
+NKF(1)                                                     NKF(1)
 
 
        --ll     0x80-0xfeのコードをISO-8859-1 (Latin-1)として扱う。
               JISコードアウトプットとの組合せみのみ有効。 -s, -e,
               -xとは両立しない。
 
-       --xx     通 常おこなわれるX0201仮名->X0208の仮名変換をしない
+       --xx     通常おこなわれるX0201仮名->X0208の仮名変換をしな い
               で、
-               X0201仮名を保存す る。 入 力 は、MS-Kanjiの1byte仮
-              名、SO/SI、  ESC-(-I, SSOを受け付ける。出力は、日本
+               X0201仮 名 を 保 存する。入力は、MS-Kanjiの1byte仮
+              名、SO/SI、 ESC-(-I, SSOを受け付ける。出力は、日 本
               語EUC中ではSSO、 JISでは ESC-'('-I を使う。
 
-       --OO     ファイルに 出 力 す る。Unixで は 不 要 な 機 能 だ
-              がWindowsやMSDOSで は 必 要らしい。直後の引き数でな
-              く、最後のファイル名が出力ファイル名となり上書き さ
-              れ て し ま う の で 注意。ファイル名がない場合は、
+       --OO     ファ イ ル に 出 力 す る。Unixで は 不 要 な機能だ
+              がWindowsやMSDOSでは必要らしい。直後の引き 数 で な
+              く、 最後のファイル名が出力ファイル名となり上書きさ
+              れてしまうので注意。ファイル 名 が な い 場 合 は、
               nkf.out。
 
        --cc     NLまえにCRを付加する。
 
-       --dd     NLまえのCRを削除する。単独のCRは、NLに置き換えら れ
+       --dd     NLま えのCRを削除する。単独のCRは、NLに置き換えられ
               る。
 
-       --LL[[wwmmuu]] 改改行行モモーードド
-                            -Lu   unix (LF)
-                            -Lw   windows (CRLF)
-                            -Lm   mac (CR)
-                        デフォルトは変換なし。
+       --LL[[wwmmuu]]
+              改行モード
+                      -Lu    unix (LF)
+                      -Lw    windows (CRLF)
+                      -Lm    mac (CR)
+              デフォルトは変換なし。
 
        ---- 長長いい名名前前ののオオププシショョンン。。ここれれららはは、、上上ののオオププシショョンンのの組組合合せせ
               のの別別名名。。
-                   --fj,--unix,--mac,--msdos, --windows
-                         これらのシステムに適した変換をします。
+              --fj,--unix,--mac,--msdos, --windows
+                     これらのシステムに適した変換をします。
 
-                   --jis,--euc,--sjis,--mime,--base64
-                      対応する変換をします。
+              --jis,--euc,--sjis,--mime,--base64
+                     対応する変換をします。
 
-                   --hirakana, --katakana 平仮名、片仮名変換
-                   --cap-input, --url-input それぞれ ':', '%' に続く 16 進数を文字に変換する
-                   --overwrite 元のファイルを変換結果で置き換える。複数のファイルを書き換えることも可能。
-                   --no-cp932 Shift_JIS の、FAxx-FCxx を、CP932 で同値な文字に読み換える動作を無効にする
-                   --help
-                   --version
-                   --        これ以降のオプションを無視する
+              --hirakana, --katakana
+                     平仮名、片仮名変換
 
-       次次のの 22 つつはは、、ccoonnffiigg..hh でで EEXXEECC__IIOO をを ddeeffiinnee ししててココンンパパイイルル
-              ししたた時時のの みみ有有効効
-                   --exec-in  nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf の入力とする
-                   --exec-out  nkf [options] --exec-out cmd args... とやると、nkf の出力を cmd の入力とする
+              --cap-input, --url-input
+                     それぞれ ':', '%' に続く 16 進数を文字に変換
+                     する
 
-AAUUTTHHOORR
-       市川  至  ichikawa@flab.fujitsu.co.jp   (was ichikawa@fujitsu.JUNET)
-       河野  真治      kono@ie.u-ryukyu.acjp
-       Rei FURUKAWA    furukawa@tcp-ip.or.jp
+              --overwrite
+                     元 の ファイルを変換結果で置き換える。複数の
+                     ファイルを書き換えることも可能。
 
+              --no-cp932 Shift_JIS の、FAxx-FCxx を、CP932 で同値
+                     な文字に読み換 える動作を無効にする
+
+              --help
+
+              --version
 
 
 
@@ -199,7 +199,26 @@ AAUUTTHHOORR
 
 
 
-NKF(2)                                                     NKF(2)
+NKF(1)                                                     NKF(1)
+
+
+              --     これ以降のオプションを無視する
+
+       次次のの 22 つつはは、、ccoonnffiigg..hh でで EEXXEECC__IIOO をを ddeeffiinnee ししててココンンパパイイルル
+              ししたた時時のの みみ有有効効
+              --exec-in
+                     nkf [options] --exec-in cmd args... と や る
+                     と、cmd の出力を nkf の入力とする
+
+              --exec-out
+                     nkf  [options] --exec-out cmd args... とやる
+                     と、nkf の出力を cmd の入力とする
+
+AAUUTTHHOORR
+       市川  至  ichikawa@flab.fujitsu.co.jp   (was ichikawa@fujitsu.JUNET)
+       河野  真治      kono@ie.u-ryukyu.acjp
+       Rei FURUKAWA    furukawa@tcp-ip.or.jp
+
 
 
 BBUUGGSS
@@ -208,35 +227,47 @@ BBUUGGSS
        て、特定不能の間は保留バッファにためておかれ、確定後に処理
        される。このため、
 
-       1)     7ビットJISは常に認識される。シフトJIS、EUC混合も ほ
+       1)     7ビッ トJISは常に認識される。シフトJIS、EUC混合もほ
               とんどの場合は問題がない。ただし、
 
-       2)     シ フ トJISのX0201仮名とEUCが識別できない。したがっ
-              て、デフォルトではシフトJISのX0201仮名はないと仮 定
+       2)     シフトJISのX0201仮名とEUCが識別できない。し た がっ
+              て、 デフォルトではシフトJISのX0201仮名はないと仮定
               している。
 
        このフィルタの変換は、コード系に対応した一括写像を施すだけ
-       なので、外字や特殊記号や罫線素片など、JIS第一、第二水準 表
+       な ので、外字や特殊記号や罫線素片など、JIS第一、第二水準表
        において定義されていないコードに各社により割り当てられた文
-       字変換しない。第三水準なども変換しない。 UTF8の日本語以 外
+       字 変換しない。第三水準なども変換しない。 UTF8の日本語以外
        の部分にも対応していない。
 
 
 kkoonnoo@@ccssll..ssoonnyy..ccoo..jjpp ((SShhiinnjjii KKoonnoo)) にによよるる変変更更。。
        X0201仮名(いわゆる半角かな)はデフォルトでX0208(全角仮名)に
-       変換される。ただし、シフトJISのX0201仮名はデ フォ ル ト で
-       はEUCだ と解釈されてしまう。これが望ましくない時には -S や
-       - -X などのフラグを使えば良い。-Xを指定すると一旦確定し た
-       シ フ トJISか ら  EUCに 移 行することはない。ESC-(-Iによる
+       変 換 さ れ る。ただし、シフトJISのX0201仮名はデフォルトで
+       はEUCだと解釈されてしまう。これが望ましくない時には -S  や
+       -  -X などのフラグを使えば良い。-Xを指定すると一旦確定した
+       シフトJISから EUCに移行するこ と は な い。ESC-(-Iに よ る
        X0201は常に認識される。SI/SO SSOは、-lが指定されていなけれ
        ばX0201と解釈する。
 
        MIME
        decodeは、ISO-2022-JPのbase64と、ISO-8859-1の16進encodeの
-       み  decodeする。 MIME decodeは、単純な改行や空白は安全に読
+       み decodeする。 MIME decodeは、単純な改行や空白は安全に 読
        み飛ばされる。ということは、 MIME decode中の空白は保存され
-       な い。変換は可逆ではない。 lessやrnで行が分割された時は、
-       Terminalによって異なる ESC-[-K などが挿入されるので、完 全
+       ない。変換は可逆ではない。 lessやrnで行が分割された時 は、
+       Terminalに よって異なる ESC-[-K などが挿入されるので、完全
+
+
+
+                           13/Oct/2003                          4
+
+
+
+
+
+NKF(1)                                                     NKF(1)
+
+
        にはdecode できない。-mN では、チェックが緩いので decodeで
        きる場合もある。 ISO-8859-1 出力はJIS コード出力としか両立
        しない。
@@ -250,26 +281,14 @@ kkoonnoo@@ccssll..ssoonnyy..ccoo..jjpp ((SShhiinnjjii 
 
 
 nnkkff 11..66 kkoonnoo@@iiee..uu--rryyuukkyyuu..aacc..jjpp ((SShhiinnjjii KKoonnoo)) にによよるる変変更更。。
-        -B のlevelを0,1,2 に増やした。MIMEのbase64,  Q-Encodingを
+        -B  のlevelを0,1,2 に増やした。MIMEのbase64, Q-Encodingを
        解読する機能を付けた。ヘッダなどは解読しないので、Encodeさ
-       れた部分だけを通す必要がある。 -mB は、nkf1.5と違う動き を
+       れ た部分だけを通す必要がある。 -mB は、nkf1.5と違う動きを
        するので、-B -m とすること。
 
 
-
-
-
-                           13/Oct/2003                          4
-
-
-
-
-
-NKF(2)                                                     NKF(2)
-
-
 nnkkff 11..66..11
-       -Z1  でX0208間 隔->ASCII  spaceの 変 換 を お こなう。 -Z2
+       -Z1 でX0208間隔->ASCII spaceの 変 換 を お こ な う。  -Z2
        でX0208間隔->ASCII space 2個の変換をおこなう。
 
 
@@ -277,21 +296,21 @@ nnkkff 11..66..11
 nnkkff 11..77
        ESC-$-(-B などにも対応するようになった。
 
-       copy right の非営利の条件が不要になった。使用時の問い合 わ
+       copy  right の非営利の条件が不要になった。使用時の問い合わ
        せも不要。
 
        Perl Extension として使えるようになった。
 
 
 nnkkff 11..99
-       MIME  エ ン コードの機能時でも、コード変換されしまうので注
+       MIME エンコードの機能時でも、コード変換されしまう の で 注
        意。 base64 エンコードでは改行時に先頭に空白が付くのでメー
        ルヘッダに使用できる。
 
        コード変換モジュールは、サブルーチンを継続によって接続する
        形式となった。複数の変換を自由に接続できるようになった。
 
-             getc <-- iconv --> oconv -->  other  conversion  -->
+             getc  <--  iconv  --> oconv --> other conversion -->
        putc
 
        という形で、順に呼び出される。
@@ -303,10 +322,22 @@ nnkkff 11..99
            --unix など。
 
 
+
+
+
+                           13/Oct/2003                          5
+
+
+
+
+
+NKF(1)                                                     NKF(1)
+
+
 UUTTFF--88 ササポポーートトににつついいてて
        furukawa@tcp-ip.or.jp による。
 
-       従 来 の nkf と同様に、nkf -e として起動すると、自動判別で
+       従来の nkf と同様に、nkf -e として起動すると、自動判 別 で
        UTF-8 と判定されれば、そのまま euc-jp に変換される。
 
 
@@ -324,16 +355,6 @@ UUTTFF--88 ササポポーートトににつついいてて
                '&gt;', '&lt;', '&quot;', '&amp;' に変換します
 
 
-
-                           13/Oct/2003                          5
-
-
-
-
-
-NKF(2)                                                     NKF(2)
-
-
 nnkkff 22..00
        newline を保存する folding -F。fmtに近い動作をする。
 
@@ -342,8 +363,8 @@ nnkkff 22..00
        制的にfoldingする。携帯にメールを送るときに使う。
 
 
-       nkf -f40-0 などとしてメールを 40 文字づつ 切 り 出 し て、
-       「Subject  160 文字目から 199 文字目まで」「本文    200 文
+       nkf  -f40-0  な ど と してメールを 40 文字づつ切り出して、
+       「Subject 160 文字目から 199 文字目まで」「本文    200  文
        字目から 239 文字目まで」とする。
 
 
@@ -355,16 +376,28 @@ MMIIMMEE関関係係
        Q encode の Soft Wrap に対応。
 
 
-       MIME  encode のWrapでは、先頭に一文字の空白挿入。した。あA
+       MIME encode のWrapでは、先頭に一文字の空白挿入。した。 あA
        の MIME 変換は、A を含んで変換しないといけないが、対応して
-       い な い。RFCに は 反した動作だが、 encoded word 間のwhite
+       いない。RFCには反した動作だが、  encoded  word  間 のwhite
        spaceは無視される。 nkf_test.pl では、MIMEの空白を削除して
        から比較している。
 
 
-       non-strict  mime  -MN  で は、空白、改行をまたいで、base64
+       non-strict mime -MN では、空白、改行を ま た い で、base64
        encoding を解読する。これで、スクリーンからcut&pasteでデコ
        ードすることも可能。止まらない可能性あり。
+
+
+
+
+
+                           13/Oct/2003                          6
+
+
+
+
+
+NKF(1)                                                     NKF(1)
 
 
 そそのの他他
@@ -372,7 +405,7 @@ MMIIMMEE関関係係
        にdiffを取るようにした。 make_test.pl でテスト作成可能。
 
 
-       Perl moduleで、\0を含む文字列も変換できるよう に なっ た。
+       Perl  moduleで、\0を 含 む文字列も変換できるようになった。
        Perl XSでの文字列の長さの扱いを修正。
 
        NKFをNKF.modにしたので、Mac OS X でMakeでコンパイル化。
@@ -388,17 +421,6 @@ MMIIMMEE関関係係
           -h1   --katakana ひらがな->かたかな
           -h2   --hirakana かたかな->ひらがな
           -h3   --hirakana-katakana かたかな<->ひらがな
-
-
-
-                           13/Oct/2003                          6
-
-
-
-
-
-NKF(2)                                                     NKF(2)
-
 
        --overwrite で、引数のファイルを直接、置き換えることができ
        ます。
@@ -418,7 +440,7 @@ nnkkff 22..00..44 ((予予定定))
 
 
        --numchar-input オプションを新設
-           mhonarc など、日本語を UTF-16 の &#....; のパターン で
+           mhonarc  など、日本語を UTF-16 の &#....; のパターンで
        出力するものを変換します。
 
 
@@ -430,6 +452,18 @@ nnkkff 22..00..44 ((予予定定))
            nkf -e --exec-out cmd args...
            とやると、nkf の出力を cmd の入力とします。
 
+
+
+
+
+
+                           13/Oct/2003                          7
+
+
+
+
+
+NKF(1)                                                     NKF(1)
 
 
 AACCKKNNOOWWLLEEDDGGEE
@@ -454,18 +488,6 @@ AACCKKNNOOWWLLEEDDGGEE
        KAWAMURA Masao
        Kazuhiko Mori
        Keitaro Isokawa
-
-
-
-                           13/Oct/2003                          7
-
-
-
-
-
-NKF(2)                                                     NKF(2)
-
-
        Ken-ichi Hirose
        Ki-ichiro SATO
        Kiwamu Aoyama
@@ -498,6 +520,18 @@ NKF(2)                                                     NKF(2)
        金井 智彦
        桂田 祐史 （かつらだ まさし）
        高橋宜盟
+
+
+
+                           13/Oct/2003                          8
+
+
+
+
+
+NKF(1)                                                     NKF(1)
+
+
        国吉
        黒江明彦
        三宅正泰
@@ -520,18 +554,6 @@ NKF(2)                                                     NKF(2)
        望月 孝志
        木村（＠筑波大学数学研究科）
        野村俊彰
-
-
-
-                           13/Oct/2003                          8
-
-
-
-
-
-NKF(2)                                                     NKF(2)
-
-
        有岡＠ミノルタ
        有沢 明宏
        落合一喜
@@ -543,28 +565,6 @@ NKF(2)                                                     NKF(2)
 
        河野真治
             www.ie.u-ryukyu.ac.jp/~kono/nkf/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

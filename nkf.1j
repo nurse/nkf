@@ -1,4 +1,4 @@
-.TH NKF 2 13/Oct/2003
+.TH NKF 1 13/Oct/2003
 .SH NAME
 nkf \- ネットワーク用漢字コード変換フィルタ v2.0.4
 .SH SYNOPSIS
@@ -40,44 +40,70 @@ MIME を解読する。(デフォルト) ISO-2022-JP(base64)とISO-8859-1(
 のみを解読する。ISO-8859-1 (Latin-1) を解読する時は、
 -lフラグも必要である。\-m0 ではMIMEを解読しない。\-mQ, \-mBでは、
 Q encode, B encode されているものとして処理する。
-.nf
-  \-mB   MIME base64 stream を解読する。ヘッダなどは取り除くこと。
-  \-mQ   MIME quoted stream を解読する。
-  \-mS   MIME のチェックを厳しくする (デフォルト)
-  \-mN   MIME のチェックを緩くする
-  \-m0   MIME を解読しない。
-
-  \-mS は、宣言の内容と、その後に続くbase64の整合性をチェックする。
-  \-mN は、改行で切られたMIMEなども解読する。解読が止まらないこともある。
-.fi
+.PD 0
+.RS
+.RS 3
+.TP 4
+\-mB
+MIME base64 stream を解読する。ヘッダなどは取り除くこと。
+.TP
+\-mQ
+MIME quoted stream を解読する。
+.TP
+\-mS
+MIME のチェックを厳しくする (デフォルト)
+.TP
+\-mN
+MIME のチェックを緩くする
+.TP
+\-m0
+MIME を解読しない。
+.RE
+.PD
+\-mS は、宣言の内容と、その後に続くbase64の整合性をチェックする。
+\-mN は、改行で切られたMIMEなども解読する。解読が止まらないこともある。
+.RE
 .TP
 .B  \-M[BQ] 
 MIME に変換する。JISにコード変換してからbase64される。
-.RS
-.nf
-  \-M    ヘッダ形式に変換する
-  \-MB   base64 stream に変換する
-  \-MQ   Quoted stream に変換する
-.fi
+.RS 8
+.PD 0
+.TP
+\-M
+ヘッダ形式に変換する
+.TP
+\-MB
+base64 stream に変換する
+.TP
+\-MQ
+Quoted stream に変換する
 .RE
+.PD
 .TP
 .B "\-J \-E \-S \-X \-B"
 期待される入力コードの性質を指定する。
 .RS
-.IP \fB\-J\fP
+.TP
+.B \-J
 ISO-2022-JPを仮定する。
-.IP \fB\-E\fP
+.TP
+.B \-E
 日本語EUC(AT&T)を仮定する。
-.IP \fB\-S\fP
+.TP
+.B \-S
 MS漢字を仮定する。X0201仮名も仮定される。
-.IP \fB\-X\fP
+.TP
+.B \-X
 MS漢字中にX0201仮名があると仮定する。
-.IP \fB\-B\fP
+.TP
+.B \-B
 壊れた(Broken)JISコード。ESCがなくなったと仮定する。
 .RS
-.IP \fB\-B1\fP
+.TP
+.B \-B1
  \fBESC-(\fP, \fBESC-$\fP のあとのコードを問わない
-.IP \fB\-B2\fP
+.TP
+.B \-B2
 改行のあとに強制的にASCIIの戻す
 .RE
 .RE
@@ -145,36 +171,66 @@ NLまえにCRを付加する。
 .B \-d
 NLまえのCRを削除する。単独のCRは、NLに置き換えられる。
 .TP
-.B \-L[wmu] 改行モード 
-.nf
-		    -Lu   unix (LF) 
-		    -Lw   windows (CRLF) 
-		    -Lm   mac (CR) 
-		デフォルトは変換なし。
-.fi
+.B \-L[wmu]
+改行モード 
+.RS
+.RS
+.PD 0
+.TP
+-Lu
+unix (LF) 
+.TP
+-Lw
+windows (CRLF) 
+.TP
+-Lm
+mac (CR) 
+.RE
+デフォルトは変換なし。
+.RE
+.PD
 .TP
 .B \-- 長い名前のオプション。これらは、上のオプションの組合せの別名。
-.nf
-     \--fj,\--unix,\--mac,\--msdos, \--windows
-           これらのシステムに適した変換をします。
-
-     \--jis,\--euc,\--sjis,\--mime,\--base64  
-	   対応する変換をします。
-
-     \--hirakana, \--katakana 平仮名、片仮名変換
-     \--cap-input, \--url-input それぞれ ':', '%' に続く 16 進数を文字に変換する
-     \--overwrite 元のファイルを変換結果で置き換える。複数のファイルを書き換えることも可能。
-     \--no-cp932 Shift_JIS の、FAxx-FCxx を、CP932 で同値な文字に読み換える動作を無効にする
-     \--help
-     \--version
-     \--		これ以降のオプションを無視する
-.fi
+.RS
+.PD 0
+.TP
+\--fj,\--unix,\--mac,\--msdos, \--windows
+これらのシステムに適した変換をします。
+.PD
+.TP
+\--jis,\--euc,\--sjis,\--mime,\--base64  
+対応する変換をします。
+.TP
+\--hirakana, \--katakana
+平仮名、片仮名変換
+.TP
+\--cap-input, \--url-input
+それぞれ ':', '%' に続く 16 進数を文字に変換する
+.TP
+\--overwrite
+元のファイルを変換結果で置き換える。複数のファイルを書き換えることも可能。
+.TP
+\--no-cp932 Shift_JIS の、FAxx-FCxx を、CP932 で同値な文字に読み換える動作を無効にする
+.TP
+\--help
+.TP
+\--version
+.TP
+\--
+これ以降のオプションを無視する
+.RE
 .TP
 .B 次の 2 つは、config.h で EXEC_IO を define してコンパイルした時のみ有効
-.nf
-     \--exec-in  nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf の入力とする
-     \--exec-out  nkf [options] --exec-out cmd args... とやると、nkf の出力を cmd の入力とする
-.fi
+.RS
+.PD 0
+.TP
+\--exec-in
+nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf の入力とする
+.PD
+.TP
+\--exec-out
+nkf [options] --exec-out cmd args... とやると、nkf の出力を cmd の入力とする
+.RE
 .SH AUTHOR
 
 .nf
