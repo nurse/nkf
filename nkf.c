@@ -110,9 +110,6 @@ static char *Patchlevel =
 #include <stdio.h>
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-
 #if defined(MSDOS) || defined(__OS2__) 
 #include <fcntl.h>
 #include <io.h>
@@ -145,6 +142,8 @@ static char *Patchlevel =
 
 #ifdef OVERWRITE
 /* added by satoru@isoternet.org */
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #ifndef MSDOS /* UNIX, OS/2 */
 #include <unistd.h>
@@ -632,6 +631,9 @@ main(argc, argv)
     FILE  *fin;
     unsigned char  *cp;
 
+    char *outfname;
+    char *origfname;
+
 #ifdef EASYWIN /*Easy Win */
     _BufferSize.y = 400;/*Set Scroll Buffer Size*/
 #endif
@@ -697,9 +699,6 @@ main(argc, argv)
           kanji_convert(stdin);
     } else {
       while (argc--) {
-          char *outfname;
-	  char *origfname;
-
           if ((fin = fopen((origfname = *argv++), "r")) == NULL) {
               perror(*--argv);
               return(-1);
@@ -1536,9 +1535,13 @@ void w_status(ptr, c)
           if (0x80 <= c && c <= 0xbf){
               status_push_ch(ptr, c);
               if (ptr->index > ptr->stat){
+                  int bom = (ptr->buf[0] == 0xef && ptr->buf[1] == 0xbb
+                             && ptr->buf[2] == 0xbf);
                   w2e_conv(ptr->buf[0], ptr->buf[1], ptr->buf[2],
                            &ptr->buf[0], &ptr->buf[1]);
-                  code_score(ptr);
+                  if (!bom){
+                      code_score(ptr);
+                  }
                   status_clear(ptr);
               }
           }else{
@@ -2205,8 +2208,8 @@ w2e_conv(c2, c1, c0, p2, p1)
         }
 #ifdef NUMCHAR_OPTION
         if (ret){
-            c1 = CLASS_UTF16 | ww16_conv(c2, c1, c0);
-            c2 = 0;
+            if (p2) *p2 = 0;
+            if (p1) *p1 = CLASS_UTF16 | ww16_conv(c2, c1, c0);
             ret = 0;
         }
 #endif
