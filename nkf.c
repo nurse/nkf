@@ -1201,7 +1201,7 @@ void s_status(ptr, c)
       case 0:
           if (c <= DEL){
               break;
-          }else if (0xa1 <= c && c <= 0xef){
+          }else if (0xa1 <= c && c <= 0xdf){
               status_push_ch(ptr, SSO);
               status_push_ch(ptr, c);
               code_score(ptr);
@@ -1214,7 +1214,7 @@ void s_status(ptr, c)
           }
           break;
       case 1:
-          if ((0x40 <= c && c <= 0x7e) || (0x80 <= c && c <= 0xfd)){
+          if ((0x40 <= c && c <= 0x7e) || (0x80 <= c && c <= 0xfc)){
               status_push_ch(ptr, c);
               s2e_conv(ptr->buf[0], ptr->buf[1], &ptr->buf[0], &ptr->buf[1]);
               code_score(ptr);
