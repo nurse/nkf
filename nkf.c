@@ -1007,7 +1007,7 @@ options(cp)
             } else if (*cp=='S') {
                 mime_f = STRICT_MIME; cp++;
             } else if (*cp=='0') {
-                mime_f = FALSE;
+                mime_f = FALSE; cp++;
             }
             continue;
         case 'M':   /* MIME output */
@@ -1047,13 +1047,13 @@ options(cp)
             continue;
         case 'L':  /* line mode */
             if (*cp=='u') {         /* unix */
-                crmode_f = NL;
+                crmode_f = NL; cp++;
             } else if (*cp=='m') { /* mac */
-                crmode_f = CR;
+                crmode_f = CR; cp++;
             } else if (*cp=='w') { /* windows */
-                crmode_f = CRLF;
+                crmode_f = CRLF; cp++;
             } else if (*cp=='0') { /* no conversion  */
-                crmode_f = 0;
+                crmode_f = 0; cp++;
             }
             continue;
         case ' ':    
@@ -1295,7 +1295,8 @@ void
 std_putc(c)
 int c;
 {
-    putchar(c);
+    if(c!=EOF)
+      putchar(c);
 }
 
 int
@@ -1984,6 +1985,7 @@ w_oconv(c2, c1)
                     c1;
 {
     if (c2 == EOF) {
+        (*o_putc)(EOF);
         return;
     } else if (c2 == 0) { 
 	output_mode = ASCII;
@@ -2020,6 +2022,7 @@ w_oconv16(c2, c1)
 	w_oconv16_begin_f=1;
     }
     if (c2 == EOF) {
+        (*o_putc)(EOF);
         return;
     } else if (c2 == 0) { 
         (*o_putc)(0);
@@ -2042,6 +2045,7 @@ e_oconv(c2, c1)
                     c1;
 {
     if (c2 == EOF) {
+        (*o_putc)(EOF);
         return;
     } else if (c2 == 0) { 
 	output_mode = ASCII;
@@ -2072,6 +2076,7 @@ s_oconv(c2, c1)
                     c1;
 {
     if (c2 == EOF) {
+        (*o_putc)(EOF);
         return;
     } else if (c2 == 0) {
 	output_mode = ASCII;
@@ -2106,6 +2111,7 @@ j_oconv(c2, c1)
             (*o_putc)(ascii_intro);
 	    output_mode = ASCII;
         }
+        (*o_putc)(EOF);
     } else if (c2==X0201) {
         if (output_mode!=X0201) {
             output_mode = X0201;
@@ -2154,7 +2160,7 @@ base64_conv(c2, c1)
     } else if (base64_count>66 && mimeout_mode) {
 	(*o_base64conv)(EOF,0);
 	(*o_putc)(NL);
-	(*o_putc)(' ');
+	(*o_putc)('\t'); base64_count += 7;
     }
     (*o_base64conv)(c2,c1);
 }
