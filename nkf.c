@@ -439,7 +439,7 @@ struct input_code input_code_list[] = {
     {"EUC-JP",    0, 0, 0, {0, 0, 0}, e_status, e_iconv, 0},
     {"Shift_JIS", 0, 0, 0, {0, 0, 0}, s_status, s_iconv, 0},
     {"UTF-8",     0, 0, 0, {0, 0, 0}, w_status, w_iconv, 0},
-    {"UTF-16",     0, 0, 0, {0, 0, 0}, w16_status, w_iconv16, 0},
+    {"UTF-16",    0, 0, 0, {0, 0, 0}, w16_status, w_iconv16, 0},
     {0}
 };
 
@@ -1196,6 +1196,25 @@ options(cp)
 }
 
 #ifdef ANSI_C_PROTOTYPE
+struct input_code * find_inputcode_byfunc(int (*iconv_func)(int c2,int c1,int c0))
+#else
+struct input_code * find_inputcode_byfunc(iconv_func)
+     int (*iconv_func)();
+#endif
+{
+    if (iconv_func){
+        struct input_code *p = input_code_list;
+        while (p->name){
+            if (iconv_func == p->iconv_func){
+                return p;
+            }
+            p++;
+        }
+    }
+    return 0;
+}
+
+#ifdef ANSI_C_PROTOTYPE
 void set_iconv(int f, int (*iconv_func)(int c2,int c1,int c0))
 #else
 void set_iconv(f, iconv_func)
@@ -1222,12 +1241,10 @@ void set_iconv(f, iconv_func)
     }
 #ifdef CHECK_OPTION
     if (estab_f && iconv_for_check != iconv){
-#ifdef UTF8_INPUT_ENABLE
-        if (iconv == w_iconv) debug(input_codename = "UTF-8");
-        if (iconv == w_iconv16) debug(input_codename = "UTF-16");
-#endif
-        if (iconv == s_iconv) debug(input_codename = "Shift_JIS");
-        if (iconv == e_iconv) debug(input_codename = "EUC-JP");
+        struct input_code *p = find_inputcode_byfunc(iconv);
+        if (p){
+            debug(input_codename = p->name);
+        }
         iconv_for_check = iconv;
     }
 #endif
@@ -1241,7 +1258,11 @@ void set_iconv(f, iconv_func)
 #else
 #define SCORE_NO_EXIST (SCORE_DEPEND << 1)   /* 存在しない文字 */
 #endif
-#define SCORE_ERROR    (SCORE_NO_EXIST << 1) /* エラー */
+#define SCORE_iMIME    (SCORE_NO_EXIST << 1) /* MIME による指定 */
+#define SCORE_ERROR    (SCORE_iMIME << 1) /* エラー */
+
+#define SCORE_INIT (SCORE_iMIME)
+
 int score_table_A0[] = {
     0, 0, 0, 0,
     0, 0, 0, 0,
@@ -1260,7 +1281,18 @@ void set_code_score(ptr, score)
      struct input_code *ptr;
      int score;
 {
-    ptr->score |= score;
+    if (ptr){
+        ptr->score |= score;
+    }
+}
+
+void clr_code_score(ptr, score)
+     struct input_code *ptr;
+     int score;
+{
+    if (ptr){
+        ptr->score &= ~score;
+    }
 }
 
 void code_score(ptr)
@@ -1300,12 +1332,19 @@ void status_push_ch(ptr, c)
     ptr->buf[ptr->index++] = c;
 }
 
-void status_reset(ptr)
+void status_clear(ptr)
      struct input_code *ptr;
 {
     ptr->stat = 0;
-    ptr->score = 0;
+    ptr->score &= SCORE_INIT;
     ptr->index = 0;
+}
+
+void status_reset(ptr)
+     struct input_code *ptr;
+{
+    status_clear(ptr);
+    ptr->score = SCORE_INIT;
 }
 
 void status_reinit(ptr)
@@ -1343,7 +1382,7 @@ void s_status(ptr, c)
               status_push_ch(ptr, SSO);
               status_push_ch(ptr, c);
               code_score(ptr);
-              status_reset(ptr);
+              status_clear(ptr);
           }else if ((0x81 <= c && c < 0xa0) || (0xe0 <= c && c <= 0xef)){
               ptr->stat = 1;
               status_push_ch(ptr, c);
@@ -1362,7 +1401,7 @@ void s_status(ptr, c)
               status_push_ch(ptr, c);
               s2e_conv(ptr->buf[0], ptr->buf[1], &ptr->buf[0], &ptr->buf[1]);
               code_score(ptr);
-              status_reset(ptr);
+              status_clear(ptr);
           }else{
               status_disable(ptr);
           }
@@ -1373,7 +1412,7 @@ void s_status(ptr, c)
               status_push_ch(ptr, c);
               if (s2e_conv(ptr->buf[0], ptr->buf[1], &ptr->buf[0], &ptr->buf[1]) == 0){
                   set_code_score(ptr, SCORE_CP932);
-                  status_reset(ptr);
+                  status_clear(ptr);
                   break;
               }
           }
@@ -1409,7 +1448,7 @@ void e_status(ptr, c)
           if (0xa1 <= c && c <= 0xfe){
               status_push_ch(ptr, c);
               code_score(ptr);
-              status_reset(ptr);
+              status_clear(ptr);
           }else{
               status_disable(ptr);
           }
@@ -1449,7 +1488,7 @@ void w16_status(ptr, c)
               ptr->_file_stat = -1;
           }else{
               status_push_ch(ptr, c);
-              status_reset(ptr);
+              status_clear(ptr);
           }
           break;
 
@@ -1457,7 +1496,7 @@ void w16_status(ptr, c)
       case 0xff:
           if (ptr->stat != c && (c == 0xfe || c == 0xff)){
               status_push_ch(ptr, c);
-              status_reset(ptr);
+              status_clear(ptr);
           }else{
               status_disable(ptr);
               ptr->_file_stat = -1;
@@ -1499,7 +1538,7 @@ void w_status(ptr, c)
                   w2e_conv(ptr->buf[0], ptr->buf[1], ptr->buf[2],
                            &ptr->buf[0], &ptr->buf[1]);
                   code_score(ptr);
-                  status_reset(ptr);
+                  status_clear(ptr);
               }
           }else{
               status_disable(ptr);
@@ -2011,7 +2050,7 @@ h_conv(f, c2, c1)
             }
             ++p;
         }
-        set_iconv(FALSE, p->iconv_func);
+        set_iconv(FALSE, result->iconv_func);
     }
 
 
@@ -3034,7 +3073,18 @@ unsigned char *mime_pattern[] = {
 #if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
    (unsigned char *)"\075?UTF-8?B?",
 #endif
+   (unsigned char *)"\075?US-ASCII?Q?",
    NULL
+};
+
+
+/* 該当するコードの優先度を上げるための目印 */
+int (*mime_priority_func[])PROTO((int c2, int c1, int c0)) = {
+    e_iconv, s_iconv, 0, 0, 0, 0,
+#if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
+    w_iconv,
+#endif
+    0,
 };
 
 int      mime_encode[] = {
@@ -3042,6 +3092,7 @@ int      mime_encode[] = {
 #if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
     UTF8,
 #endif
+    ASCII,
     0
 };
 
@@ -3050,6 +3101,7 @@ int      mime_encode_method[] = {
 #if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
     'B',
 #endif
+    'Q',
     0
 };
 
@@ -3119,6 +3171,9 @@ FILE *f;
         }
     }
     mime_decode_mode = p[i-2];
+
+    clr_code_score(find_inputcode_byfunc(mime_priority_func[j]), SCORE_iMIME);
+
     if (mime_decode_mode=='B') {
         mimebuf_f = unbuf_f;
         if (!unbuf_f) {
