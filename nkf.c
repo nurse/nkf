@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.59 2005/02/19 00:57:06 naruse Exp $ */
+/* $Id: nkf.c,v 1.60 2005/02/19 05:54:23 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
-#define NKF_RELEASE_DATE "2005-02-02"
+#define NKF_RELEASE_DATE "2005-02-19"
 #include "config.h"
 
 static char *CopyRight =
@@ -370,6 +370,7 @@ static int             hira_f = FALSE;          /* hira/kata henkan */
 static int             input_f = FALSE;        /* non fixed input code  */
 static int             alpha_f = FALSE;        /* convert JIx0208 alphbet to ASCII */
 static int             mime_f = STRICT_MIME;   /* convert MIME B base64 or Q */
+static int             mime_decode_f = FALSE;  /* mime decode is explicitly on */
 static int             mimebuf_f = FALSE;      /* MIME buffered input */
 static int             broken_f = FALSE;       /* convert ESC-less broken JIS */
 static int             iso8859_f = FALSE;      /* ISO8859 through */
@@ -1230,6 +1231,7 @@ options(cp)
 	    }
             continue;
         case 'm':   /* MIME support */
+            mime_decode_f = TRUE;
             if (*cp=='B'||*cp=='Q') {
                 mime_decode_mode = *cp++;
                 mimebuf_f = FIXED_MIME;
@@ -2127,8 +2129,7 @@ kanji_convert(f)
             } else if ((c1 == NL || c1 == CR) && broken_f&4) {
                 input_mode = ASCII; set_iconv(FALSE, 0);
                 SEND;
-	    /*
-	    } else if (c1 == NL && mime_f && !mime_decode_mode ) {
+	    } else if (c1 == NL && mime_decode_f && !mime_decode_mode ) {
 		if ((c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
 		    i_ungetc(SPACE,f);
 		    continue;
@@ -2137,7 +2138,7 @@ kanji_convert(f)
 		}
 		c1 = NL;
 		SEND;
-	    } else if (c1 == CR && mime_f && !mime_decode_mode ) {
+	    } else if (c1 == CR && mime_decode_f && !mime_decode_mode ) {
 		if ((c1=(*i_getc)(f))!=EOF) {
 		    if (c1==SPACE) {
 			i_ungetc(SPACE,f);
@@ -2154,7 +2155,6 @@ kanji_convert(f)
 		}
 		c1 = CR;
 		SEND;
-	    */
 	    } else 
                 SEND;
         }
@@ -4540,6 +4540,7 @@ reinit()
     input_f = FALSE;
     alpha_f = FALSE;
     mime_f = STRICT_MIME;
+    mime_decode_f = FALSE;
     mimebuf_f = FALSE;
     broken_f = FALSE;
     iso8859_f = FALSE;
