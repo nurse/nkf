@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.50 2004/12/29 21:04:23 naruse Exp $ */
+/* $Id: nkf.c,v 1.51 2004/12/31 17:19:43 naruse Exp $ */
 #define NKF_VERSION "2.0.4"
-#define NKF_RELEASE_DATE "2004-12-01"
+#define NKF_RELEASE_DATE "2005-01-01"
 #include "config.h"
 
 static char *CopyRight =
@@ -4303,7 +4303,7 @@ mime_putc(c)
 	eof_mime();
 	(*o_mputc)(NL);
 	base64_count=0;
-    } else if (c==CR||c==NL) {
+    } else if (mimeout_f!=FIXED_MIME && (c==CR||c==NL)) {
 	base64_count=0;
     }
     if (c!=EOF && mimeout_f!=FIXED_MIME) {
