@@ -36,10 +36,12 @@ sub command_test {
 
     $result = '';
     open(OUT,"> nkf.in");
+    binmode OUT;
     print OUT $in;
     close(OUT);
     system("$nkf <nkf.in >nkf.out");   # easy
     open(IN,"< nkf.out");
+    binmode IN;
     while(<IN>) {
 	$result .= $_;
     }
@@ -63,12 +65,13 @@ sub command_test {
     system "mv nkf.in nkf.in.$error_count.bad";
     system "mv nkf.out nkf.out.$error_count.bad";
     open(OUT,"> nkf.expect.$error_count.bad");
+    binmode OUT;
     print OUT $ans;
     close(OUT);
     $error_count++;
     if ($diff) {
-	open(R,"|od -c >tmp.result.bad"); print R $result; close(R);
-	open(R,"|od -c >tmp.expect.bad"); print R $ans; close(R);
+	open(R,"|od -c >tmp.result.bad"); binmode R; print R $result; close(R);
+	open(R,"|od -c >tmp.expect.bad"); binmode R; print R $ans; close(R);
 	system "diff -c tmp.result.bad tmp.expect.bad";
     }
     return $result;
