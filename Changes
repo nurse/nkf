@@ -1,3 +1,9 @@
+2003-09-28 Shinji KONO
+
+b encoded ISO-8859-1 MIME
+
+MIME のencoding を信用するようにした方がいいかも...
+
 2002-10-06  Rei FURUKAWA  <furukawa@tcp-ip.or.jp>
 
 	* INSTALL, INSTALL.j, make_test.pl を追加

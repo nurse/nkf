@@ -46,7 +46,7 @@ static char *CopyRight =
 static char *Version =
       "2.0";
 static char *Patchlevel =
-      "2/0301/Shinji Kono";
+      "3/0301/Shinji Kono";
 
 /*
 **
@@ -2122,12 +2122,11 @@ w16e_conv(val, p2, p1)
         if (c0){
             pp = utf8_to_euc_3bytes[c2 - 0x80];
             psize = sizeof_utf8_to_euc_C2;
-            return w_iconv_common(c1, c0, pp, psize, p2, p1);
         }else{
             pp = utf8_to_euc_2bytes;
             psize = sizeof_utf8_to_euc_2bytes;
-            return w_iconv_common(c2, c1, pp, psize, p2, p1);
         }
+        return w_iconv_common(c1, c0, pp, psize, p2, p1);
     }
     return val;
 }
@@ -2149,7 +2148,7 @@ w_iconv16(c2, c1, c0)
 	int tmp;
 	tmp=c1; c1=c2; c2=tmp;
     }
-    if ((c2==0 && c1 < 0x80) || c2==EOF) {
+    if (c2==0 || c2==EOF) {
 	(*oconv)(c2, c1);
 	return 0;
     }
@@ -2873,6 +2872,7 @@ unsigned char *mime_pattern[] = {
    (unsigned char *)"\075?EUC-JP?B?",
    (unsigned char *)"\075?SHIFT_JIS?B?",
    (unsigned char *)"\075?ISO-8859-1?Q?",
+   (unsigned char *)"\075?ISO-8859-1?B?",
    (unsigned char *)"\075?ISO-2022-JP?B?",
    (unsigned char *)"\075?ISO-2022-JP?Q?",
 #if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
@@ -2882,7 +2882,7 @@ unsigned char *mime_pattern[] = {
 };
 
 int      mime_encode[] = {
-    JAPANESE_EUC, SHIFT_JIS,ISO8859_1, X0208, X0201,
+    JAPANESE_EUC, SHIFT_JIS,ISO8859_1, ISO8859_1, X0208, X0201,
 #if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
     UTF8,
 #endif
@@ -2890,7 +2890,7 @@ int      mime_encode[] = {
 };
 
 int      mime_encode_method[] = {
-    'B', 'B','Q', 'B', 'Q',
+    'B', 'B','Q', 'B', 'B', 'Q',
 #if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
     'B',
 #endif
