@@ -38,3 +38,13 @@ shar:
 	echo "cd nkf$(VERSION)" >>nkf$(VERSION).shar
 	( cd nkf$(VERSION) ; $(SHAR)  `cat ../MANIFEST` ) >> nkf$(VERSION).shar
 	-$(RM) nkf$(VERSION)
+
+tar:
+	-mkdir nkf$(VERSION)
+	-mkdir nkf$(VERSION)/NKF.mod
+	for file in  `cat MANIFEST`;  \
+	do  \
+	    nkf -j -m0 $$file > nkf$(VERSION)/$$file ; \
+	done 
+	tar cf nkf$(VERSION).tar nkf$(VERSION)
+	-$(RM) nkf$(VERSION)
