@@ -1740,7 +1740,7 @@ kanji_convert(f)
     FILE  *f;
 {
     int    c1,
-                    c2;
+                    c2, c3;
 
     module_connection();
     c2 = 0;
@@ -1975,9 +1975,15 @@ kanji_convert(f)
                     }
                } else if ( c1 == 'N' || c1 == 'n' ){
                    /* SS2 */
-                   c1 = (*i_getc)(f);  /* skip SS2 */
-                   if ( SPACE<=c1 && c1 < 0xe0 ) {
+                   c3 = (*i_getc)(f);  /* skip SS2 */
+                   if ( (SPACE<=c3 && c3 < 0x60) || (0xa0<=c3 && c3 < 0xe0)){
+                       c1 = c3;
                        c2 = X0201;
+                       SEND;
+                   }else{
+                       (*i_ungetc)(c3, f);
+                       /* lonely ESC  */
+                       (*oconv)(0, ESC);
                        SEND;
                    }
                 } else {
