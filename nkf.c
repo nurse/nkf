@@ -1387,10 +1387,21 @@ code_status(c)
     }
 }
 
+#ifdef PERL_XS
+#define STD_GC_BUFSIZE (256)
+int std_gc_buf[STD_GC_BUFSIZE];
+int std_gc_ndx;
+#endif
+
 int 
 std_getc(f)
 FILE *f;
 {
+#ifdef PERL_XS
+    if (std_gc_ndx){
+        return std_gc_buf[--std_gc_ndx];
+    }
+#endif
     return getc(f);
 }
 
@@ -1399,6 +1410,13 @@ std_ungetc(c,f)
 int c;
 FILE *f;
 {
+#ifdef PERL_XS
+    if (std_gc_ndx == STD_GC_BUFSIZE){
+        return EOF;
+    }
+    std_gc_buf[std_gc_ndx++] = c;
+    return c;
+#endif
     return ungetc(c,f);
 }
 
