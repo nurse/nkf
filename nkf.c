@@ -378,6 +378,7 @@ static int             iso2022jp_f = FALSE;    /* convert ISO-2022-JP */
 #ifdef UTF8_OUTPUT_ENABLE
 static int             unicode_bom_f= 0;   /* Output Unicode BOM */
 static int             w_oconv16_LE = 0;   /* utf-16 little endian */
+static int             ms_ucs_map_f = FALSE;   /* Microsoft UCS Mapping Compatible */
 #endif
 
 
@@ -892,6 +893,7 @@ struct {
 #ifdef UTF8_OUTPUT_ENABLE
     {"utf8", "w"},
     {"utf16", "w16"},
+    {"ms-ucs-map", ""},
 #endif
 #ifdef UTF8_INPUT_ENABLE
     {"utf8-input", "W"},
@@ -1008,6 +1010,12 @@ options(cp)
                       return;
                   }
 #endif
+#ifdef UTF8_OUTPUT_ENABLE
+                if (strcmp(long_option[i].name, "ms-ucs-map") == 0){
+                    ms_ucs_map_f = TRUE;
+                    continue;
+                }
+#endif
                 if (strcmp(long_option[i].name, "prefix=") == 0){
                     if (*p == '=' && ' ' < p[1] && p[1] < 128){
                         for (i = 2; ' ' < p[i] && p[i] < 128; i++){
@@ -1092,7 +1100,7 @@ options(cp)
                     if (cp[0] == '0'){
                         unicode_bom_f=1; cp++;
                     }
-                }
+                } 
 	    } else if (cp[0] == '8') {
 		output_conv = w_oconv; cp++;
 		unicode_bom_f=2;
@@ -2436,6 +2444,7 @@ e2w_conv(c2, c1)
 {
     extern unsigned short euc_to_utf8_1byte[];
     extern unsigned short * euc_to_utf8_2bytes[];
+    extern unsigned short * euc_to_utf8_2bytes_ms[];
     unsigned short *p;
 
     if (c2 == X0201) {
@@ -2444,7 +2453,7 @@ e2w_conv(c2, c1)
         c2 &= 0x7f;
         c2 = (c2&0x7f) - 0x21;
         if (0<=c2 && c2<sizeof_euc_to_utf8_2bytes)
-	    p = euc_to_utf8_2bytes[c2];
+            p = ms_ucs_map_f ? euc_to_utf8_2bytes_ms[c2] : euc_to_utf8_2bytes[c2];
 	else
 	    return 0;
     }
