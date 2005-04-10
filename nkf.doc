@@ -3,7 +3,7 @@ NKF(1)                                                                  NKF(1)
 
 
 NNAAMMEE
-       nkf - ネットワーク用漢字コード変換フィルタ v2.0.4
+       nkf - ネットワーク用漢字コード変換フィルタ v2.0.5
 
 SSYYNNOOPPSSIISS
        nnkkff [_o_p_t_i_o_n_s] [_f_i_l_e]
@@ -19,8 +19,8 @@ DDEESSCCRRIIPPTTIIOONN
        する安全なものにはなっている。
 
        現在、_n_k_fが認識できる入力の漢字コード系は、いわゆる「JISコー ド 」(ISO-
-       2022-JP に基づくもの)、MS漢字コード(シフトJIS)、日本語EUC(AT&Tコード)の
-       いずれかである。出力する漢字コード系も、この3種類である。
+       2022-JP に基づくもの)、MS漢字コード(シフトJIS)、日本語EUC(AT&Tコード)、
+       UTF-8、UTF-16のいずれかである。出力する漢字コード系も、これらである。
 
        入力は、ファイルを指定しなければ、標準入力となる。出力は標準出力であ る
        。
@@ -33,12 +33,17 @@ DDEESSCCRRIIPPTTIIOONN
 
        --ss     シフトJISコードを出力する。
 
-       --ww     UTF8コードを出力する。
+       --ww     UTF8 コ ー ド を出力する。（BOM無し） --ww88 UTF8コードを出力する。
+              --ww8800 UTF8コードを出力する。（BOM無し） --ww1166 UTF16コードを出力 す
+              る 。（Big Endian / BOM無し） --ww1166BB UTF16コードを出力する。（Big
+              Endian / BOM有り） --ww1166BB00 UTF16コードを出力する。（Big Endian  /
+              BOM無し） --ww1166LL UTF16コードを出力する。（Little Endian / BOM有り
+              ） --ww1166LL00 UTF16コードを出力する。（Little Endian / BOM無し）
 
        --mm[[BBQQSSNN00]]
-              MIME  を解読する。(デフォルト) ISO-2022-JP(base64)とISO-8859-1(Q
+              MIME を解読する。(デフォルト) ISO-2022-JP(base64) とISO-8859-1(Q
               encode) のみを解読する。ISO-8859-1 (Latin-1) を解読する時は、 -l
-              フ ラ グも必要である。-m0 ではMIMEを解読しない。-mQ, -mBでは、 Q
+              フラグも必要である。-m0 ではMIMEを解読しない。-mQ, -mBでは 、  Q
               encode, B encode されているものとして処理する。
                  -mB MIME base64 stream を解読する。ヘッダなどは取り除くこと。
                  -mQ MIME quoted stream を解読する。
@@ -63,6 +68,16 @@ DDEESSCCRRIIPPTTIIOONN
 
               --SS     MS漢字を仮定する。X0201仮名も仮定される。
 
+              --WW     UTF-8を仮定する。
+
+              --WW88    UTF-8を仮定する。
+
+              --WW1166   UTF-16(Little Endien)を仮定する。
+
+              --WW1166BB  UTF-16(Big Endien)を仮定する。
+
+              --WW1166LL  UTF-16(Little Endien)を仮定する。
+
               --XX     MS漢字中にX0201仮名があると仮定する。
 
               --BB     壊れた(Broken)JISコード。ESCがなくなったと仮定する。
@@ -74,8 +89,8 @@ DDEESSCCRRIIPPTTIIOONN
        --ff_?    一行_?文字になるように簡単な整形をおこなう。デフォルトは 60文字で
               ある。
 
-       --ZZ     X0208中の英数字と若干の記号をASCIIに変換する。-Z1  はX0208 間 隔
-              をASCII  spaceに変換する。-Z2はX0208間隔をASCII space 二つに変換
+       --ZZ     X0208 中 の 英数字と若干の記号をASCIIに変換する。-Z1 はX0208間隔
+              をASCII spaceに変換する。-Z2はX0208間隔をASCII space 二つに変 換
               する。趣味によって使い分けてほしい。
 
        --bb     バッファリング出力を行う。(デフォルト)
@@ -87,7 +102,7 @@ DDEESSCCRRIIPPTTIIOONN
 
        --II     iso-2022-jp以外の漢字コードを〓に変換。
 
-       --ii_?    JIS 漢字を指示するシーケンスとして EESSCC--’’$$’’--_?を使用する。 (デフォ
+       --ii_?    JIS漢字を指示するシーケンスとして EESSCC--’’$$’’--_?を使用する。 (デフ ォ
               ルトは、ESC-’$’-’B’)
 
        --oo_?    1バイト英数文字セットを指示するシーケンスとして、EESSCC--’’((’’--_?を使用
@@ -95,16 +110,18 @@ DDEESSCCRRIIPPTTIIOONN
 
        --rr     ROT13/47の変換をする。
 
+       --gg     自動判別の結果を出力します。
+
        --vv     バージョンを表示する。
 
        --TT     テキストモードで出力する。(MS-DOS上でのみ効力を持つ)
 
-       --ll     0x80-0xfe のコードをISO-8859-1 (Latin-1)として扱う。 JISコードア
+       --ll     0x80-0xfeのコードをISO-8859-1 (Latin-1)として扱う。 JISコード ア
               ウトプットとの組合せみのみ有効。 -s, -e, -xとは両立しない。
 
        --xx     通常おこなわれるX0201仮名->X0208の仮名変換をしないで、
-               X0201仮名を保存する。入力は 、MS-Kanji の1byte 仮 名 、SO/SI 、
-              ESC-(-I,  SSO を受け付ける。出力は、日本語EUC中ではSSO、 JISでは
+               X0201 仮 名 を 保 存 する。入力は、MS-Kanjiの1byte仮名、SO/SI、
+              ESC-(-I, SSOを受け付ける。出力は、日本語EUC中ではSSO、 JIS で は
               ESC-’(’-I を使う。
 
        --OO     ファイルに出力する。Unixでは不要な機能だがWindowsやMSDOSでは必要
@@ -135,12 +152,26 @@ DDEESSCCRRIIPPTTIIOONN
               --cap-input, --url-input
                      それぞれ ’:’, ’%’ に続く 16 進数を文字に変換する
 
-              --overwrite
-                     元 のファイルを変換結果で置き換える。複数のファイルを書き
-                     換えることも可能。
+              --numchar-input
+                     &#....; のような、Unicode文字参照を変換する
 
-              --no-cp932 Shift_JIS  の、FAxx-FCxx を、CP932 で同値な文字に読み
-              換える動作を無効にする
+              --no-cp932
+                     Shift_JIS の、FAxx-FCxx を、CP932 で同値な文字に読み換 え
+                     る動作を無効にする
+
+              --cp932inv
+                     Shift_JIS   へ の 変 換の際、EDxx-EFxx を、CP932 で同値な
+                     FAxx-FCxx の文字に変換する
+
+              --ms-ucs-map
+                     MicrosoftのUCSマッピング互換の変換を行う
+
+              --overwrite
+                     元のファイルを変換結果で置き換える。複数のファイルを書 き
+                     換えることも可能
+
+              --guess
+                     自動判別の結果を出力する
 
               --help
 
@@ -150,7 +181,7 @@ DDEESSCCRRIIPPTTIIOONN
 
        次の 22 つは、ccoonnffiigg..hh で EEXXEECC__IIOO を ddeeffiinnee してコンパイルした時のみ有効
               --exec-in
-                     nkf [options] --exec-in cmd args... とやると、cmd の出 力
+                     nkf  [options] --exec-in cmd args... とやると、cmd の出力
                      を nkf の入力とする
 
               --exec-out
@@ -165,39 +196,39 @@ AAUUTTHHOORR
 
 
 BBUUGGSS
-       実は、入力のコード系の判定は、EUCとシフトJISとの自動判定であり、最初 に
-       特 定できる文字が来た時点で確定してしまう。そして、特定不能の間は保留バ
+       実 は、入力のコード系の判定は、EUCとシフトJISとの自動判定であり、最初に
+       特定できる文字が来た時点で確定してしまう。そして、特定不能の間は保留 バ
        ッファにためておかれ、確定後に処理される。このため、
 
        1)     7ビットJISは常に認識される。シフトJIS、EUC混合もほとんどの場合は
               問題がない。ただし、
 
-       2)      シフトJISのX0201仮名とEUCが識別できない。したがって、デフォルト
+       2)     シフトJISのX0201仮名とEUCが識別できない。したがって、デフォル ト
               ではシフトJISのX0201仮名はないと仮定している。
 
-       このフィルタの変換は、コード系に対応した一括写像を施すだけなので、外 字
+       こ のフィルタの変換は、コード系に対応した一括写像を施すだけなので、外字
        や特殊記号や罫線素片など、JIS第一、第二水準表において定義されていないコ
-       ードに各社により割り当てられた文字変換しない。第三水準なども変換しな い
+       ー ドに各社により割り当てられた文字変換しない。第三水準なども変換しない
        。 UTF8の日本語以外の部分にも対応していない。
 
 
 kkoonnoo@@ccssll..ssoonnyy..ccoo..jjpp ((SShhiinnjjii KKoonnoo)) による変更。
-       X0201 仮名(いわゆる半角かな)はデフォルトでX0208(全角仮名)に変換される。
+       X0201仮名(いわゆる半角かな)はデフォルトでX0208(全角仮名)に変換される 。
        ただし、シフトJISのX0201仮名はデフォルトではEUCだと解釈されてしまう。こ
-       れ が望ましくない時には -S や - -X などのフラグを使えば良い。-Xを指定す
-       ると一旦確定したシフトJISから EUCに移行することはない。ESC-(-I に よ る
+       れが望ましくない時には -S や - -X などのフラグを使えば良い。-Xを指定 す
+       る と 一 旦確定したシフトJISから EUCに移行することはない。ESC-(-Iによる
        X0201は常に認識される。SI/SO SSOは、-lが指定されていなければX0201と解釈
        する。
 
        MIME decodeは、ISO-2022-JPのbase64と、ISO-8859-1の16進encodeのみ decode
-       す る。 MIME decodeは、単純な改行や空白は安全に読み飛ばされる。というこ
+       する。 MIME decodeは、単純な改行や空白は安全に読み飛ばされる。という こ
        とは、 MIME decode中の空白は保存されない。変換は可逆ではない。 lessやrn
-       で 行が分割された時は、 Terminalによって異なる ESC-[-K などが挿入される
-       ので、完全にはdecode できない。-mN では、チェックが緩いので decodeで き
+       で行が分割された時は、 Terminalによって異なる ESC-[-K などが挿入され る
+       の で、完全にはdecode できない。-mN では、チェックが緩いので decodeでき
        る場合もある。 ISO-8859-1 出力はJIS コード出力としか両立しない。
 
-       Fold  機能はfmtと異なり行頭の空白を無視する。禁則処理はあるが指定された
-       長さ+5で強制改行する。-f60-10 などとすると強制改行の 余 地(fold-margin)
+       Fold 機能はfmtと異なり行頭の空白を無視する。禁則処理はあるが指定され た
+       長 さ+5 で強制改行する。-f60-10 などとすると強制改行の余地(fold-margin)
        を調整できる。-f40-0とすると禁則処理なしとなる。
 
        X0201仮名はrot47されない。
@@ -205,12 +236,12 @@ kkoonnoo@@ccssll..ssoonnyy..ccoo..jjpp ((SShhiinnjjii 
 
 nnkkff 11..66 kkoonnoo@@iiee..uu--rryyuukkyyuu..aacc..jjpp ((SShhiinnjjii KKoonnoo)) による変更。
         -B のlevelを0,1,2 に増やした。MIMEのbase64, Q-Encodingを解読する機能を
-       付けた。ヘッダなどは解読しないので、Encodeされた部分だけを通す必要が あ
+       付 けた。ヘッダなどは解読しないので、Encodeされた部分だけを通す必要があ
        る。 -mB は、nkf1.5と違う動きをするので、-B -m とすること。
 
 
 nnkkff 11..66..11
-       -Z1   でX0208間隔->ASCII spaceの変換をおこなう。 -Z2 でX0208間隔->ASCII
+       -Z1 でX0208間隔->ASCII spaceの変換をおこなう。 -Z2 でX0208 間 隔->ASCII
        space 2個の変換をおこなう。
 
 
@@ -227,7 +258,7 @@ nnkkff 11..99
        MIME エンコードの機能時でも、コード変換されしまうので注意。 base64 エン
        コードでは改行時に先頭に空白が付くのでメールヘッダに使用できる。
 
-       コ ード変換モジュールは、サブルーチンを継続によって接続する形式となった
+       コード変換モジュールは、サブルーチンを継続によって接続する形式となっ た
        。複数の変換を自由に接続できるようになった。
 
              getc <-- iconv --> oconv --> other conversion --> putc
@@ -270,7 +301,7 @@ nnkkff 22..00
 
 
        nkf -f40-0 などとしてメールを 40 文字づつ切り出して、「Subject 160 文字
-       目 から 199 文字目まで」「本文    200 文字目から 239 文字目まで」とする
+       目から 199 文字目まで」「本文    200 文字目から 239 文字目まで」とす る
        。
 
 
@@ -281,19 +312,19 @@ MMIIMMEE関係
        Q encode の Soft Wrap に対応。
 
 
-       MIME encode のWrapでは、先頭に一文字の空白挿入。した。あA の MIME 変 換
+       MIME  encode のWrapでは、先頭に一文字の空白挿入。した。あA の MIME 変換
        は、A を含んで変換しないといけないが、対応していない。RFCには反した動作
-       だが、 encoded word 間のwhite spaceは無視される 。  nkf_test.pl   で は
+       だ が 、  encoded  word  間のwhite spaceは無視される。 nkf_test.pl では
        、MIMEの空白を削除してから比較している。
 
 
-       non-strict  mime -MN では、空白、改行をまたいで、base64 encoding を解読
+       non-strict mime -MN では、空白、改行をまたいで、base64 encoding を解 読
        する。これで、スクリーンからcut&pasteでデコードすることも可能。止まらな
        い可能性あり。
 
 
 その他
-       nkf_test.pl  のバグチェックを増やした。 test が失敗したときにdiffを取る
+       nkf_test.pl のバグチェックを増やした。 test が失敗したときにdiffを取 る
        ようにした。 make_test.pl でテスト作成可能。
 
 
@@ -318,8 +349,8 @@ MMIIMMEE関係
 
 
 nnkkff 22..00..44
-       Shift_JIS   の  FAxx-FCxx について、普通の式では euc に変換できませんが
-       、CP932 で同値な文字に読み換えて変換します。この動作を無効にす る に は
+       Shift_JIS の FAxx-FCxx について、普通の式では euc に変換できま せ ん が
+       、CP932   で 同値な文字に読み換えて変換します。この動作を無効にするには
        、--no-cp932 をつけてください。
 
 
@@ -333,7 +364,7 @@ nnkkff 22..00..44
        変換します。
 
 
-       --exec-in, --exec-out オプションを新設 (config.h で EXEC_IO  を  define
+       --exec-in,  --exec-out  オプションを新設 (config.h で EXEC_IO を define
        してコンパイルした時のみ有効)
 
            nkf -e --exec-in cmd args...
@@ -349,13 +380,13 @@ nnkkff 22..00..55
        については、 CP932 で同値な FAxx-FCxx の文字に変換します。
 
 
-       --guess または -g というオプションをつけると自動判別の結果を出力しま す
+       --guess  または -g というオプションをつけると自動判別の結果を出力します
        。
 
 
-       --prefix=  というオプションをつけると、EUC-JP から Shift_JIS への変換の
-       際、2 バイト目に現れた文字の前にエスケープ文字をつけることができます 。
-       引 数の 1 文字目がエスケープ文字、2文字目以降にエスケープされるべき文字
+       --prefix= というオプションをつけると、EUC-JP から Shift_JIS への変換 の
+       際 、2 バイト目に現れた文字の前にエスケープ文字をつけることができます。
+       引数の 1 文字目がエスケープ文字、2文字目以降にエスケープされるべき文 字
        を指定します。
 
        例えば、
@@ -363,6 +394,13 @@ nnkkff 22..00..55
        --prefix= とすると、Shift_JIS の 2 文字目に $, @ が来たら、その前に  が
        挿入されます --prefix=@@ とすると、Shift_JIS の 2 文字目に @ が来たら、
        その前に @ が挿入されます
+
+
+       -w8, -w16B, -w16L, -W8, -W16B, -W16L というオプションを追加しました。
+
+
+       --ms-ucs-map  というオプションを付けると、 MicrosoftのUCSマッピング互換
+       の変換を行います。
 
 
 
@@ -404,7 +442,6 @@ AACCKKNNOOWWLLEEDDGGEE
        Tsutomu Sakai
        YAMASHITA Junji (山下 純司)
        Yasuyuki Sato
-       Yoshiaki Yanagihara
        Yoshiaki Yanagihara
        hat@so-net
        ＤＣＣ技術部渡辺
@@ -451,6 +488,8 @@ AACCKKNNOOWWLLEEDDGGEE
        成瀬ゆい
        鶴谷直樹
        中田伸悦
+       わたなべひろふみ
+       MoonWolf
 
        河野真治
             www.ie.u-ryukyu.ac.jp/~kono/nkf/

@@ -1,6 +1,6 @@
 .TH NKF 1 07/Feb/2004
 .SH NAME
-nkf \- ネットワーク用漢字コード変換フィルタ v2.0.4
+nkf \- ネットワーク用漢字コード変換フィルタ v2.0.5
 .SH SYNOPSIS
 .B nkf
 .RI [ options ]

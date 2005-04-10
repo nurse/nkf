@@ -39,13 +39,13 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.66 2005/03/07 16:16:50 naruse Exp $ */
-#define NKF_VERSION "2.0.4"
-#define NKF_RELEASE_DATE "2005-03-05"
+/* $Id: nkf.c,v 1.67 2005/04/09 21:06:20 rei_furukawa Exp $ */
+#define NKF_VERSION "2.0.5"
+#define NKF_RELEASE_DATE "2005-04-10"
 #include "config.h"
 
 static char *CopyRight =
-      "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2004 Kono, Furukawa";
+      "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2005 Kono, Furukawa, Naruse";
 
 
 /*

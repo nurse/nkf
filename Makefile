@@ -5,7 +5,7 @@ SHAR = shar
 # SHAR = shar -T
 PERL = perl
 RM = rm -rf
-VERSION = 204
+VERSION = 205
 EXIST = test -f
 #EXIST = exist #nmake
 
