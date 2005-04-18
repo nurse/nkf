@@ -4,20 +4,21 @@
 
 /*WIN32DLL*/
 /* こちらのバージョンも更新してください。 */
-#define NKF_VERSIONW L"2.0.4"
+#define NKF_VERSIONW L"2.0.5"
 /* NKF_VERSION のワイド文字 */
-#define DLL_VERSION   "2.0.4.1 1"
+#define DLL_VERSION   "2.0.5.0 2"
 /* DLLが返す */
-#define DLL_VERSIONW L"2.0.4.1 1"
+#define DLL_VERSIONW L"2.0.5.0 2"
 /* DLLが返す DLL_VERSION のワイド文字 */
 
 /* nkf32.dll main */
 #include <windows.h>
 #include <tchar.h>
 #include <stdarg.h>
-#include "nkf.h"
 
 #ifdef DLLDBG /* DLLDBG @@*/
+#include "nkf.h"
+
 void dumpn(unsigned char *buff,unsigned n)
 {
     int i;
@@ -46,9 +47,9 @@ void mkfile(char *f,char *p);
 #define GUESS 64
 #endif /*GUESS*/
 
-char guessbuffA[MAX_PATH + GUESS];
+char *guessbuffA = NULL;
 #ifdef UNICODESUPPORT
-wchar_t guessbuffW[MAX_PATH + GUESS];
+wchar_t *guessbuffW = NULL;
 UINT guessCodePage = CP_OEMCP;
 DWORD guessdwFlags = MB_PRECOMPOSED;
 
@@ -190,17 +191,36 @@ print_guessed_code (filename)
         }
     }
     if (filename != NULL) {
+        guessbuffA = realloc(guessbuffA,(strlen(filename) + GUESS + 1) * sizeof (char) );
         sprintf(guessbuffA,"%s:%s", filename,codename);
-#ifdef UNICODESUPPORT
-        swprintf(guessbuffW,L"%s:%s",filename,tounicode(codename));
-#endif /*UNICODESUPPORT*/
     } else {
+        guessbuffA = realloc(guessbuffA,(GUESS + 1) * sizeof (char) );
         sprintf(guessbuffA,"%s", codename);
-#ifdef UNICODESUPPORT
-        swprintf(guessbuffW,L"%s",tounicode(codename));
-#endif /*UNICODESUPPORT*/
     }
 }
+
+#ifdef UNICODESUPPORT
+void
+print_guessed_codeW (filename)
+    wchar_t *filename;
+{
+    char *codename = "BINARY";
+    if (!is_inputcode_mixed) {
+        if (strcmp(input_codename, "") == 0) {
+            codename = "ASCII";
+        } else {
+            codename = input_codename;
+        }
+    }
+    if (filename != NULL) {
+        guessbuffW = realloc(guessbuffW,(wcslen(filename) + GUESS + 1) * sizeof (wchar_t) );
+        swprintf(guessbuffW,L"%s:%s",filename,tounicode(codename));
+    } else {
+        guessbuffW = realloc(guessbuffW,(GUESS + 1) * sizeof (wchar_t));
+        swprintf(guessbuffW,L"%s",tounicode(codename));
+    }
+}
+#endif /*UNICODESUPPORT*/
 
 /**
  ** パッチ制作者
@@ -228,6 +248,16 @@ reinitdll()
     nout = -1;
     noutmax = -1;
     std_putc_mode = 1;
+    if ( guessbuffA ) {
+        free(guessbuffA);
+        guessbuffA = NULL;
+    }
+#ifdef UNICODESUPPORT
+    if ( guessbuffW ) {
+        free(guessbuffW);
+        guessbuffW = NULL;
+    }
+#endif /*UNICODESUPPORT*/
 }
 
 #ifndef DLLDBG /* DLLDBG @@*/
@@ -413,7 +443,7 @@ int CALLBACK NkfGetKanjiCode(VOID)
     //if(iconv == s_iconv)iCode=0; /* 0:シフトJIS */
     if(iconv == w_iconv)iCode=3; /* UTF-8 */
     else if(iconv == w_iconv16){
-        if(utf16_mode == UTF16LE_INPUT)iCode=5; /* 5:UTF-16BE */
+        if(utf16_mode == UTF16BE_INPUT)iCode=5; /* 5:UTF-16BE */
         else iCode=4; /* 4:UTF-16LE */
     }else if(iconv == e_iconv){
         if(estab_f == FALSE)iCode=2; /* 2:ISO-2022-JP */
@@ -691,7 +721,7 @@ BOOL WINAPI GetNkfGuessW(LPWSTR outStr,DWORD nBufferLength /*in TCHARs*/,LPDWORD
 {
 #ifdef UNICODESUPPORT
     if ( outStr == NULL || nBufferLength == 0 ) return FALSE;
-    print_guessed_code(NULL);
+    print_guessed_codeW(NULL);
     *lpTCHARsReturned = wcslen(guessbuffW) + 1;
     return wscp(outStr,guessbuffW,nBufferLength);
 #else /*UNICODESUPPORT*/
@@ -699,8 +729,14 @@ BOOL WINAPI GetNkfGuessW(LPWSTR outStr,DWORD nBufferLength /*in TCHARs*/,LPDWORD
 #endif /*UNICODESUPPORT*/
 }
 
-static struct NKFSUPPORTFUNCTIONS NkfSupportFunctions = {
-sizeof(struct NKFSUPPORTFUNCTIONS),
+static struct {
+DWORD size;
+LPCSTR copyrightA;
+LPCSTR versionA;
+LPCSTR dateA;
+DWORD functions;
+} NkfSupportFunctions = {
+sizeof(NkfSupportFunctions),
 NULL,
 NKF_VERSION,
 NKF_RELEASE_DATE,
@@ -957,7 +993,7 @@ int main(int argc,char **argv)
         file2(argv[2],argv[3],argv[4],buff3);
         break;
       case 'u':
-        sts = NkfUsage(buff,sizeof buff * 0 + 2073,&len);
+        sts = NkfUsage(buff,sizeof buff,&len);
         printf("strlen(buff)=%d\n",strlen(buff));
         printf("NkfUsage()=%d len=%d \n%s",sts,len,buff);
         break;
