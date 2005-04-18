@@ -15,23 +15,23 @@ is a yet another kanji code converter among networks, hosts and terminals.
 It converts input kanji code to designated kanji code
 such as 7-bit JIS, MS-kanji (shifted-JIS), utf-8 or EUC.
 .PP
-One of the most unique facicility of 
+One of the most unique faculty of 
 .B nkf
-is the guess of the input kanji code.
+is the guess of the input kanji encodings.
 It currently recognizes 7-bit JIS, MS-kanji (shifted-JIS),utf-8 and EUC.
-So users needn't the input kanji code specification.
+So users needn't give the input kanji code specification.
 
-By default X0201 kana is converted into X0208 kana. For
+By default, X0201 kana is converted into X0208 kana. For
 X0201 kana, SO/SI, SSO and
 ESC-(-I methods are supported. For automatic code detection, nkf assumes
 no X0201 kana in MS-Kanji. To accept X0201 in MS-Kanji, use \-X, \-x or
 \-S.
 .PP
-Options are bellow:
+Options are shown below:
 .TP
 .B \-j
 output 7-bit JIS code.
-This is a default.
+This is default.
 .TP
 .B \-s
 output MS-kanji (shifted-JIS) code.
@@ -43,20 +43,20 @@ output EUC (AT&T) code.
 output UTF-8 (Unicode 8bit form).
 .TP
 .B \-S
-Assume MS-Kanji and X0201 kana input. It also accpet JIS.
+Assume MS-Kanji and X0201 kana input. It also accepts JIS.
 AT&T EUC is recognized as X0201 kana. Without \-x flag,
 X0201 kana is converted into X0208.
 .TP
 .B \-J
 Assume  JIS input. It also accepts Japanese EUC.
-This is the default. This flag does not excludde MS-Kanji.
+This is the default. This flag does not exclude MS-Kanji.
 .TP
 .B \-E
-Assume AT&T EUC input. It also accpet JIS.
+Assume AT&T EUC input. It also accepts JIS.
 Same as \-J.
 .TP
 .B \-B
-Assume broken JIS-Kanji, which lost ESC.  Usefull when your site is 
+Assume broken JIS-Kanji input, which lost ESC.  Useful when your site is 
 using old B-News Nihongo patch. \-B1 allows any char after ESC-( or
 ESC-$. \-B2 forces ASCII after NL.
 .TP
@@ -65,15 +65,15 @@ Assume UTF-8 input.
 .TP
 .B \-m
 MIME ISO-2022-JP/ISO8859-1 decode. (default) To see ISO8859-1 (Latin-1)
-\-l is necessary. \-mN does loose encoding. It allows line break in the
-middle of the basr64 encoding.
+\-l is necessary. \-mN is for loose encoding. It allows line break in the
+middle of the base64 encoding.
 .TP
 .B \-mB
 Decode MIME base64 encoded stream. Remove header or other part before
 conversion. 
 .TP
 .B \-mQ
-Decode MIME quoted stream. '_' in quoted is converted to space.
+Decode MIME quoted stream. '_' in quoted stream is converted to space.
 .TP
 .B \-m0
 No MIME decode.
@@ -93,11 +93,11 @@ Input and output code is ISO8859-1 (Latin-1) and ISO-2022-JP.
 .BI \-f n
 Folding on 
 .BI n 
-length in a line. Default 60. \-f40-0 forces 0 margin folding.
+length in a line. Default is 60. \-f40-0 forces 0 margin folding.
 .TP
 .B \-X
 Allow X0201 kana in MS-Kanji.  
-X0201 is converted into X0208 by default.
+X0201 is converted into X0208 Kana by default.
 This is default in MSDOS.
 .TP
 .B \-x
@@ -111,23 +111,24 @@ Convert X0208 alphabet to ASCII. \-Z1 converts X0208 kankaku to one
 ASCII space. \-Z2 converts X0208 kankaku to two ASCII spaces.
 .TP
 .B \-Z3
-Replacing "><&" into '&gt;', '&lt;', '&quot;', '&amp;' as in HTML.
+Replacing >,<,",& into '&gt;', '&lt;', '&quot;', '&amp;' as in HTML.
 .TP
 .B \-I
-Replacing Non iso-2022-jp char into the strage geta character.
+Replacing non iso-2022-jp char into a geta character
+(substitute character in Japanese).
 .TP
 .B \-b
-bufferd output.
-This is a default.
+buffered output.
+This is default.
 .TP
 .B \-u
-unbufferd output.
+unbuffered output.
 .TP
 .B \-t
 no operations.
 .TP
 .B \-O
-Output result to file. The first name in arguments becomes output.
+Output result to file. The first string in arguments becomes output file name.
 Please be careful. If there are no file arguments, nkf.out is chosen.
 \--overwrite does rewriting. Original listed files are replaced by filtered
 result.
@@ -166,7 +167,7 @@ delete CR after NL.
     -Lu   unix (LF) 
     -Lw   windows (CRLF) 
     -Lm   mac (CR) 
-default no conversion
+default is no conversion (output as it is).
 .fl
 .PP
 .B \-F
@@ -241,7 +242,6 @@ Shin MICHIMUKO,
 Tsutomu Sakai,
 YAMASHITA Junji,
 Yasuyuki Sato,
-Yoshiaki Yanagihara,
 Yoshiaki Yanagihara,
 hat@so-net,
 SHIOZAKI Takehiko,
