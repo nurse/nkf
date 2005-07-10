@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.70 2005/07/05 12:39:00 naruse Exp $ */
+/* $Id: nkf.c,v 1.71 2005/07/09 21:46:17 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
 #define NKF_RELEASE_DATE "2005-07-05"
 #include "config.h"
@@ -440,6 +440,7 @@ static int noout_f = FALSE;
 STATIC void no_putc PROTO((int c));
 static int debug_f = FALSE;
 STATIC void debug PROTO((char *str));
+static int (*iconv_for_check)() = 0;
 #endif
 
 static int guess_f = FALSE;
@@ -759,6 +760,9 @@ main(argc, argv)
 	    is_inputcode_mixed = FALSE;
 	    is_inputcode_set   = FALSE;
 	    input_codename = "";
+#ifdef CHECK_OPTION
+	    iconv_for_check = 0;
+#endif
           if ((fin = fopen((origfname = *argv++), "r")) == NULL) {
               perror(*--argv);
               return(-1);
@@ -1376,10 +1380,6 @@ struct input_code * find_inputcode_byfunc(iconv_func)
     }
     return 0;
 }
-
-#ifdef CHECK_OPTION
-static int (*iconv_for_check)() = 0;
-#endif
 
 #ifdef ANSI_C_PROTOTYPE
 void set_iconv(int f, int (*iconv_func)(int c2,int c1,int c0))
@@ -2526,10 +2526,12 @@ w_iconv(c2, c1, c0)
 	    ; /* 1 or 2ytes */
 	else if ((c2 & 0xf0) == 0xe0) /* 0xe0-0xef */
 	    return -1; /* 3bytes */
-	/*else if (0xf0 <= c2)
+#ifdef __COMMENT__
+	else if (0xf0 <= c2)
 	    return 0; /* 4,5,6bytes */
 	else if ((c2 & 0xc0) == 0x80) /* 0x80-0xbf */
 	    return 0; /* trail byte */
+#endif
 	else return 0;
     }
     if (c2 == EOF);
@@ -4829,16 +4831,16 @@ usage()
     fprintf(stderr,"Flags:\n");
     fprintf(stderr,"b,u      Output is buffered (DEFAULT),Output is unbuffered\n");
 #ifdef DEFAULT_CODE_SJIS
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS (DEFAULT), AT&T JIS (EUC), UTF-8\n");
+    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS (DEFAULT), AT&T JIS (EUC), UTF-8N\n");
 #endif
 #ifdef DEFAULT_CODE_JIS
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit (DEFAULT), Shift JIS, AT&T JIS (EUC), UTF-8\n");
+    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit (DEFAULT), Shift JIS, AT&T JIS (EUC), UTF-8N\n");
 #endif
 #ifdef DEFAULT_CODE_EUC
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, AT&T JIS (EUC) (DEFAULT), UTF-8\n");
+    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, AT&T JIS (EUC) (DEFAULT), UTF-8N\n");
 #endif
 #ifdef DEFAULT_CODE_UTF8
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, AT&T JIS (EUC), UTF-8 (DEFAULT)\n");
+    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, AT&T JIS (EUC), UTF-8N (DEFAULT)\n");
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
     fprintf(stderr,"         After 'w' you can add more options. (80?|16((B|L)0?)?) \n");
@@ -4879,6 +4881,9 @@ usage()
 #endif
 #ifdef NUMCHAR_OPTION
     fprintf(stderr," --numchar-input   Convert Unicode Character Reference\n");
+#endif
+#ifdef UNICODE_NORMALIZATION
+    fprintf(stderr," --utf8mac-input   UTF-8-MAC input\n");
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
     fprintf(stderr," --ms-ucs-map      Microsoft UCS Mapping Compatible\n");
