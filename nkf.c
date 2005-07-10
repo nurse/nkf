@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.71 2005/07/09 21:46:17 naruse Exp $ */
+/* $Id: nkf.c,v 1.72 2005/07/10 04:36:50 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2005-07-05"
+#define NKF_RELEASE_DATE "2005-07-10"
 #include "config.h"
 
 static char *CopyRight =
@@ -372,6 +372,7 @@ static unsigned char           mime_buf[MIME_BUF_SIZE];
 static unsigned int            mime_top = 0;
 static unsigned int            mime_last = 0;  /* decoded */
 static unsigned int            mime_input = 0; /* undecoded */
+static int (*mime_iconv_back)PROTO((int c2,int c1,int c0)) = NULL;
 
 /* flags */
 static int             unbuf_f = FALSE;
@@ -3611,6 +3612,8 @@ unswitch_mime_getc()
     }
     i_getc = i_mgetc;
     i_ungetc = i_mungetc;
+    if(mime_iconv_back)set_iconv(FALSE, mime_iconv_back);
+    mime_iconv_back = NULL;
 }
 
 int
@@ -3648,6 +3651,7 @@ FILE *f;
     }
     mime_decode_mode = p[i-2];
 
+    mime_iconv_back = iconv;
     set_iconv(FALSE, mime_priority_func[j]);
     clr_code_score(find_inputcode_byfunc(mime_priority_func[j]), SCORE_iMIME);
 
@@ -4009,12 +4013,16 @@ FILE *f;
         if ((c1 = (*i_mgetc)(f)) == EOF) return (EOF);
 restart_mime_q:
         if (c1=='_') return ' ';
+	if (c1<=' ' || DEL<=c1) {
+	    mime_decode_mode = FALSE; /* quit */
+	    unswitch_mime_getc();
+	    return c1;
+	}
         if (c1!='=' && c1!='?') {
 	    return c1;
 	}
                 
         mime_decode_mode = exit_mode; /* prepare for quit */
-        if (c1<=' ') return c1;
         if ((c2 = (*i_mgetc)(f)) == EOF) return (EOF);
         if (c1=='?'&&c2=='=' && mimebuf_f != FIXED_MIME) {
             /* end Q encoding */
