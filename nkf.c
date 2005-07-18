@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.72 2005/07/10 04:36:50 naruse Exp $ */
+/* $Id: nkf.c,v 1.73 2005/07/17 19:56:15 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2005-07-10"
+#define NKF_RELEASE_DATE "2005-07-18"
 #include "config.h"
 
 static char *CopyRight =
@@ -2539,6 +2539,10 @@ w_iconv(c2, c1, c0)
     else if (c2 == 0xef && c1 == 0xbb && c0 == 0xbf)
 	return 0; /* throw BOM */
     else if (internal_unicode_f && (output_conv == w_oconv || output_conv == w_oconv16)){
+	if(c2 == 0){
+	    c2 = c1;
+	    c1 = 0;
+	}
 	val = ww16_conv(c2, c1, c0);
 	c2 = (val >> 8) & 0xff;
 	c1 = val & 0xff;
@@ -4724,7 +4728,7 @@ reinit()
 #endif
     iso2022jp_f = FALSE;
 #ifdef UNICODE_ENABLE
-    internal_unicode_f = TRUE;
+    internal_unicode_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
     unicode_bom_f = 0;
