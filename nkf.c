@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.73 2005/07/17 19:56:15 naruse Exp $ */
+/* $Id: nkf.c,v 1.74 2005/07/18 16:24:35 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2005-07-18"
+#define NKF_RELEASE_DATE "2005-07-19"
 #include "config.h"
 
 static char *CopyRight =
@@ -2523,8 +2523,10 @@ w_iconv(c2, c1, c0)
     unsigned short val = 0;
     
     if (c0 == 0){
-	if (c2 < 0x80 || (c2 & 0xc0) == 0xdf) /* 0x00-0x7f 0xc0-0xdf */
-	    ; /* 1 or 2ytes */
+	if (c2 == 0) /* 0x00-0x7f */
+	    ; /* 1byte */
+	else if ((c2 & 0xe0) == 0xc0) /* 0xc0-0xdf */
+	    ; /* 2ytes */
 	else if ((c2 & 0xf0) == 0xe0) /* 0xe0-0xef */
 	    return -1; /* 3bytes */
 #ifdef __COMMENT__
@@ -4018,8 +4020,7 @@ FILE *f;
 restart_mime_q:
         if (c1=='_') return ' ';
 	if (c1<=' ' || DEL<=c1) {
-	    mime_decode_mode = FALSE; /* quit */
-	    unswitch_mime_getc();
+	    mime_decode_mode = exit_mode; /* prepare for quit */
 	    return c1;
 	}
         if (c1!='=' && c1!='?') {
