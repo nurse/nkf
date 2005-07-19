@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.11 2005/04/09 21:07:16 rei_furukawa Exp $
+# $Id: nkf_test.pl,v 1.12 2005/07/18 16:25:09 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -868,6 +868,21 @@ eofeof
 
 print "test_data/z1space-2    ";
     &test("$nkf -e -Z2",$example{'test_data/z1space-2'},$example{'test_data/z1space-2.ans'});
+# test_data/bug2273
 
+$example{'test_data/bug2273'} = unpack('u',<<'eofeof');
+M/3]I<V\M,C`R,BUJ<#]Q/STY-CU!,CTX1CU",STY,3U&.#TX1$P].$0].3`]
+M.#$]038*:'1T<#HO+V5X86UP;&4N8V]M+S]O<&4]<V5L"FAT='`Z+R]E>&UA
+,<&QE+FIP+PHN+BX*
+eofeof
+
+$example{'test_data/bug2273.ans'} = unpack('u',<<'eofeof');
+MS*2^M<+ZN:VY\**H"FAT='`Z+R]E>&%M<&QE+F-O;2\_;W!E/7-E;`IH='1P
+3.B\O97AM87!L92YJ<"\*+BXN"@``
+eofeof
+
+print "test_data/bug2273    ";
+    &test("$nkf -e",$example{'test_data/bug2273'},$example{'test_data/bug2273.ans'});
 
 # end
+
