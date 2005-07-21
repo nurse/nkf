@@ -43,6 +43,9 @@
  */
 /* #define INT_IS_SHORT */
 
+/* Unicode Normalization */
+#define UNICODE_NORMALIZATION
+
 #ifndef WIN32DLL
 /******************************/
 /* デフォルトの出力コード選択 */
@@ -54,6 +57,18 @@
 /******************************/
 #else
 #define DEFAULT_CODE_SJIS
+#endif
+
+#if defined(UTF8_INPUT_ENABLE) && defined(UNICODE_NORMALIZATION)
+#define NORMALIZATION_TABLE_LENGTH 942
+#define NORMALIZATION_TABLE_NFC_LENGTH 3
+#define NORMALIZATION_TABLE_NFD_LENGTH 9
+struct normalization_pair{
+    int nfc[NORMALIZATION_TABLE_NFC_LENGTH];
+    int nfd[NORMALIZATION_TABLE_NFD_LENGTH];
+};
+#else
+#undef UNICODE_NORMALIZATION
 #endif
 
 #endif /* _CONFIG_H_ */
