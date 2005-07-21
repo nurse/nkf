@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.75 2005/07/21 05:55:59 naruse Exp $ */
+/* $Id: nkf.c,v 1.76 2005/07/21 06:45:53 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
 #define NKF_RELEASE_DATE "2005-07-22"
 #include "config.h"
@@ -2393,7 +2393,7 @@ int s2e_conv(c2, c1, p2, p1)
 #endif
 #ifdef SHIFTJIS_CP932
     if (cp932_f && CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END){
-        extern unsigned short shiftjis_cp932[3][189];
+        extern const unsigned short shiftjis_cp932[3][189];
         val = shiftjis_cp932[c2 - CP932_TABLE_BEGIN][c1 - 0x40];
         if (val){
             c2 = val >> 8;
@@ -2403,7 +2403,7 @@ int s2e_conv(c2, c1, p2, p1)
 #endif /* SHIFTJIS_CP932 */
 #ifdef X0212_ENABLE
     if (x0212_f && 0xfa <= c2 && c2 <= 0xfc){
-        extern unsigned short shiftjis_x0212[3][189];
+        extern const unsigned short shiftjis_x0212[3][189];
         val = shiftjis_x0212[c2 - 0xfa][c1 - 0x40];
         if (val){
             if (val & 0x8000){

@@ -2265,7 +2265,7 @@ const unsigned short euc_to_utf8_1byte[] = {
       0,      0,      0,      0,      0,      0,      0,      0,
       0,      0,      0,      0,      0, 0x00A9, 0x2122,
 };
-const unsigned short * euc_to_utf8_2bytes[] = {
+const unsigned short *const euc_to_utf8_2bytes[] = {
                  euc_to_utf8_A1, euc_to_utf8_A2, euc_to_utf8_A3,
  euc_to_utf8_A4, euc_to_utf8_A5, euc_to_utf8_A6, euc_to_utf8_A7,
  euc_to_utf8_A8, euc_to_utf8_A9, euc_to_utf8_AA, euc_to_utf8_AB,
@@ -2292,7 +2292,7 @@ const unsigned short * euc_to_utf8_2bytes[] = {
  euc_to_utf8_FC,              0,              0,
 };
 /* Microsoft UCS Mapping Compatible */
-const unsigned short * euc_to_utf8_2bytes_ms[] = {
+const unsigned short *const euc_to_utf8_2bytes_ms[] = {
                  euc_to_utf8_A1_ms, euc_to_utf8_A2_ms, euc_to_utf8_A3,
  euc_to_utf8_A4, euc_to_utf8_A5, euc_to_utf8_A6, euc_to_utf8_A7,
  euc_to_utf8_A8, euc_to_utf8_A9, euc_to_utf8_AA, euc_to_utf8_AB,
@@ -2320,7 +2320,7 @@ const unsigned short * euc_to_utf8_2bytes_ms[] = {
 };
 
 #ifdef X0212_ENABLE
-const unsigned short * x0212_to_utf8_2bytes[] = {
+const unsigned short *const x0212_to_utf8_2bytes[] = {
                               0, euc_to_utf8_8FA2,              0,
               0,              0, euc_to_utf8_8FA6, euc_to_utf8_8FA7,
               0, euc_to_utf8_8FA9, euc_to_utf8_8FAA, euc_to_utf8_8FAB,
