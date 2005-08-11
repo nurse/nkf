@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.76 2005/07/21 06:45:53 naruse Exp $ */
+/* $Id: nkf.c,v 1.77 2005/08/10 20:48:31 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2005-07-22"
+#define NKF_RELEASE_DATE "2005-08-11"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -3300,7 +3300,7 @@ int c2,c1;
         if (f_line<=fold_len) {   /* normal case */
             fold_state = 1;
         } else {
-            if (f_line>=fold_len+fold_margin) { /* too many kinsou suspension */
+            if (f_line>fold_len+fold_margin) { /* too many kinsoku suspension */
                 f_line = char_size(c2,c1);
                 fold_state =  '\n';       /* We can't wait, do fold now */
             } else if (c2==X0201) {
