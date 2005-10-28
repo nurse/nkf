@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.77 2005/08/10 20:48:31 naruse Exp $ */
+/* $Id: nkf.c,v 1.78 2005/10/27 23:44:23 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2005-08-11"
+#define NKF_RELEASE_DATE "2005-10-28"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -2419,12 +2419,14 @@ int s2e_conv(c2, c1, p2, p1)
         }
     }
 #endif
-    c2 = c2 + c2 - ((c2 <= 0x9f) ? SJ0162 : SJ6394);
-    if (c1 < 0x9f)
-        c1 = c1 - ((c1 > DEL) ? SPACE : 0x1f);
-    else {
-        c1 = c1 - 0x7e;
-        c2++;
+    if(c2 >= 0x80){
+	c2 = c2 + c2 - ((c2 <= 0x9f) ? SJ0162 : SJ6394);
+	if (c1 < 0x9f)
+	    c1 = c1 - ((c1 > DEL) ? SPACE : 0x1f);
+	else {
+	    c1 = c1 - 0x7e;
+	    c2++;
+	}
     }
 
 #ifdef X0212_ENABLE
@@ -2691,6 +2693,13 @@ w_iconv_common(c1, c0, pp, psize, p2, p1)
     const unsigned short *p;
     unsigned short val;
 
+    /* CP932/CP51932: U+00A6 (BROKEN BAR) -> not 0x8fa2c3, but 0x7c */
+    if (cp932_f && c1 == 0xC2 && c0 == 0xA6){
+	if (p2) *p2 = 0;
+	if (p1) *p1 = 0x7C;
+	return 0;
+    }
+
     if (pp == 0) return 1;
 
     c1 -= 0x80;
@@ -2888,7 +2897,10 @@ e_oconv(c2, c1)
             }
         }
 #endif
-        if ((c2 & 0xff00) >> 8 == 0x8f){
+        if (c2 == 0) {
+	    output_mode = ASCII;
+	    (*o_putc)(c1);
+	}else if ((c2 & 0xff00) >> 8 == 0x8f){
             if (x0212_f){
                 (*o_putc)(0x8f);
                 (*o_putc)((c2 & 0x7f) | 0x080);
@@ -4778,6 +4790,9 @@ reinit()
 #ifdef SHIFTJIS_CP932
     cp932_f = TRUE;
     cp932inv_f = TRUE;
+#endif
+#ifdef X0212_ENABLE
+    x0212_f = FALSE;
 #endif
     {
         int i;
