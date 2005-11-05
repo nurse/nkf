@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.78 2005/10/27 23:44:23 naruse Exp $ */
+/* $Id: nkf.c,v 1.79 2005/11/05 03:44:32 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
 #define NKF_RELEASE_DATE "2005-10-28"
 #include "config.h"
@@ -301,6 +301,12 @@ STATIC  int     s_iconv PROTO((int c2,int c1,int c0));
 STATIC  int     s2e_conv PROTO((int c2, int c1, int *p2, int *p1));
 STATIC  int     e_iconv PROTO((int c2,int c1,int c0));
 #ifdef UTF8_INPUT_ENABLE
+STATIC  void    encode_fallback_html PROTO((int c));
+STATIC  void    encode_fallback_xml PROTO((int c));
+STATIC  void    encode_fallback_java PROTO((int c));
+STATIC  void    encode_fallback_perl PROTO((int c));
+STATIC  void    encode_fallback_subchar PROTO((int c));
+STATIC  void    (*encode_fallback)PROTO((int c)) = NULL;
 STATIC  int     w2e_conv PROTO((int c2,int c1,int c0,int *p2,int *p1));
 STATIC  int     w_iconv PROTO((int c2,int c1,int c0));
 STATIC  int     w_iconv16 PROTO((int c2,int c1,int c0));
@@ -407,6 +413,7 @@ STATIC int             internal_unicode_f = FALSE;   /* Internal Unicode Process
 STATIC int             unicode_bom_f= 0;   /* Output Unicode BOM */
 STATIC int             w_oconv16_LE = 0;   /* utf-16 little endian */
 STATIC int             ms_ucs_map_f = FALSE;   /* Microsoft UCS Mapping Compatible */
+STATIC int             unicode_subchar  = '?'; /* the regular substitution character */
 #endif
 
 #ifdef UNICODE_NORMALIZATION
@@ -960,6 +967,12 @@ struct {
     {"utf8", "w"},
     {"utf16", "w16"},
     {"ms-ucs-map", ""},
+    {"fb-skip", ""},
+    {"fb-html", ""},
+    {"fb-xml", ""},
+    {"fb-perl", ""},
+    {"fb-java", ""},
+    {"fb-subchar", ""},
 #endif
 #ifdef UTF8_INPUT_ENABLE
     {"utf8-input", "W"},
@@ -1106,6 +1119,30 @@ options(cp)
 #if defined(UTF8_OUTPUT_ENABLE) && defined(UTF8_INPUT_ENABLE)
                 if (strcmp(long_option[i].name, "internal-unicode") == 0){
                     internal_unicode_f = TRUE;
+                    continue;
+                }
+                if (strcmp(long_option[i].name, "fb-skip") == 0){
+		    encode_fallback = NULL;
+                    continue;
+                }
+                if (strcmp(long_option[i].name, "fb-html") == 0){
+		    encode_fallback = encode_fallback_html;
+                    continue;
+                }
+                if (strcmp(long_option[i].name, "fb-xml" ) == 0){
+		    encode_fallback = encode_fallback_xml;
+                    continue;
+                }
+                if (strcmp(long_option[i].name, "fb-java") == 0){
+		    encode_fallback = encode_fallback_java;
+                    continue;
+                }
+                if (strcmp(long_option[i].name, "fb-perl") == 0){
+		    encode_fallback = encode_fallback_perl;
+                    continue;
+                }
+                if (strcmp(long_option[i].name, "fb-subchar") == 0){
+		    encode_fallback = encode_fallback_subchar;
                     continue;
                 }
 #endif
@@ -2097,13 +2134,13 @@ kanji_convert(f)
                     /* normal ASCII code */ 
                     SEND;
                 }
-            } else if (c1 == SI) {
+            } else if (!is_8bit && c1 == SI) {
                 shift_mode = FALSE; 
                 NEXT;
-            } else if (c1 == SO) {
+            } else if (!is_8bit && c1 == SO) {
                 shift_mode = TRUE; 
                 NEXT;
-            } else if (c1 == ESC ) {
+            } else if (!is_8bit && c1 == ESC ) {
                 if ((c1 = (*i_getc)(f)) == EOF) {
                     /*  (*oconv)(0, ESC); don't send bogus code */
                     LAST;
@@ -2727,6 +2764,117 @@ w_iconv_common(c1, c0, pp, psize, p2, p1)
 #endif
 
 #ifdef UTF8_OUTPUT_ENABLE
+void
+nkf_each_char_to_hex(f, c)
+    void (*f)PROTO((int c));
+    int c;
+{
+    const char *hex = "0123456789ABCDEF";
+    c &= 0x00FFFFFF;
+    int shift = 20;
+    while(shift >= 0){
+	if(c >= 1<<shift){
+	    while(shift >= 0){
+		(*f)(hex[(c>>shift)&0xF]);
+		shift -= 4;
+	    }
+	}else{
+	    shift -= 4;
+	}
+    }
+    return;
+}
+
+void
+encode_fallback_html(c)
+    int c;
+{
+    (*o_putc)('&');
+    (*o_putc)('#');
+    c &= 0x00FFFFFF;
+    if(c >= 1000000)
+	(*o_putc)(0x30+(c/1000000)%10);
+    if(c >= 100000)
+	(*o_putc)(0x30+(c/100000 )%10);
+    if(c >= 10000)
+	(*o_putc)(0x30+(c/10000  )%10);
+    if(c >= 1000)
+	(*o_putc)(0x30+(c/1000   )%10);
+    if(c >= 100)
+	(*o_putc)(0x30+(c/100    )%10);
+    if(c >= 10)
+	(*o_putc)(0x30+(c/10     )%10);
+    if(c >= 0)
+	(*o_putc)(0x30+ c         %10);
+    (*o_putc)(';');
+    return;
+}
+
+void
+encode_fallback_xml(c)
+    int c;
+{
+    (*o_putc)('&');
+    (*o_putc)('#');
+    (*o_putc)('x');
+    nkf_each_char_to_hex(o_putc, c);
+    (*o_putc)(';');
+    return;
+}
+
+void
+encode_fallback_java(c)
+    int c;
+{
+    const char *hex = "0123456789ABCDEF";
+    (*o_putc)('\\');
+    if((c&0x00FFFFFF) > 0xFFFF){
+	(*o_putc)('U');
+	(*o_putc)('0');
+	(*o_putc)('0');
+	(*o_putc)(hex[(c>>20)&0xF]);
+	(*o_putc)(hex[(c>>16)&0xF]);
+    }else{
+	(*o_putc)('u');
+    }
+    (*o_putc)(hex[(c>>12)&0xF]);
+    (*o_putc)(hex[(c>> 8)&0xF]);
+    (*o_putc)(hex[(c>> 4)&0xF]);
+    (*o_putc)(hex[ c     &0xF]);
+    return;
+}
+
+void
+encode_fallback_perl(c)
+    int c;
+{
+    (*o_putc)('\\');
+    (*o_putc)('x');
+    (*o_putc)('{');
+    nkf_each_char_to_hex(o_putc, c);
+    (*o_putc)('}');
+    return;
+}
+
+void
+encode_fallback_subchar(c)
+    int c;
+{
+    c = unicode_subchar;
+    int shift = 16;
+    while(shift >= 0){
+	if(c >= 1<<shift){
+	    while(shift >= 0){
+		(*o_putc)((c>>shift)&0xFF);
+		shift -= 8;
+	    }
+	}else{
+	    shift -= 8;
+	}
+    }
+    return;
+}
+
 int
 e2w_conv(c2, c1)
     int    c2, c1;
@@ -2870,6 +3018,7 @@ e_oconv(c2, c1)
     if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16){
         w16e_conv(c1, &c2, &c1);
         if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16){
+	    if(encode_fallback)(*encode_fallback)(c1);
             return;
         }
     }
@@ -2998,6 +3147,10 @@ s_oconv(c2, c1)
 #ifdef NUMCHAR_OPTION
     if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16){
         w16e_conv(c1, &c2, &c1);
+        if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16){
+	    if(encode_fallback)(*encode_fallback)(c1);
+            return;
+        }
     }
 #endif
     if (c2 == EOF) {
@@ -4768,6 +4921,8 @@ reinit()
     unicode_bom_f = 0;
     w_oconv16_LE = 0;
     ms_ucs_map_f = FALSE;
+    encode_fallback = NULL;
+    unicode_subchar  = '?';
 #endif
 #ifdef UNICODE_NORMALIZATION
     nfc_f = FALSE;
