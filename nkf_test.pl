@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.12 2005/07/18 16:25:09 naruse Exp $
+# $Id: nkf_test.pl,v 1.13 2005/11/06 20:17:42 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -126,6 +126,12 @@ print "JIS  to EUC ... ";&test("$nkf -e",$example{'jis'},$example{'euc'});
 print "JIS  to UTF8... ";&test("$nkf -w",$example{'jis'},$example{'utf8N'});
 print "JIS  to U16L... ";&test("$nkf -w16L",$example{'jis'},$example{'u16L'});
 print "JIS  to U16B... ";&test("$nkf -w16B",$example{'jis'},$example{'u16B'});
+print "JIS  to JIS ... ";&test("$nkf --ic=iso-2022-jp --oc=iso-2022-jp"	,$example{'jis'},$example{'jis'});
+print "JIS  to SJIS... ";&test("$nkf --ic=iso-2022-jp --oc=shift_jis"	,$example{'jis'},$example{'sjis'});
+print "JIS  to EUC ... ";&test("$nkf --ic=iso-2022-jp --oc=euc-jp"	,$example{'jis'},$example{'euc'});
+print "JIS  to UTF8... ";&test("$nkf --ic=iso-2022-jp --oc=utf-8n"	,$example{'jis'},$example{'utf8N'});
+print "JIS  to U16L... ";&test("$nkf --ic=iso-2022-jp --oc=utf-16le-bom",$example{'jis'},$example{'u16L'});
+print "JIS  to U16B... ";&test("$nkf --ic=iso-2022-jp --oc=utf-16be-bom",$example{'jis'},$example{'u16B'});
 
 # From SJIS
 
@@ -135,6 +141,12 @@ print "SJIS to EUC ... ";&test("$nkf -e",$example{'sjis'},$example{'euc'});
 print "SJIS to UTF8... ";&test("$nkf -w",$example{'sjis'},$example{'utf8N'});
 print "SJIS to U16L... ";&test("$nkf -w16L",$example{'sjis'},$example{'u16L'});
 print "SJIS to U16B... ";&test("$nkf -w16B",$example{'sjis'},$example{'u16B'});
+print "SJIS to JIS ... ";&test("$nkf --ic=shift_jis --oc=iso-2022-jp"	,$example{'sjis'},$example{'jis'});
+print "SJIS to SJIS... ";&test("$nkf --ic=shift_jis --oc=shift_jis"	,$example{'sjis'},$example{'sjis'});
+print "SJIS to EUC ... ";&test("$nkf --ic=shift_jis --oc=euc-jp"	,$example{'sjis'},$example{'euc'});
+print "SJIS to UTF8... ";&test("$nkf --ic=shift_jis --oc=utf-8n"	,$example{'sjis'},$example{'utf8N'});
+print "SJIS to U16L... ";&test("$nkf --ic=shift_jis --oc=utf-16le-bom"	,$example{'sjis'},$example{'u16L'});
+print "SJIS to U16B... ";&test("$nkf --ic=shift_jis --oc=utf-16be-bom"	,$example{'sjis'},$example{'u16B'});
 
 # From EUC
 
@@ -144,6 +156,12 @@ print "EUC  to EUC ... ";&test("$nkf -e",$example{'euc'},$example{'euc'});
 print "EUC  to UTF8... ";&test("$nkf -w",$example{'euc'},$example{'utf8N'});
 print "EUC  to U16L... ";&test("$nkf -w16L",$example{'euc'},$example{'u16L'});
 print "EUC  to U16B... ";&test("$nkf -w16B",$example{'euc'},$example{'u16B'});
+print "EUC  to JIS ... ";&test("$nkf --ic=euc-jp --oc=iso-2022-jp"	,$example{'euc'},$example{'jis'});
+print "EUC  to SJIS... ";&test("$nkf --ic=euc-jp --oc=shift_jis"	,$example{'euc'},$example{'sjis'});
+print "EUC  to EUC ... ";&test("$nkf --ic=euc-jp --oc=euc-jp"	,$example{'euc'},$example{'euc'});
+print "EUC  to UTF8... ";&test("$nkf --ic=euc-jp --oc=utf-8n"	,$example{'euc'},$example{'utf8N'});
+print "EUC  to U16L... ";&test("$nkf --ic=euc-jp --oc=utf-16le-bom"	,$example{'euc'},$example{'u16L'});
+print "EUC  to U16B... ";&test("$nkf --ic=euc-jp --oc=utf-16be-bom"	,$example{'euc'},$example{'u16B'});
 
 # From UTF8
 
@@ -157,6 +175,16 @@ print "UTF8 to U16L... ";&test("$nkf -w16L",	$example{'utf8N'},$example{'u16L'})
 print "UTF8 to U16L0.. ";&test("$nkf -w16L0",	$example{'utf8N'},$example{'u16L0'});
 print "UTF8 to U16B... ";&test("$nkf -w16B",	$example{'utf8N'},$example{'u16B'});
 print "UTF8 to U16B0.. ";&test("$nkf -w16B0",	$example{'utf8N'},$example{'u16B0'});
+print "UTF8 to JIS ... ";&test("$nkf --ic=utf-8 --oc=iso-2022-jp",	$example{'utf8N'},$example{'jis'});
+print "UTF8 to SJIS... ";&test("$nkf --ic=utf-8 --oc=shift_jis",	$example{'utf8N'},$example{'sjis'});
+print "UTF8 to EUC ... ";&test("$nkf --ic=utf-8 --oc=euc-jp",		$example{'utf8N'},$example{'euc'});
+print "UTF8 to UTF8N.. ";&test("$nkf --ic=utf-8 --oc=utf-8",		$example{'utf8N'},$example{'utf8N'});
+print "UTF8 to UTF8BOM ";&test("$nkf --ic=utf-8 --oc=utf-8-bom",	$example{'utf8N'},$example{'utf8'});
+print "UTF8 to UTF8N.. ";&test("$nkf --ic=utf-8 --oc=utf-8n",		$example{'utf8N'},$example{'utf8N'});
+print "UTF8 to U16L... ";&test("$nkf --ic=utf-8 --oc=utf-16le-bom",	$example{'utf8N'},$example{'u16L'});
+print "UTF8 to U16L0.. ";&test("$nkf --ic=utf-8 --oc=utf-16le",		$example{'utf8N'},$example{'u16L0'});
+print "UTF8 to U16B... ";&test("$nkf --ic=utf-8 --oc=utf-16be-bom",	$example{'utf8N'},$example{'u16B'});
+print "UTF8 to U16B0.. ";&test("$nkf --ic=utf-8 --oc=utf-16be",		$example{'utf8N'},$example{'u16B0'});
 
 
 
@@ -252,6 +280,8 @@ eofeof
 
 print "test_data/cp932    ";
     &test("$nkf -eS",$example{'test_data/cp932'},$example{'test_data/cp932.ans'});
+print "test_data/cp51932    ";
+    &test("$nkf --ic=cp932 --oc=cp51932",$example{'test_data/cp932'},$example{'test_data/cp932.ans'});
 
 # test_data/cp932inv
 print "test_data/cp932inv    ";
@@ -293,6 +323,8 @@ print "Normal UCS Mapping : ";
 
 print "Microsoft UCS Mapping : ";
     &test("$nkf -w16B0 -S --ms-ucs-map",$example{'ms_ucs_map_1_sjis'},$example{'ms_ucs_map_1_utf16_ms'});
+print "CP932 to UTF-16BE : ";
+    &test("$nkf --ic=cp932 --oc=utf-16be",$example{'ms_ucs_map_1_sjis'},$example{'ms_ucs_map_1_utf16_ms'});
 
 print"\n";
 
