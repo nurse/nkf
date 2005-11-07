@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.79 2005/11/05 03:44:32 naruse Exp $ */
+/* $Id: nkf.c,v 1.80 2005/11/06 20:11:27 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2005-10-28"
+#define NKF_RELEASE_DATE "2005-11-07"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -232,6 +232,17 @@
 #define		is_alnum(c)  \
             (('a'<=c && c<='z')||('A'<= c && c<='Z')||('0'<=c && c<='9'))
 
+/* I don't trust portablity of toupper */
+#define nkf_toupper(c)  (('a'<=c && c<='z')?(c-('a'-'A')):c)
+#define nkf_isoctal(c)  ('0'<=c && c<='7')
+#define nkf_isdigit(c)  ('0'<=c && c<='9')
+#define nkf_isxdigit(c)  (nkf_isdigit(c) || ('a'<=c && c<='f') || ('A'<=c && c <= 'F'))
+#define nkf_isblank(c) (c == SPACE || c == TAB)
+#define nkf_isspace(c) (nkf_isblank(c) || c == CR || c == NL)
+#define nkf_isalpha(c) (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'))
+#define nkf_isalnum(c) (nkf_isdigit(c) || nkf_isalpha(c))
+#define hex2bin(x)     ( nkf_isdigit(x) ? x - '0' : nkf_toupper(x) - 'A' + 10)
+
 #define         HOLD_SIZE       1024
 #define         IOBUF_SIZE      16384
 
@@ -312,6 +323,7 @@ STATIC  int     w_iconv PROTO((int c2,int c1,int c0));
 STATIC  int     w_iconv16 PROTO((int c2,int c1,int c0));
 STATIC  int	w_iconv_common PROTO((int c1,int c0,const unsigned short *const *pp,int psize,int *p2,int *p1));
 STATIC  int     ww16_conv PROTO((int c2, int c1, int c0));
+STATIC  int     w16e_conv PROTO((unsigned short val,int *p2,int *p1));
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
 STATIC  int     e2w_conv PROTO((int c2,int c1));
@@ -413,7 +425,7 @@ STATIC int             internal_unicode_f = FALSE;   /* Internal Unicode Process
 STATIC int             unicode_bom_f= 0;   /* Output Unicode BOM */
 STATIC int             w_oconv16_LE = 0;   /* utf-16 little endian */
 STATIC int             ms_ucs_map_f = FALSE;   /* Microsoft UCS Mapping Compatible */
-STATIC int             unicode_subchar  = '?'; /* the regular substitution character */
+STATIC int             unicode_subchar = '?'; /* the regular substitution character */
 #endif
 
 #ifdef UNICODE_NORMALIZATION
@@ -469,10 +481,12 @@ STATIC int exec_f = 0;
 #endif
 
 #ifdef SHIFTJIS_CP932
-STATIC int cp932_f = TRUE;
+/* invert IBM extended characters to others and controls some UCS mapping */
+STATIC int cp51932_f = TRUE;
 #define CP932_TABLE_BEGIN (0xfa)
 #define CP932_TABLE_END   (0xfc)
 
+/* invert NEC-selected IBM extended characters to IBM extended characters */
 STATIC int cp932inv_f = TRUE;
 #define CP932INV_TABLE_BEGIN (0xed)
 #define CP932INV_TABLE_END   (0xee)
@@ -973,6 +987,7 @@ struct {
     {"fb-perl", ""},
     {"fb-java", ""},
     {"fb-subchar", ""},
+    {"fb-subchar=", ""},
 #endif
 #ifdef UTF8_INPUT_ENABLE
     {"utf8-input", "W"},
@@ -1011,34 +1026,41 @@ void
 options(cp) 
      unsigned char *cp;
 {
-    int i;
+    int i, j;
     unsigned char *p = NULL;
+    unsigned char *cp_back = NULL;
 
     if (option_mode==1)
 	return;
     while(*cp && *cp++!='-');
-    while (*cp) {
+    while (*cp || cp_back) {
+	if(!*cp){
+	    cp = cp_back;
+	    cp_back = NULL;
+	    continue;
+	}
 	p = 0;
         switch (*cp++) {
         case '-':  /* literal options */
-	    if (!*cp) {        /* ignore the rest of arguments */
+	    if (!*cp || *cp == SPACE) {        /* ignore the rest of arguments */
 		option_mode = 1;
 		return;
 	    }
             for (i=0;i<sizeof(long_option)/sizeof(long_option[0]);i++) {
-		int j;
                 p = (unsigned char *)long_option[i].name;
                 for (j=0;*p && *p != '=' && *p == cp[j];p++, j++);
 		if (*p == cp[j] || cp[j] == ' '){
-		    p = &cp[j];
+		    p = &cp[j] + 1;
 		    break;
 		}
 		p = 0;
             }
 	    if (p == 0) return;
-            cp = (unsigned char *)long_option[i].alias;
-            if (!*cp){
-	        cp = p;
+	    while(*cp && *cp != SPACE && cp++);
+            if (long_option[i].alias[0]){
+		cp_back = cp;
+		cp = (unsigned char *)long_option[i].alias;
+	    }else{
 #ifdef OVERWRITE
                 if (strcmp(long_option[i].name, "overwrite") == 0){
                     file_out = TRUE;
@@ -1074,7 +1096,7 @@ options(cp)
 #endif
                 if (strcmp(long_option[i].name, "cp932") == 0){
 #ifdef SHIFTJIS_CP932
-                    cp932_f = TRUE;
+                    cp51932_f = TRUE;
                     cp932inv_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
@@ -1084,7 +1106,7 @@ options(cp)
                 }
                 if (strcmp(long_option[i].name, "no-cp932") == 0){
 #ifdef SHIFTJIS_CP932
-                    cp932_f = FALSE;
+                    cp51932_f = FALSE;
                     cp932inv_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
@@ -1145,6 +1167,32 @@ options(cp)
 		    encode_fallback = encode_fallback_subchar;
                     continue;
                 }
+                if (strcmp(long_option[i].name, "fb-subchar=") == 0){
+		    encode_fallback = encode_fallback_subchar;
+		    unicode_subchar = 0;
+		    if (p[0] != '0'){
+			/* decimal number */
+			for (i = 0; i < 7 && nkf_isdigit(p[i]); i++){
+			    unicode_subchar *= 10;
+			    unicode_subchar += hex2bin(p[i]);
+			}
+		    }else if(p[1] == 'x' || p[1] == 'X'){
+			/* hexadecimal number */
+			for (i = 2; i < 8 && nkf_isxdigit(p[i]); i++){
+			    unicode_subchar <<= 4;
+			    unicode_subchar |= hex2bin(p[i]);
+			}
+		    }else{
+			/* octal number */
+			for (i = 1; i < 8 && nkf_isoctal(p[i]); i++){
+			    unicode_subchar *= 8;
+			    unicode_subchar += hex2bin(p[i]);
+			}
+		    }
+		    w16e_conv(unicode_subchar, &i, &j);
+		    unicode_subchar = i<<8 | j;
+                    continue;
+                }
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
                 if (strcmp(long_option[i].name, "ms-ucs-map") == 0){
@@ -1160,9 +1208,9 @@ options(cp)
 		}
 #endif
                 if (strcmp(long_option[i].name, "prefix=") == 0){
-                    if (*p == '=' && ' ' < p[1] && p[1] < 128){
-                        for (i = 2; ' ' < p[i] && p[i] < 128; i++){
-                            prefix_table[p[i]] = p[1];
+                    if (' ' < p[0] && p[0] < 128){
+                        for (i = 1; ' ' < p[i] && p[i] < 128; i++){
+                            prefix_table[p[i]] = p[0];
                         }
                     }
                     continue;
@@ -1602,7 +1650,7 @@ void s_status(ptr, c)
               ptr->stat = 1;
               status_push_ch(ptr, c);
 #ifdef SHIFTJIS_CP932
-          }else if (cp932_f
+          }else if (cp51932_f
                     && CP932_TABLE_BEGIN <= c && c <= CP932_TABLE_END){
               ptr->stat = 2;
               status_push_ch(ptr, c);
@@ -2429,7 +2477,7 @@ int s2e_conv(c2, c1, p2, p1)
     int val;
 #endif
 #ifdef SHIFTJIS_CP932
-    if (cp932_f && CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END){
+    if (cp51932_f && CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END){
         extern const unsigned short shiftjis_cp932[3][189];
         val = shiftjis_cp932[c2 - CP932_TABLE_BEGIN][c1 - 0x40];
         if (val){
@@ -2508,7 +2556,7 @@ e_iconv(c2, c1, c0)
         c2 = (c2 << 8) | (c1 & 0x7f);
         c1 = c0 & 0x7f;
 #ifdef SHIFTJIS_CP932
-        if (cp932_f){
+        if (cp51932_f){
             int s2, s1;
             if (e2s_conv(c2, c1, &s2, &s1) == 0){
                 s2e_conv(s2, s1, &c2, &c1);
@@ -2731,7 +2779,7 @@ w_iconv_common(c1, c0, pp, psize, p2, p1)
     unsigned short val;
 
     /* CP932/CP51932: U+00A6 (BROKEN BAR) -> not 0x8fa2c3, but 0x7c */
-    if (cp932_f && c1 == 0xC2 && c0 == 0xA6){
+    if (cp51932_f && c1 == 0xC2 && c0 == 0xA6){
 	if (p2) *p2 = 0;
 	if (p1) *p1 = 0x7C;
 	return 0;
@@ -2766,7 +2814,7 @@ w_iconv_common(c1, c0, pp, psize, p2, p1)
 #ifdef UTF8_OUTPUT_ENABLE
 void
 nkf_each_char_to_hex(f, c)
-    void (*f)PROTO((int c));
+    void (*f)PROTO((int c2,int c1));
     int c;
 {
     const char *hex = "0123456789ABCDEF";
@@ -2775,7 +2823,7 @@ nkf_each_char_to_hex(f, c)
     while(shift >= 0){
 	if(c >= 1<<shift){
 	    while(shift >= 0){
-		(*f)(hex[(c>>shift)&0xF]);
+		(*f)(0, hex[(c>>shift)&0xF]);
 		shift -= 4;
 	    }
 	}else{
@@ -2789,24 +2837,24 @@ void
 encode_fallback_html(c)
     int c;
 {
-    (*o_putc)('&');
-    (*o_putc)('#');
+    (*oconv)(0, '&');
+    (*oconv)(0, '#');
     c &= 0x00FFFFFF;
     if(c >= 1000000)
-	(*o_putc)(0x30+(c/1000000)%10);
+	(*oconv)(0, 0x30+(c/1000000)%10);
     if(c >= 100000)
-	(*o_putc)(0x30+(c/100000 )%10);
+	(*oconv)(0, 0x30+(c/100000 )%10);
     if(c >= 10000)
-	(*o_putc)(0x30+(c/10000  )%10);
+	(*oconv)(0, 0x30+(c/10000  )%10);
     if(c >= 1000)
-	(*o_putc)(0x30+(c/1000   )%10);
+	(*oconv)(0, 0x30+(c/1000   )%10);
     if(c >= 100)
-	(*o_putc)(0x30+(c/100    )%10);
+	(*oconv)(0, 0x30+(c/100    )%10);
     if(c >= 10)
-	(*o_putc)(0x30+(c/10     )%10);
+	(*oconv)(0, 0x30+(c/10     )%10);
     if(c >= 0)
-	(*o_putc)(0x30+ c         %10);
-    (*o_putc)(';');
+	(*oconv)(0, 0x30+ c         %10);
+    (*oconv)(0, ';');
     return;
 }
 
@@ -2814,11 +2862,11 @@ void
 encode_fallback_xml(c)
     int c;
 {
-    (*o_putc)('&');
-    (*o_putc)('#');
-    (*o_putc)('x');
-    nkf_each_char_to_hex(o_putc, c);
-    (*o_putc)(';');
+    (*oconv)(0, '&');
+    (*oconv)(0, '#');
+    (*oconv)(0, 'x');
+    nkf_each_char_to_hex(oconv, c);
+    (*oconv)(0, ';');
     return;
 }
 
@@ -2827,20 +2875,20 @@ encode_fallback_java(c)
     int c;
 {
     const char *hex = "0123456789ABCDEF";
-    (*o_putc)('\\');
+    (*oconv)(0, '\\');
     if((c&0x00FFFFFF) > 0xFFFF){
-	(*o_putc)('U');
-	(*o_putc)('0');
-	(*o_putc)('0');
-	(*o_putc)(hex[(c>>20)&0xF]);
-	(*o_putc)(hex[(c>>16)&0xF]);
+	(*oconv)(0, 'U');
+	(*oconv)(0, '0');
+	(*oconv)(0, '0');
+	(*oconv)(0, hex[(c>>20)&0xF]);
+	(*oconv)(0, hex[(c>>16)&0xF]);
     }else{
-	(*o_putc)('u');
+	(*oconv)(0, 'u');
     }
-    (*o_putc)(hex[(c>>12)&0xF]);
-    (*o_putc)(hex[(c>> 8)&0xF]);
-    (*o_putc)(hex[(c>> 4)&0xF]);
-    (*o_putc)(hex[ c     &0xF]);
+    (*oconv)(0, hex[(c>>12)&0xF]);
+    (*oconv)(0, hex[(c>> 8)&0xF]);
+    (*oconv)(0, hex[(c>> 4)&0xF]);
+    (*oconv)(0, hex[ c     &0xF]);
     return;
 }
 
@@ -2848,11 +2896,11 @@ void
 encode_fallback_perl(c)
     int c;
 {
-    (*o_putc)('\\');
-    (*o_putc)('x');
-    (*o_putc)('{');
-    nkf_each_char_to_hex(o_putc, c);
-    (*o_putc)('}');
+    (*oconv)(0, '\\');
+    (*oconv)(0, 'x');
+    (*oconv)(0, '{');
+    nkf_each_char_to_hex(oconv, c);
+    (*oconv)(0, '}');
     return;
 }
 
@@ -2861,11 +2909,13 @@ encode_fallback_subchar(c)
     int c;
 {
     c = unicode_subchar;
+    (*oconv)((c>>8)&0xFF, c&0xFF);
+    return;
     int shift = 16;
     while(shift >= 0){
 	if(c >= 1<<shift){
 	    while(shift >= 0){
-		(*o_putc)((c>>shift)&0xFF);
+		(*oconv)(0, (c>>shift)&0xFF);
 		shift -= 8;
 	    }
 	}else{
@@ -3039,7 +3089,7 @@ e_oconv(c2, c1)
     } else if ((c2 & 0xff00) >> 8 == 0x8f){
 	output_mode = JAPANESE_EUC;
 #ifdef SHIFTJIS_CP932
-        if (cp932_f){
+        if (cp51932_f){
             int s2, s1;
             if (e2s_conv(c2, c1, &s2, &s1) == 0){
                 s2e_conv(s2, s1, &c2, &c1);
@@ -3208,8 +3258,12 @@ j_oconv(c2, c1)
                     c1;
 {
 #ifdef NUMCHAR_OPTION
-    if ((c1 & CLASS_MASK) == CLASS_UTF16){
+    if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16){
         w16e_conv(c1, &c2, &c1);
+        if (c2 == 0 && (c1 & CLASS_MASK) == CLASS_UTF16){
+	    if(encode_fallback)(*encode_fallback)(c1);
+            return;
+        }
     }
 #endif
     if (c2 == EOF) {
@@ -3772,15 +3826,6 @@ const int mime_encode_method[] = {
 
 #define MAXRECOVER 20
 
-/* I don't trust portablity of toupper */
-#define nkf_toupper(c)  (('a'<=c && c<='z')?(c-('a'-'A')):c)
-#define nkf_isdigit(c)  ('0'<=c && c<='9')
-#define nkf_isxdigit(c)  (nkf_isdigit(c) || ('a'<=c && c<='f') || ('A'<=c && c <= 'F'))
-#define nkf_isblank(c) (c == SPACE || c == TAB)
-#define nkf_isspace(c) (nkf_isblank(c) || c == CR || c == NL)
-#define nkf_isalpha(c) (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'))
-#define nkf_isalnum(c) (nkf_isdigit(c) || nkf_isalpha(c))
-
 void
 switch_mime_getc()
 {
@@ -3987,14 +4032,6 @@ print_guessed_code (filename)
     printf("%s\n", codename);
 }
 #endif /*WIN32DLL*/
-
-int
-hex2bin(x)
-     int x;
-{
-    if (nkf_isdigit(x)) return x - '0';
-    return nkf_toupper(x) - 'A' + 10;
-}
 
 #ifdef INPUT_OPTION 
 
@@ -4943,7 +4980,7 @@ reinit()
     exec_f = 0;
 #endif
 #ifdef SHIFTJIS_CP932
-    cp932_f = TRUE;
+    cp51932_f = TRUE;
     cp932inv_f = TRUE;
 #endif
 #ifdef X0212_ENABLE
@@ -5088,6 +5125,10 @@ usage()
 #endif
 #ifdef UNICODE_NORMALIZATION
     fprintf(stderr," --utf8mac-input   UTF-8-MAC input\n");
+#endif
+#ifdef UTF8_INPUT_ENABLE
+    fprintf(stderr," --fb-{skip, html, xml, perl, java, subchar}\n");
+    fprintf(stderr,"                   set the way nkf handles unassigned characters\n");
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
     fprintf(stderr," --ms-ucs-map      Microsoft UCS Mapping Compatible\n");
