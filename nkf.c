@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.80 2005/11/06 20:11:27 naruse Exp $ */
+/* $Id: nkf.c,v 1.81 2005/11/06 20:17:01 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
 #define NKF_RELEASE_DATE "2005-11-07"
 #include "config.h"
@@ -949,6 +949,8 @@ struct {
     const char *name;
     const char *alias;
 } long_option[] = {
+    {"ic=", ""},
+    {"oc=", ""},
     {"base64","jMB"},
     {"euc","e"},
     {"euc-input","E"},
@@ -1029,6 +1031,7 @@ options(cp)
     int i, j;
     unsigned char *p = NULL;
     unsigned char *cp_back = NULL;
+    unsigned char codeset[32];
 
     if (option_mode==1)
 	return;
@@ -1061,6 +1064,145 @@ options(cp)
 		cp_back = cp;
 		cp = (unsigned char *)long_option[i].alias;
 	    }else{
+                if (strcmp(long_option[i].name, "ic=") == 0){
+		    for (i=0; i < 16 && SPACE < p[i] && p[i] < DEL; i++){
+			codeset[i] = nkf_toupper(p[i]);
+		    }
+		    codeset[i] = 0;
+		    if(strcmp(codeset, "ISO-2022-JP") == 0){
+			input_f = JIS_INPUT;
+		    }else if(strcmp(codeset, "SHIFT_JIS") == 0){
+			input_f = SJIS_INPUT;
+			if (x0201_f==NO_X0201) x0201_f=TRUE;
+		    }else if(strcmp(codeset, "CP932") == 0){
+			input_f = SJIS_INPUT;
+			x0201_f = FALSE;
+#ifdef SHIFTJIS_CP932
+                    cp51932_f = TRUE;
+                    cp932inv_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+                    ms_ucs_map_f = TRUE;
+#endif
+		    }else if(strcmp(codeset, "EUCJP") == 0 ||
+			     strcmp(codeset, "EUC-JP") == 0 ||
+			     strcmp(codeset, "CP51932") == 0){
+			input_f = JIS_INPUT;
+			x0201_f = FALSE;
+#ifdef SHIFTJIS_CP932
+                    cp51932_f = TRUE;
+                    cp932inv_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+                    ms_ucs_map_f = TRUE;
+#endif
+		    }else if(strcmp(codeset, "EUC-JP-MS") == 0 ||
+			     strcmp(codeset, "EUCJP-MS") == 0){
+			input_f = JIS_INPUT;
+			x0201_f = FALSE;
+#ifdef SHIFTJIS_CP932
+                    cp51932_f = FALSE;
+                    cp932inv_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+                    ms_ucs_map_f = TRUE;
+#endif
+#ifdef UTF8_INPUT_ENABLE
+		    }else if(strcmp(codeset, "UTF-8") == 0 ||
+			     strcmp(codeset, "UTF-8N") == 0 ||
+			     strcmp(codeset, "UTF-8-BOM") == 0){
+			input_f = UTF8_INPUT;
+#ifdef UNICODE_NORMALIZATION
+		    }else if(strcmp(codeset, "UTF8-MAC") == 0){
+			input_f = UTF8_INPUT;
+			nfc_f = TRUE;
+#endif
+		    }else if(strcmp(codeset, "UTF-16") == 0){
+			input_f = UTF16BE_INPUT;
+			utf16_mode = UTF16BE_INPUT;
+		    }else if(strcmp(codeset, "UTF-16BE") == 0 ||
+			     strcmp(codeset, "UTF-16BE-BOM") == 0){
+			input_f = UTF16BE_INPUT;
+			utf16_mode = UTF16BE_INPUT;
+		    }else if(strcmp(codeset, "UTF-16LE") == 0 ||
+			     strcmp(codeset, "UTF-16LE-BOM") == 0){
+			input_f = UTF16LE_INPUT;
+			utf16_mode = UTF16LE_INPUT;
+#endif
+		    }
+                    continue;
+		}
+                if (strcmp(long_option[i].name, "oc=") == 0){
+		    for (i=0; i < 16 && SPACE < p[i] && p[i] < DEL; i++){
+			codeset[i] = nkf_toupper(p[i]);
+		    }
+		    codeset[i] = 0;
+		    if(strcmp(codeset, "ISO-2022-JP") == 0){
+			output_conv = j_oconv;
+		    }else if(strcmp(codeset, "SHIFT_JIS") == 0){
+			output_conv = s_oconv;
+		    }else if(strcmp(codeset, "CP932") == 0){
+			output_conv = s_oconv;
+			x0201_f = FALSE;
+#ifdef SHIFTJIS_CP932
+                    cp51932_f = TRUE;
+                    cp932inv_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+                    ms_ucs_map_f = TRUE;
+#endif
+		    }else if(strcmp(codeset, "EUCJP") == 0 ||
+			     strcmp(codeset, "EUC-JP") == 0 ||
+			     strcmp(codeset, "CP51932") == 0){
+			output_conv = e_oconv;
+			x0201_f = FALSE;
+#ifdef SHIFTJIS_CP932
+                    cp51932_f = TRUE;
+                    cp932inv_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+                    ms_ucs_map_f = TRUE;
+#endif
+		    }else if(strcmp(codeset, "EUC-JP-MS") == 0 ||
+			     strcmp(codeset, "EUCJP-MS") == 0){
+			output_conv = e_oconv;
+			x0201_f = FALSE;
+			x0212_f = TRUE;
+#ifdef SHIFTJIS_CP932
+                    cp51932_f = FALSE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+                    ms_ucs_map_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+		    }else if(strcmp(codeset, "UTF-8") == 0){
+			output_conv = w_oconv;
+		    }else if(strcmp(codeset, "UTF-8N") == 0){
+			output_conv = w_oconv;
+			unicode_bom_f=1;
+		    }else if(strcmp(codeset, "UTF-8-BOM") == 0){
+			output_conv = w_oconv;
+			unicode_bom_f=2;
+		    }else if(strcmp(codeset, "UTF-16") == 0){
+			output_conv = w_oconv16; 
+		    }else if(strcmp(codeset, "UTF-16BE") == 0){
+			output_conv = w_oconv16; 
+			unicode_bom_f=1;
+		    }else if(strcmp(codeset, "UTF-16BE-BOM") == 0){
+			output_conv = w_oconv16; 
+			unicode_bom_f=2;
+		    }else if(strcmp(codeset, "UTF-16LE") == 0){
+			output_conv = w_oconv16; 
+			w_oconv16_LE = 1;
+			unicode_bom_f=1;
+		    }else if(strcmp(codeset, "UTF-16LE-BOM") == 0){
+			output_conv = w_oconv16; 
+			w_oconv16_LE = 1;
+			unicode_bom_f=2;
+#endif
+		    }
+                    continue;
+		}
 #ifdef OVERWRITE
                 if (strcmp(long_option[i].name, "overwrite") == 0){
                     file_out = TRUE;
