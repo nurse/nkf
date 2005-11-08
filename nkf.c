@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.81 2005/11/06 20:17:01 naruse Exp $ */
+/* $Id: nkf.c,v 1.82 2005/11/07 22:38:08 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
 #define NKF_RELEASE_DATE "2005-11-07"
 #include "config.h"
@@ -2921,7 +2921,7 @@ w_iconv_common(c1, c0, pp, psize, p2, p1)
     unsigned short val;
 
     /* CP932/CP51932: U+00A6 (BROKEN BAR) -> not 0x8fa2c3, but 0x7c */
-    if (cp51932_f && c1 == 0xC2 && c0 == 0xA6){
+    if (ms_ucs_map_f && cp51932_f && c1 == 0xC2 && c0 == 0xA6){
 	if (p2) *p2 = 0;
 	if (p1) *p1 = 0x7C;
 	return 0;
@@ -2938,6 +2938,7 @@ w_iconv_common(c1, c0, pp, psize, p2, p1)
     if (c0 < 0 || sizeof_utf8_to_euc_E5B8 <= c0) return 1;
     val = p[c0];
     if (val == 0) return 1;
+    if (!ms_ucs_map_f && (val <= 0xFF || (c1 >= 0x40 && val & 0x8000))) return 1;
 
     c2 = val >> 8;
     if (val & 0x8000){
