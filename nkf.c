@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.83 2005/11/20 23:04:23 naruse Exp $ */
+/* $Id: nkf.c,v 1.84 2005/11/26 20:46:24 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2005-11-21"
+#define NKF_RELEASE_DATE "2005-11-27"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -2939,6 +2939,8 @@ w_iconv16(c2, c1, c0)
     if ((c2==0 && c1 < 0x80) || c2==EOF) {
 	(*oconv)(c2, c1);
 	return 0;
+    }else if((c2>>3)==27){ /* surrogate pair */
+	return 1;
     }
 #if defined(UTF8_OUTPUT_ENABLE) && defined(UTF8_INPUT_ENABLE)
     if (internal_unicode_f && (output_conv == w_oconv || output_conv == w_oconv16));
@@ -2984,6 +2986,18 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
 	    }
 	}
 	ret =  w_iconv_common(c2, c1, utf8_to_euc_2bytes, sizeof_utf8_to_euc_2bytes, p2, p1);
+	if(!ret && !ms_ucs_map_f && !x0212_f){
+	    if(*p2 == 0 && *p1 < 0x80){
+		return 1;
+	    }else if(*p2 > 0xFF){
+		int s2, s1;
+		if (e2s_conv(*p2, *p1, &s2, &s1) == 0){
+		    s2e_conv(s2, s1, p2, p1);
+		    if(*p2 == 0 && *p1 < 0x80)
+			return 1;
+		}
+            }
+	}
     }else if(c0){
 	if(!ms_ucs_map_f){
 	    /* eucJP-ascii */
