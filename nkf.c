@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.84 2005/11/26 20:46:24 naruse Exp $ */
+/* $Id: nkf.c,v 1.85 2005/11/30 09:15:06 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
 #define NKF_RELEASE_DATE "2005-11-27"
 #include "config.h"
@@ -2995,7 +2995,7 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
 		    s2e_conv(s2, s1, p2, p1);
 		    if(*p2 == 0 && *p1 < 0x80)
 			return 1;
-		}
+		}else return 1;
             }
 	}
     }else if(c0){
