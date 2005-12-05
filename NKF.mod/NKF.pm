@@ -59,73 +59,310 @@ NKF - Perl extension for Network Kanji Filter
 
 =head1 DESCRIPTION
 
-This is a Perl Extension version of nkf (Netowrk Kanji Filter ) 1.7.
+This is a Perl Extension version of nkf (Netowrk Kanji Filter).
 It converts the last argument and return converted result. Conversion
 details are specified by flags before the last argument.
 
-Flags:
 
-C<b,u      Output is bufferred (DEFAULT),Output is unbufferred>
+B<Nkf> is a yet another kanji code converter among networks, hosts and terminals.
+It converts input kanji code to designated kanji code
+such as ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8 or UTF-16.
 
-C<j,s,e    Outout code is JIS 7 bit (DEFAULT), Shift JIS, AT&T JIS (EUC)>
+One of the most unique faculty of B<nkf> is the guess of the input kanji encodings.
+It currently recognizes ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8 and UTF-16.
+So users needn't set the input kanji code explicitly.
 
-C<J,S,E    Input assumption is JIS 7 bit , Shift JIS, AT&T JIS (EUC)>
+By default, X0201 kana is converted into X0208 kana.
+For X0201 kana, SO/SI, SSO and ESC-(-I methods are supported.
+For automatic code detection, nkf assumes no X0201 kana in Shift_JIS.
+To accept X0201 in Shift_JIS, use B<-X>, B<-x> or B<-S>.
 
-C<t        no conversion>
+=head1 Flags
 
-C<i_       Output sequence to designate JIS-kanji (DEFAULT B)>
+=over
 
-C<o_       Output sequence to designate ASCII (DEFAULT B)>
+=item B<-b -u>
 
-C<r        {de/en}crypt ROT13/47>
+Output is bufferred (DEFAULT),Output is unbufferred
 
-C<m[BQ]    MIME decode [B:base64 stream,Q:quoted stream]>
+=item B<-j -s -e -w -w16>
 
-C<l        ISO8859-1 (Latin-1) support>
+Outout code is ISO-2022-JP (7bit JIS), Shift_JIS, EUC-JP,
+UTF-8N, UTF-16BE.
+Without this option and compile option, ISO-2022-JP is assumed.
 
-C<f        Folding: C<-f60> or C<-f>>
+=item B<-J -S -E -W -W16>
 
-C<Z[0-2]   Convert X0208 alphabet to ASCII  1: Kankaku to space,2: 2 spaces>
+Input assumption is JIS 7 bit , Shift_JIS, EUC-JP,
+UTF-8, UTF-16LE.
 
-C<X,x      Assume X0201 kana in MS-Kanji, C<-x> preserves X0201>
+=over
 
-C<B[0-2]   Broken input  0: missing ESC,1: any X on ESC-[($]-X,2: ASCII on NL>
+=item B<-J>
 
-C<d,c      Delete \r in line feed, Add \r in line feed>
+Assume  JIS input. It also accepts EUC-JP.
+This is the default. This flag does not exclude Shift_JIS.
 
+=item B<-S>
 
-C<m0 No MIME decode.>
+Assume Shift_JIS and X0201 kana input. It also accepts JIS.
+EUC-JP is recognized as X0201 kana. Without B<-x> flag,
+X0201 kana (halfwidth kana) is converted into X0208.
 
-C<M MIME encode. Header style. All ASCII code and control characters are intact.>
+=item B<-E>
 
-C<MB MIME encode.  Base64 stream. Kanji conversion is performed before encoding, so this cannot be used as a picture encoder.>
+Assume EUC-JP input. It also accepts JIS.
+Same as -J.
 
-C<l Input and output code is ISO8859-1 (Latin-1) and ISO-2022-JP.>
+=back
 
-C<L[wmu] new line mode>
+=item B<-t>
 
-C<    -Lu   unix (LF) >
+no conversion
 
-C<    -Lw   windows (CRLF) >
+=item B<-i_>
 
-C<    -Lm   mac (CR) >
+Output sequence to designate JIS-kanji (DEFAULT B)
 
-C< --fj,--unix,--mac,--msdos, --windows convert for these system>
+=item B<-o_>
 
-C< --jis,--euc,--sjis,--mime,--base64  convert for named code>
+Output sequence to designate ASCII (DEFAULT B)
 
-C< --jis-input,--euc-input,--sjis-input,--mime-input,--base64-input assume input system>
+=item B<-r>
 
-C< -- ignore rest of -option>
+{de/en}crypt ROT13/47
 
-C< --help>
+=item B<-T>
+Text mode output (MS-DOS)
 
-C< --version>
+=item B<-l>
+
+ISO8859-1 (Latin-1) support
+
+=item B<-f[I<m> [- I<n>]]>
+
+Folding on I<m> length with I<n> margin in a line.
+Without this option, fold length is 60 and fold margin is 10.
+
+=item B<-F>
+
+New line preserving line folding.
+
+=item B<-Z[0-2]>
+
+Convert X0208 alphabet (Fullwidth Alphabets) to ASCII.
+
+=over
+
+=item B<-Z -Z0>
+
+Convert X0208 alphabet to ASCII.
+
+=item B<-Z1>
+
+converts X0208 kankaku to single ASCII space.
+
+=item B<-Z2>
+
+converts X0208 kankaku to double ASCII spaces.
+
+=item B<-Z3>
+
+Replacing Fullwidth >, <, ", & into '&gt;', '&lt;', '&quot;', '&amp;' as in HTML.
+
+=back
+
+=item B<-X -x>
+
+Assume X0201 kana in MS-Kanji.
+With B<-X> or without this option, X0201 is converted into X0208 Kana.
+With B<-x>, try to preseve X0208 kana and do not convert X0201 kana to X0208.
+In JIS output, ESC-(-I is used. In EUC output, SSO is used.
+
+=item B<-B[0-2]>
+
+Assume broken JIS-Kanji input, which lost ESC.
+Useful when your site is using old B-News Nihongo patch.
+
+=over
+
+=item B<-B1>
+
+allows any char after ESC-( or ESC-$.
+
+=item B<-B2>
+
+forces ASCII after NL.
+
+=back
+
+=item B<-I>
+
+Replacing non iso-2022-jp char into a geta character
+(substitute character in Japanese).
+
+=item B<-d -c>
+
+Delete \r in line feed, Add \r in line feed
+
+=item B<-m[BQN0]>
+
+MIME ISO-2022-JP/ISO8859-1 decode. (default)
+To see ISO8859-1 (Latin-1) -l is necessary.
+
+=over
+
+=item B<-mB>
+
+Decode MIME base64 encoded stream. Remove header or other part before
+conversion. 
+
+=item B<-mQ>
+
+Decode MIME quoted stream. '_' in quoted stream is converted to space.
+
+=item B<-mN>
+
+Non-strict decoding.
+It allows line break in the middle of the base64 encoding.
+
+=item B<-m0>
+
+No MIME decode.
+
+=back
+
+=item B<-M>
+
+MIME encode. Header style. All ASCII code and control characters are intact.
+
+=over
+
+=item B<-MB>
+
+MIME encode Base64 stream.
+Kanji conversion is performed before encoding, so this cannot be used as a picture encoder.
+
+=item B<-MQ>
+
+perfome quoted encoding.
+
+=back
+
+=item B<-l>
+
+Input and output code is ISO8859-1 (Latin-1) and ISO-2022-JP.
+B<-s>, B<-e> and B<-x> are not compatible with this option.
+
+=item B<-L[wmu]>
+
+new line mode
+
+=over
+
+=item B<-Lu>
+
+unix (LF)
+
+=item B<-Lw>
+
+windows (CRLF)
+
+=item B<-Lm>
+
+mac (CR)
+
+Without this option, nkf doesn't convert line breaks.
+
+=back
+
+=item B<--fj --unix --mac --msdos --windows>
+
+convert for these system
+
+=item B<--jis --euc --sjis --mime --base64>
+
+convert for named code
+
+=item B<--jis-input --euc-input --sjis-input --mime-input --base64-input>
+
+assume input system
+
+=item B<--ic=I<input codeset> --oc=I<output codeset>>
+
+Set the input or output codeset.
+NKF supports following codesets and those codeset name are case insensitive.
+
+=over
+
+=item ISO-2022-JP
+
+a.k.a. RFC1468, 7bit JIS, JUNET
+
+=item EUC-JP (eucJP-nkf)
+
+a.k.a. AT&T JIS, Japanese EUC, UJIS
+
+=item eucJP-ascii
+
+=item eucJP-ms
+
+=item CP51932
+
+Microsoft Version of EUC-JP.
+
+=item Shift_JIS
+
+a.k.a. SJIS, MS-Kanji
+
+=item CP932
+
+a.k.a. Windows-31J
+
+=item UTF-8
+
+=item UTF-16
+
+=item UTF8-MAC (input only)
+
+=back
+
+=item B<--fb-{skip, html, xml, perl, java, subchar}>
+
+Specify the way that nkf handles unassigned characters.
+Without this option, --fb-skip is assumed.
+
+=item B<--disable-cp932ext>
+
+Handle the characters extended in CP932 as unassinged characters.
+
+=item B<--cap-input>
+
+Decode hex encoded characters.
+
+=item B<--url-input>
+
+Unescape percent escaped characters.
+
+=item B<-->
+
+ignore rest of -option
+
+=item B<-v --help>
+
+output this help.
+
+=item B<-V --version>
+
+output version info.
+
+=back
 
 =head1 AUTHOR
 
-Network Kanji Filter Version 1.9 (2/0002/Shinji Kono) 
-Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),1998 S. Kono, COW
+Network Kanji Filter Version 2.0.5
+
+Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2005 Kono, Furukawa, Naruse
 
 =head1 SEE ALSO
 
