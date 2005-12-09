@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.85 2005/11/30 09:15:06 naruse Exp $ */
+/* $Id: nkf.c,v 1.86 2005/12/09 03:18:40 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2005-11-27"
+#define NKF_RELEASE_DATE "2005-12-08"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -2963,10 +2963,17 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
     if(c2 < 0xe0){
 	if (ms_ucs_map_f && cp51932_f){
 	    /* CP932/CP51932: U+00A6 (BROKEN BAR) -> not 0x8fa2c3, but 0x7c */
-	    if(c2 == 0xC2 && c1 == 0xA6){
-		if (p2) *p2 = 0;
-		if (p1) *p1 = 0x7C;
-		return 0;
+	    if(c2 == 0xC2){
+		switch(c1){
+		case 0xA5:
+		    if (p2) *p2 = 0;
+		    if (p1) *p1 = 0x5C;
+		    return 0;
+		case 0xA6:
+		    if (p2) *p2 = 0;
+		    if (p1) *p1 = 0x7C;
+		    return 0;
+		}
 	    }
 	}else if(strict_mapping_f){
 	    switch(c2){
@@ -5392,19 +5399,16 @@ usage()
     fprintf(stderr,"I        Convert non ISO-2022-JP charactor to GETA\n");
     fprintf(stderr,"-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n");
     fprintf(stderr,"long name options\n");
+    fprintf(stderr," --ic=<input codeset> --oc=<output codeset>         set the input or output codeset\n");
     fprintf(stderr," --fj,--unix,--mac,--windows                        convert for the system\n");
     fprintf(stderr," --jis,--euc,--sjis,--utf8,--utf16,--mime,--base64  convert for the code\n");
     fprintf(stderr," --hiragana, --katakana    Hiragana/Katakana Conversion\n");
-    fprintf(stderr," --x0212                   Convert JISX0212\n");
     fprintf(stderr," --prefix=    Insert escape before troublesome characters of Shift_JIS\n");
 #ifdef INPUT_OPTION
     fprintf(stderr," --cap-input, --url-input  Convert hex after ':' or '%%'\n");
 #endif
 #ifdef NUMCHAR_OPTION
     fprintf(stderr," --numchar-input   Convert Unicode Character Reference\n");
-#endif
-#ifdef UNICODE_NORMALIZATION
-    fprintf(stderr," --utf8mac-input   UTF-8-MAC input\n");
 #endif
 #ifdef UTF8_INPUT_ENABLE
     fprintf(stderr," --fb-{skip, html, xml, perl, java, subchar}\n");
