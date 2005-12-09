@@ -132,6 +132,24 @@ Output sequence to designate ASCII (DEFAULT B)
 
 {de/en}crypt ROT13/47
 
+=item B<-h[123] --hiragana --katakana --katakana-hiragana>
+
+=over
+
+=item B<-h1 --hiragana>
+
+Katakana to Hiragana convertion
+
+=item B<-h2 --katakana>
+
+Hiragana to Katakana convertion
+
+=item B<-h3 --katakana-hiragana>
+
+Katakana to Hiragana and Hiragana to Katakana convertion
+
+=back
+
 =item B<-T>
 Text mode output (MS-DOS)
 
@@ -148,7 +166,7 @@ Without this option, fold length is 60 and fold margin is 10.
 
 New line preserving line folding.
 
-=item B<-Z[0-2]>
+=item B<-Z[0-3]>
 
 Convert X0208 alphabet (Fullwidth Alphabets) to ASCII.
 
@@ -321,7 +339,35 @@ a.k.a. Windows-31J
 
 =item UTF-8
 
+same as UTF-8N
+
+=item UTF-8N
+
+UTF-8 without BOM
+
+=item UTF-8-BOM
+
+UTF-8 with BOM
+
 =item UTF-16
+
+same as UTF-16BE
+
+=item UTF-16BE
+
+UTF-16 Big Endian without BOM
+
+=item UTF-16BE-BOM
+
+UTF-16 Big Endian with BOM
+
+=item UTF-16LE
+
+UTF-16 Little Endian without BOM
+
+=item UTF-16LE-BOM
+
+UTF-16 Little Endian with BOM
 
 =item UTF8-MAC (input only)
 
@@ -331,6 +377,12 @@ a.k.a. Windows-31J
 
 Specify the way that nkf handles unassigned characters.
 Without this option, --fb-skip is assumed.
+
+=item B<--prefix=I<escape character>I<target character>..>
+
+When nkf converts to Shift_JIS,
+nkf adds a specified escape character to specified 2nd byte of Shift_JIS characters.
+1st byte of argument is the escape character and following bytes are target characters.
 
 =item B<--disable-cp932ext>
 
@@ -347,14 +399,6 @@ Unescape percent escaped characters.
 =item B<-->
 
 ignore rest of -option
-
-=item B<-v --help>
-
-output this help.
-
-=item B<-V --version>
-
-output version info.
 
 =back
 
