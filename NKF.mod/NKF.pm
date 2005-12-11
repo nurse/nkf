@@ -83,17 +83,17 @@ To accept X0201 in Shift_JIS, use B<-X>, B<-x> or B<-S>.
 
 =item B<-b -u>
 
-Output is bufferred (DEFAULT),Output is unbufferred
+Output is buffered (DEFAULT), Output is unbuffered.
 
 =item B<-j -s -e -w -w16>
 
-Outout code is ISO-2022-JP (7bit JIS), Shift_JIS, EUC-JP,
+Output code is ISO-2022-JP (7bit JIS), Shift_JIS, EUC-JP,
 UTF-8N, UTF-16BE.
 Without this option and compile option, ISO-2022-JP is assumed.
 
 =item B<-J -S -E -W -W16>
 
-Input assumption is JIS 7 bit , Shift_JIS, EUC-JP,
+Input assumption is JIS 7 bit, Shift_JIS, EUC-JP,
 UTF-8, UTF-16LE.
 
 =over
@@ -118,15 +118,15 @@ Same as -J.
 
 =item B<-t>
 
-no conversion
+No conversion.
 
 =item B<-i_>
 
-Output sequence to designate JIS-kanji (DEFAULT B)
+Output sequence to designate JIS-kanji. (DEFAULT B)
 
 =item B<-o_>
 
-Output sequence to designate ASCII (DEFAULT B)
+Output sequence to designate ASCII. (DEFAULT B)
 
 =item B<-r>
 
@@ -138,19 +138,20 @@ Output sequence to designate ASCII (DEFAULT B)
 
 =item B<-h1 --hiragana>
 
-Katakana to Hiragana convertion
+Katakana to Hiragana conversion.
 
 =item B<-h2 --katakana>
 
-Hiragana to Katakana convertion
+Hiragana to Katakana conversion.
 
 =item B<-h3 --katakana-hiragana>
 
-Katakana to Hiragana and Hiragana to Katakana convertion
+Katakana to Hiragana and Hiragana to Katakana conversion.
 
 =back
 
 =item B<-T>
+
 Text mode output (MS-DOS)
 
 =item B<-l>
@@ -178,11 +179,11 @@ Convert X0208 alphabet to ASCII.
 
 =item B<-Z1>
 
-converts X0208 kankaku to single ASCII space.
+Converts X0208 kankaku to single ASCII space.
 
 =item B<-Z2>
 
-converts X0208 kankaku to double ASCII spaces.
+Converts X0208 kankaku to double ASCII spaces.
 
 =item B<-Z3>
 
@@ -194,7 +195,7 @@ Replacing Fullwidth >, <, ", & into '&gt;', '&lt;', '&quot;', '&amp;' as in HTML
 
 Assume X0201 kana in MS-Kanji.
 With B<-X> or without this option, X0201 is converted into X0208 Kana.
-With B<-x>, try to preseve X0208 kana and do not convert X0201 kana to X0208.
+With B<-x>, try to preserve X0208 kana and do not convert X0201 kana to X0208.
 In JIS output, ESC-(-I is used. In EUC output, SSO is used.
 
 =item B<-B[0-2]>
@@ -221,11 +222,11 @@ Replacing non iso-2022-jp char into a geta character
 
 =item B<-d -c>
 
-Delete \r in line feed, Add \r in line feed
+Delete \r in line feed, Add \r in line feed.
 
 =item B<-m[BQN0]>
 
-MIME ISO-2022-JP/ISO8859-1 decode. (default)
+MIME ISO-2022-JP/ISO8859-1 decode. (DEFAULT)
 To see ISO8859-1 (Latin-1) -l is necessary.
 
 =over
@@ -263,7 +264,7 @@ Kanji conversion is performed before encoding, so this cannot be used as a pictu
 
 =item B<-MQ>
 
-perfome quoted encoding.
+Perfome quoted encoding.
 
 =back
 
@@ -272,7 +273,7 @@ perfome quoted encoding.
 Input and output code is ISO8859-1 (Latin-1) and ISO-2022-JP.
 B<-s>, B<-e> and B<-x> are not compatible with this option.
 
-=item B<-L[wmu]>
+=item B<-L[uwm]>
 
 new line mode
 
@@ -386,7 +387,7 @@ nkf adds a specified escape character to specified 2nd byte of Shift_JIS charact
 
 =item B<--disable-cp932ext>
 
-Handle the characters extended in CP932 as unassinged characters.
+Handle the characters extended in CP932 as unassigned characters.
 
 =item B<--cap-input>
 
@@ -398,7 +399,7 @@ Unescape percent escaped characters.
 
 =item B<-->
 
-ignore rest of -option
+Ignore rest of -option.
 
 =back
 
