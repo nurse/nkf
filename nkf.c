@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.86 2005/12/09 03:18:40 naruse Exp $ */
+/* $Id: nkf.c,v 1.87 2006/01/05 08:45:32 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
 #define NKF_RELEASE_DATE "2005-12-08"
 #include "config.h"
@@ -312,8 +312,14 @@ STATIC  int     s_iconv PROTO((int c2,int c1,int c0));
 STATIC  int     s2e_conv PROTO((int c2, int c1, int *p2, int *p1));
 STATIC  int     e_iconv PROTO((int c2,int c1,int c0));
 #ifdef UTF8_INPUT_ENABLE
+/* don't convert characters when the mapping is not defined in the standard */
 STATIC  int     strict_mapping_f = TRUE;
+/* disable NEC special, NEC-selected IBM extended and IBM extended characters */
 STATIC  int     disable_cp932ext_f = FALSE;
+/* ignore ZERO WIDTH NO-BREAK SPACE */
+STATIC  int     ignore_zwnbsp_f = TRUE;
+/* don't convert characters that can't secure round trip convertion */
+STATIC  int     unicode_round_trip_f = FALSE;
 STATIC  void    encode_fallback_html PROTO((int c));
 STATIC  void    encode_fallback_xml PROTO((int c));
 STATIC  void    encode_fallback_java PROTO((int c));
@@ -1000,6 +1006,7 @@ struct {
     {"utf16-input", "W16"},
     {"disable-cp932ext", ""},
     {"strict-mapping", ""},
+    {"enable-round-trip",""},
 #endif
 #ifdef UNICODE_NORMALIZATION
     {"utf8mac-input", ""},
@@ -1319,6 +1326,10 @@ options(cp)
 		    disable_cp932ext_f = TRUE;
                     continue;
                 }
+		if (strcmp(long_option[i].name, "enable-round-trip") == 0){
+		    unicode_round_trip_f = TRUE;
+		    continue;
+		}
                 if (strcmp(long_option[i].name, "fb-skip") == 0){
 		    encode_fallback = NULL;
                     continue;
@@ -2208,6 +2219,14 @@ kanji_convert(f)
     module_connection();
     c2 = 0;
 
+    if(input_f == SJIS_INPUT
+#ifdef UTF8_INPUT_ENABLE
+       || input_f == UTF8_INPUT || input_f == UTF16BE_INPUT
+#endif
+      ){
+	is_8bit = TRUE;
+    }
+
 
     input_mode = ASCII;
     output_mode = ASCII;
@@ -2788,6 +2807,13 @@ w_iconv(c2, c1, c0)
 {
     int ret = 0;
     
+    /* throw away ZERO WIDTH NO-BREAK SPACE (U+FEFF) */
+    if(ignore_zwnbsp_f){
+	ignore_zwnbsp_f = FALSE;
+	if(c2 == 0xef && c1 == 0xbb && c0 == 0xbf)
+	    return 0;
+    }
+    
     if (c2 == 0) /* 0x00-0x7f */
 	c1 &= 0x7F; /* 1byte */
     else if (c0 == 0){
@@ -2816,9 +2842,7 @@ w_iconv(c2, c1, c0)
 		return 0;
 	}else return 0;
     }
-    if (c2 == 0 || c2 == EOF);
-    else if (c2 == 0xef && c1 == 0xbb && c0 == 0xbf) {
-	return 0; /* throw BOM */
+    if (c2 == 0 || c2 == EOF){
 #if defined(UTF8_OUTPUT_ENABLE) && defined(UTF8_INPUT_ENABLE)
     } else if (internal_unicode_f && (output_conv == w_oconv || output_conv == w_oconv16)){
 	unsigned short val = 0;
@@ -2925,12 +2949,16 @@ w_iconv16(c2, c1, c0)
 {
     int ret = 0;
 
-    if (c2==0376 && c1==0377){
-	utf16_mode = UTF16BE_INPUT;
-	return 0;    
-    } else if (c2==0377 && c1==0376){
-	utf16_mode = UTF16LE_INPUT;
-	return 0;    
+    /* throw away ZERO WIDTH NO-BREAK SPACE (U+FEFF) */
+    if(ignore_zwnbsp_f){
+	ignore_zwnbsp_f = FALSE;
+	if (c2==0376 && c1==0377){
+	    utf16_mode = UTF16BE_INPUT;
+	    return 0;
+	}else if(c2==0377 && c1==0376){
+	    utf16_mode = UTF16LE_INPUT;
+	    return 0;
+	}
     }
     if (c2 != EOF && utf16_mode == UTF16LE_INPUT) {
 	int tmp;
@@ -2941,11 +2969,10 @@ w_iconv16(c2, c1, c0)
 	return 0;
     }else if((c2>>3)==27){ /* surrogate pair */
 	return 1;
-    }
-#if defined(UTF8_OUTPUT_ENABLE) && defined(UTF8_INPUT_ENABLE)
-    if (internal_unicode_f && (output_conv == w_oconv || output_conv == w_oconv16));
+#ifdef UTF8_OUTPUT_ENABLE
+    }else if (internal_unicode_f && (output_conv == w_oconv || output_conv == w_oconv16)){
 #endif
-    else ret = w16e_conv(((c2<<8)&0xff00) + c1, &c2, &c1);
+    }else ret = w16e_conv(((c2<<8)&0xff00) + c1, &c2, &c1);
     if (ret) return ret;
     (*oconv)(c2, c1);
     return 0;
@@ -3006,6 +3033,33 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
             }
 	}
     }else if(c0){
+	if(unicode_round_trip_f){
+	    switch(c2){
+	    case 0xE2:
+		switch(c1){
+		case 0x80:
+		    if(c0 == 0x95) return 1;
+		    break;
+		case 0x88:
+		    if(c0 == 0xA5) return 1;
+		    break;
+		}
+		break;
+	    case 0xEF:
+		switch(c1){
+		case 0xBB:
+		    if(c0 == 0xBF) return 1;
+		    break;
+		case 0xBC:
+		    if(c0 == 0x8D) return 1;
+		    break;
+		case 0xBF:
+		    if(0xA0 <= c0 && c0 <= 0xA5) return 1;
+		    break;
+		}
+		break;
+	    }
+	}
 	if(!ms_ucs_map_f){
 	    /* eucJP-ascii */
 	    if(c2 == 0xE2 && c1 == 0x80 && c0 == 0xBE){
@@ -5246,6 +5300,10 @@ reinit()
     unicode_bom_f = 0;
     w_oconv16_LE = 0;
     ms_ucs_map_f = FALSE;
+    strict_mapping_f = TRUE;
+    disable_cp932ext_f = FALSE;
+    ignore_zwnbsp_f = TRUE;
+    unicode_round_trip_f = FALSE;
     encode_fallback = NULL;
     unicode_subchar  = '?';
 #endif

@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.13 2005/11/06 20:17:42 naruse Exp $
+# $Id: nkf_test.pl,v 1.14 2006/01/05 08:45:32 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -356,11 +356,11 @@ $example{'x0201.utf'} = unpack('u',<<'eofeof');
 MY86HZ*>2XX*KXX*MXX*OXX*QXX*SXX*LXX*NXX*PXX*RXX*T"N6%J.B+L>^\
 MH>^\HN^\H^^\I.^\I>^\IN^\I^^]@>^]@N^]@^^]A.^]A>^]AN^]APKEA:CH
 MJ)CEC[?OO('OO*#OO(/OO(3OO(7OO+[OO(;OO(KOO(COO(GBB)+OO(OOO)WO
-MO+OOO+WOO9OOO9WOOZ4*Y8V*Z*>2[[VV[[VW[[VX/>^]N>^]NN^]MN^^GN^]
-MM^^^GN^]N.^^GN^]N>^^GN^]NN^^GN.!J`KEC8KHIY+OOHKOOI_OOHOOOI_O
-MOHSOOI_OOHWOOI_OOH[OOI_OO;?OOI_OO;'OOIX*[[Z*[[Z?[[Z+[[Z?[[Z,
-M"FAA;FMA:W4@[[Z*[[Z?[[Z+[[Z?[[Z,[[VD"N^^BN^^G^^^B^^^G^^^C.^^
-2G>^]H0KEC8KHIY+C@:[EOHP*
+MO+OOO+WOO9OOO9W"I0KEC8KHIY+OO;;OO;?OO;@][[VY[[VZ[[VV[[Z>[[VW
+M[[Z>[[VX[[Z>[[VY[[Z>[[VZ[[Z>XX&H"N6-BNBGDN^^BN^^G^^^B^^^G^^^
+MC.^^G^^^C>^^G^^^CN^^G^^]M^^^G^^]L>^^G@KOOHKOOI_OOHOOOI_OOHP*
+M:&%N:V%K=2#OOHKOOI_OOHOOOI_OOHSOO:0*[[Z*[[Z?[[Z+[[Z?[[Z,[[Z=
+1[[VA"N6-BNBGDN.!KN6^C`H`
 eofeof
 
 $example{'x0201.jis'} = unpack('u',<<'eofeof');
