@@ -39,13 +39,13 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.87 2006/01/05 08:45:32 naruse Exp $ */
+/* $Id: nkf.c,v 1.88 2006/01/11 12:12:30 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2005-12-08"
+#define NKF_RELEASE_DATE "2006-01-11"
 #include "config.h"
 
 #define COPY_RIGHT \
-    "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2005 Kono, Furukawa, Naruse"
+    "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2006 Kono, Furukawa, Naruse"
 
 
 /*
@@ -190,7 +190,9 @@
 #define         X0201           2
 #define         ISO8859_1       8
 #define         NO_X0201        3
-#define         X0212           16
+#define         X0212       0x2844
+#define         X0213_1     0x2850
+#define         X0213_2     0x2850
 
 /* Input Assumption */
 
@@ -508,6 +510,7 @@ STATIC int cp932inv_f = TRUE;
 STATIC int x0212_f = FALSE;
 STATIC int x0212_shift PROTO((int c));
 STATIC int x0212_unshift PROTO((int c));
+STATIC int x0213_f = FALSE;
 #endif
 
 STATIC unsigned char prefix_table[256];
@@ -1132,6 +1135,22 @@ options(cp)
 #ifdef UTF8_OUTPUT_ENABLE
                     ms_ucs_map_f = FALSE;
 #endif
+		    }else if(strcmp(codeset, "SHIFT_JISX0213") == 0){
+			input_f = SJIS_INPUT;
+			x0213_f = TRUE;
+#ifdef SHIFTJIS_CP932
+                    cp51932_f = FALSE;
+                    cp932inv_f = FALSE;
+#endif
+			if (x0201_f==NO_X0201) x0201_f=TRUE;
+		    }else if(strcmp(codeset, "EUC-JISX0213") == 0){
+			input_f = JIS_INPUT;
+			x0201_f = FALSE;
+			x0213_f = TRUE;
+#ifdef SHIFTJIS_CP932
+                    cp51932_f = FALSE;
+                    cp932inv_f = FALSE;
+#endif
 #ifdef UTF8_INPUT_ENABLE
 		    }else if(strcmp(codeset, "UTF-8") == 0 ||
 			     strcmp(codeset, "UTF-8N") == 0 ||
@@ -1212,6 +1231,13 @@ options(cp)
 #ifdef UTF8_OUTPUT_ENABLE
                     ms_ucs_map_f = FALSE;
 #endif
+		    }else if(strcmp(codeset, "SHIFT_JISX0213") == 0){
+			output_conv = s_oconv;
+			x0213_f = TRUE;
+		    }else if(strcmp(codeset, "EUC-JISX0213") == 0){
+			output_conv = e_oconv;
+			x0212_f = TRUE;
+			x0213_f = TRUE;
 #ifdef UTF8_OUTPUT_ENABLE
 		    }else if(strcmp(codeset, "UTF-8") == 0){
 			output_conv = w_oconv;
@@ -2664,6 +2690,8 @@ push_hold_buf(c2)
     return ((hold_count >= HOLD_SIZE*2) ? EOF : hold_count);
 }
 
+const int shift_jisx0213_s1a3_table[5][2] ={ { 1, 8}, { 3, 4}, { 5,12}, {13,14}, {15, 0} };
+
 int s2e_conv(c2, c1, p2, p1)
      int c2, c1;
      int *p2, *p1;
@@ -2682,7 +2710,7 @@ int s2e_conv(c2, c1, p2, p1)
     }
 #endif /* SHIFTJIS_CP932 */
 #ifdef X0212_ENABLE
-    if (x0212_f && 0xfa <= c2 && c2 <= 0xfc){
+    if (!x0213_f && x0212_f && 0xfa <= c2 && c2 <= 0xfc){
         extern const unsigned short shiftjis_x0212[3][189];
         val = shiftjis_x0212[c2 - 0xfa][c1 - 0x40];
         if (val){
@@ -2700,12 +2728,21 @@ int s2e_conv(c2, c1, p2, p1)
     }
 #endif
     if(c2 >= 0x80){
-	c2 = c2 + c2 - ((c2 <= 0x9f) ? SJ0162 : SJ6394);
-	if (c1 < 0x9f)
-	    c1 = c1 - ((c1 > DEL) ? SPACE : 0x1f);
+	if(x0213_f && c2 >= 0xF0){
+	    if(c2 <= 0xF3 || (c2 == 0xF4 && c1 < 0x9F)){ /* k=1, 3<=k<=5, k=8, 12<=k<=15 */
+		c2 = 0x8F20 + shift_jisx0213_s1a3_table[c2 - 0xF0][0x9E < c1];
+	    }else{ /* 78<=k<=94 */
+		c2 = 0x8F00 | (c2 * 2 - 0x17B);
+		if (0x9E < c1) c2++;
+	    }
+	}else{
+	    c2 = c2 + c2 - ((c2 <= 0x9F) ? SJ0162 : SJ6394);
+	    if (0x9E < c1) c2++;
+	}
+	if (c1 < 0x9F)
+	    c1 = c1 - ((c1 > DEL) ? SPACE : 0x1F);
 	else {
-	    c1 = c1 - 0x7e;
-	    c2++;
+	    c1 = c1 - 0x7E;
 	}
     }
 
@@ -3500,32 +3537,43 @@ int
 e2s_conv(c2, c1, p2, p1)
      int c2, c1, *p2, *p1;
 {
-#ifdef X0212_ENABLE
-    int val = 0;
-    const unsigned short *ptr;
     int ndx;
-    extern const unsigned short *const x0212_shiftjis[];
     if ((c2 & 0xff00) == 0x8f00){
-        ndx = c2 & 0x7f;
-        if (0x21 <= ndx && ndx <= 0x7e){
-            ptr = x0212_shiftjis[ndx - 0x21];
-            if (ptr){
-                val = ptr[(c1 & 0x7f) - 0x21];
-            }
-            if (val){
-                c2 = val >> 8;
-                c1 = val & 0xff;
-                if (p2) *p2 = c2;
-                if (p1) *p1 = c1;
-                return 0;
-            }
-        }
-        c2 = x0212_shift(c2);
-    }
+	ndx = c2 & 0xff;
+	if (x0213_f){
+	    if((0x21 <= ndx && ndx <= 0x2F)){
+		if (p2) *p2 = ((ndx - 1) >> 1) + 0xec - ndx / 8 * 3;
+		if (p1) *p1 = c1 + ((ndx & 1) ? ((c1 < 0x60) ? 0x1f : 0x20) : 0x7e);
+		return 0;
+	    }else if(0x6E <= ndx && ndx <= 0x7E){
+		if (p2) *p2 = ((ndx - 1) >> 1) + 0xbe;
+		if (p1) *p1 = c1 + ((ndx & 1) ? ((c1 < 0x60) ? 0x1f : 0x20) : 0x7e);
+		return 0;
+	    }
+	    return 1;
+	}
+#ifdef X0212_ENABLE
+	else if(0x21 <= ndx && ndx <= 0x7e){
+	    int val = 0;
+	    const unsigned short *ptr;
+	    extern const unsigned short *const x0212_shiftjis[];
+	    ndx = c2 & 0x7f;
+	    ptr = x0212_shiftjis[ndx - 0x21];
+	    if (ptr){
+		val = ptr[(c1 & 0x7f) - 0x21];
+	    }
+	    if (val){
+		c2 = val >> 8;
+		c1 = val & 0xff;
+		if (p2) *p2 = c2;
+		if (p1) *p1 = c1;
+		return 0;
+	    }
+	    c2 = x0212_shift(c2);
+	}
 #endif /* X0212_ENABLE */
-    if ((c2 & 0xff00) == 0x8f00){
-        return 1;
     }
+    if(0x7F < c2) return 1;
     if (p2) *p2 = ((c2 - 1) >> 1) + ((c2 <= 0x5e) ? 0x71 : 0xb1);
     if (p1) *p1 = c1 + ((c2 & 1) ? ((c1 < 0x60) ? 0x1f : 0x20) : 0x7e);
     return 0;
@@ -3618,13 +3666,19 @@ j_oconv(c2, c1)
         (*o_putc)(EOF);
 #ifdef X0212_ENABLE
     } else if ((c2 & 0xff00) >> 8 == 0x8f){
-        if (output_mode!=X0212) {
-            output_mode = X0212;
-            (*o_putc)(ESC);
-            (*o_putc)('$');
-            (*o_putc)('(');
-            (*o_putc)('D');
+	if(x0213_f){
+	    if(output_mode!=X0213_2){
+		output_mode = X0213_2;
+	    }
+	}else{
+	    if(output_mode!=X0212){
+		output_mode = X0212;
+	    }
         }
+	(*o_putc)(ESC);
+	(*o_putc)('$');
+	(*o_putc)('(');
+	(*o_putc)(output_mode & 0x7F);
         (*o_putc)(c2 & 0x7f);
         (*o_putc)(c1);
 #endif
@@ -3651,7 +3705,15 @@ j_oconv(c2, c1)
         }
         (*o_putc)(c1);
     } else {
-        if (output_mode != X0208) {
+	if(x0213_f){
+	    if (output_mode!=X0213_1) {
+		output_mode = X0213_1;
+		(*o_putc)(ESC);
+		(*o_putc)('$');
+		(*o_putc)('(');
+		(*o_putc)(output_mode & 0x7F);
+	    }
+	}else if (output_mode != X0208) {
             output_mode = X0208;
             (*o_putc)(ESC);
             (*o_putc)('$');
@@ -5331,6 +5393,7 @@ reinit()
 #endif
 #ifdef X0212_ENABLE
     x0212_f = FALSE;
+    x0213_f = FALSE;
 #endif
     {
         int i;
