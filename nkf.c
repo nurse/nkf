@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.88 2006/01/11 12:12:30 naruse Exp $ */
+/* $Id: nkf.c,v 1.89 2006/01/11 16:49:09 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2006-01-11"
+#define NKF_RELEASE_DATE "2006-01-12"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -313,6 +313,16 @@ STATIC  void    set_iconv PROTO((int f, int (*iconv_func)(int c2,int c1,int c0))
 STATIC  int     s_iconv PROTO((int c2,int c1,int c0));
 STATIC  int     s2e_conv PROTO((int c2, int c1, int *p2, int *p1));
 STATIC  int     e_iconv PROTO((int c2,int c1,int c0));
+#if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
+/* Microsoft UCS Mapping Compatible
+ * 0: Shift_JIS, eucJP-ascii
+ * 1: eucJP-ms
+ * 2: CP932, CP51932
+ */
+#define EUCJPMS 1
+#define MS_CODEPAGE 2
+STATIC int ms_ucs_map_f = 0;
+#endif
 #ifdef UTF8_INPUT_ENABLE
 /* don't convert characters when the mapping is not defined in the standard */
 STATIC  int     strict_mapping_f = TRUE;
@@ -322,6 +332,7 @@ STATIC  int     disable_cp932ext_f = FALSE;
 STATIC  int     ignore_zwnbsp_f = TRUE;
 /* don't convert characters that can't secure round trip convertion */
 STATIC  int     unicode_round_trip_f = FALSE;
+STATIC  int     unicode_subchar = '?'; /* the regular substitution character */
 STATIC  void    encode_fallback_html PROTO((int c));
 STATIC  void    encode_fallback_xml PROTO((int c));
 STATIC  void    encode_fallback_java PROTO((int c));
@@ -336,7 +347,12 @@ STATIC  int	w_iconv_common PROTO((int c1,int c0,const unsigned short *const *pp,
 STATIC  int     ww16_conv PROTO((int c2, int c1, int c0));
 STATIC  int     w16e_conv PROTO((unsigned short val,int *p2,int *p1));
 #endif
+#if defined(UTF8_OUTPUT_ENABLE) && defined(UTF8_INPUT_ENABLE)
+STATIC  int     internal_unicode_f = FALSE;   /* Internal Unicode Processing */
+#endif
 #ifdef UTF8_OUTPUT_ENABLE
+STATIC  int     unicode_bom_f= 0;   /* Output Unicode BOM */
+STATIC  int     w_oconv16_LE = 0;   /* utf-16 little endian */
 STATIC  int     e2w_conv PROTO((int c2,int c1));
 STATIC  void    w_oconv PROTO((int c2,int c1));
 STATIC  void    w_oconv16 PROTO((int c2,int c1));
@@ -429,15 +445,6 @@ STATIC int             x0201_f = TRUE;         /* Assume JISX0201 kana */
 STATIC int             x0201_f = NO_X0201;     /* Assume NO JISX0201 */
 #endif
 STATIC int             iso2022jp_f = FALSE;    /* convert ISO-2022-JP */
-#if defined(UTF8_OUTPUT_ENABLE) && defined(UTF8_INPUT_ENABLE)
-STATIC int             internal_unicode_f = FALSE;   /* Internal Unicode Processing */
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-STATIC int             unicode_bom_f= 0;   /* Output Unicode BOM */
-STATIC int             w_oconv16_LE = 0;   /* utf-16 little endian */
-STATIC int             ms_ucs_map_f = FALSE;   /* Microsoft UCS Mapping Compatible */
-STATIC int             unicode_subchar = '?'; /* the regular substitution character */
-#endif
 
 #ifdef UNICODE_NORMALIZATION
 STATIC int nfc_f = FALSE;
@@ -510,8 +517,8 @@ STATIC int cp932inv_f = TRUE;
 STATIC int x0212_f = FALSE;
 STATIC int x0212_shift PROTO((int c));
 STATIC int x0212_unshift PROTO((int c));
-STATIC int x0213_f = FALSE;
 #endif
+STATIC int x0213_f = FALSE;
 
 STATIC unsigned char prefix_table[256];
 
@@ -1098,7 +1105,7 @@ options(cp)
                     cp932inv_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = TRUE;
+                    ms_ucs_map_f = 2;
 #endif
 		    }else if(strcmp(codeset, "EUCJP") == 0 ||
 			     strcmp(codeset, "EUC-JP") == 0){
@@ -1111,7 +1118,7 @@ options(cp)
                     cp932inv_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = TRUE;
+                    ms_ucs_map_f = 2;
 #endif
 		    }else if(strcmp(codeset, "EUC-JP-MS") == 0 ||
 			     strcmp(codeset, "EUCJP-MS") == 0){
@@ -1122,7 +1129,7 @@ options(cp)
                     cp932inv_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = TRUE;
+                    ms_ucs_map_f = 1;
 #endif
 		    }else if(strcmp(codeset, "EUC-JP-ASCII") == 0 ||
 			     strcmp(codeset, "EUCJP-ASCII") == 0){
@@ -1133,7 +1140,7 @@ options(cp)
                     cp932inv_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = FALSE;
+                    ms_ucs_map_f = 0;
 #endif
 		    }else if(strcmp(codeset, "SHIFT_JISX0213") == 0){
 			input_f = SJIS_INPUT;
@@ -1194,7 +1201,7 @@ options(cp)
                     cp932inv_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = TRUE;
+                    ms_ucs_map_f = 2;
 #endif
 		    }else if(strcmp(codeset, "EUCJP") == 0 ||
 			     strcmp(codeset, "EUC-JP") == 0){
@@ -1207,36 +1214,42 @@ options(cp)
                     cp932inv_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = TRUE;
+                    ms_ucs_map_f = 2;
 #endif
 		    }else if(strcmp(codeset, "EUC-JP-MS") == 0 ||
 			     strcmp(codeset, "EUCJP-MS") == 0){
 			output_conv = e_oconv;
 			x0201_f = FALSE;
+#ifdef X0212_ENABLE
 			x0212_f = TRUE;
+#endif
 #ifdef SHIFTJIS_CP932
                     cp51932_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = TRUE;
+                    ms_ucs_map_f = 1;
 #endif
 		    }else if(strcmp(codeset, "EUC-JP-ASCII") == 0 ||
 			     strcmp(codeset, "EUCJP-ASCII") == 0){
 			output_conv = e_oconv;
 			x0201_f = FALSE;
+#ifdef X0212_ENABLE
 			x0212_f = TRUE;
+#endif
 #ifdef SHIFTJIS_CP932
                     cp51932_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = FALSE;
+                    ms_ucs_map_f = 0;
 #endif
 		    }else if(strcmp(codeset, "SHIFT_JISX0213") == 0){
 			output_conv = s_oconv;
 			x0213_f = TRUE;
 		    }else if(strcmp(codeset, "EUC-JISX0213") == 0){
 			output_conv = e_oconv;
+#ifdef X0212_ENABLE
 			x0212_f = TRUE;
+#endif
 			x0213_f = TRUE;
 #ifdef UTF8_OUTPUT_ENABLE
 		    }else if(strcmp(codeset, "UTF-8") == 0){
@@ -1305,7 +1318,7 @@ options(cp)
                     cp932inv_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = TRUE;
+                    ms_ucs_map_f = 2;
 #endif
                     continue;
                 }
@@ -1315,7 +1328,7 @@ options(cp)
                     cp932inv_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = FALSE;
+                    ms_ucs_map_f = 0;
 #endif
                     continue;
                 }
@@ -1409,7 +1422,7 @@ options(cp)
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
                 if (strcmp(long_option[i].name, "ms-ucs-map") == 0){
-                    ms_ucs_map_f = TRUE;
+                    ms_ucs_map_f = 1;
                     continue;
                 }
 #endif
@@ -1900,8 +1913,8 @@ void s_status(ptr, c)
 #endif /* SHIFTJIS_CP932 */
 #ifndef X0212_ENABLE
           status_disable(ptr);
-          break;
 #endif
+          break;
     }
 }
 
@@ -2880,7 +2893,7 @@ w_iconv(c2, c1, c0)
 	}else return 0;
     }
     if (c2 == 0 || c2 == EOF){
-#if defined(UTF8_OUTPUT_ENABLE) && defined(UTF8_INPUT_ENABLE)
+#ifdef UTF8_OUTPUT_ENABLE
     } else if (internal_unicode_f && (output_conv == w_oconv || output_conv == w_oconv16)){
 	unsigned short val = 0;
 	if(c2 == 0){
@@ -2899,7 +2912,9 @@ w_iconv(c2, c1, c0)
     }
     return ret;
 }
+#endif
 
+#if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
 void
 w16w_conv(val, p2, p1, p0)
      unsigned short val;
@@ -2919,7 +2934,9 @@ w16w_conv(val, p2, p1, p0)
         *p0 = 0x80 | (val        & 0x3f);
     }
 }
+#endif
 
+#ifdef UTF8_INPUT_ENABLE
 int
 ww16_conv(c2, c1, c0)
      int c2, c1, c0;
@@ -2979,7 +2996,9 @@ w16e_conv(val, p2, p1)
     }
     return ret;
 }
+#endif
 
+#ifdef UTF8_INPUT_ENABLE
 int
 w_iconv16(c2, c1, c0)
     int    c2, c1,c0;
@@ -3025,7 +3044,7 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
     int ret = 0;
 
     if(c2 < 0xe0){
-	if (ms_ucs_map_f && cp51932_f){
+	if (ms_ucs_map_f == 2){
 	    /* CP932/CP51932: U+00A6 (BROKEN BAR) -> not 0x8fa2c3, but 0x7c */
 	    if(c2 == 0xC2){
 		switch(c1){
@@ -3057,7 +3076,11 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
 	    }
 	}
 	ret =  w_iconv_common(c2, c1, utf8_to_euc_2bytes, sizeof_utf8_to_euc_2bytes, p2, p1);
-	if(!ret && !ms_ucs_map_f && !x0212_f){
+	if(!ret && !ms_ucs_map_f
+#ifdef X0212_ENABLE
+	   && !x0212_f
+#endif
+	  ){
 	    if(*p2 == 0 && *p1 < 0x80){
 		return 1;
 	    }else if(*p2 > 0xFF){
@@ -3110,7 +3133,7 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
 	    }
 	}
 	if(!strict_mapping_f);
-	else if(ms_ucs_map_f && cp51932_f){
+	else if(ms_ucs_map_f == 2){
 	    /* Microsoft Code Page */
 	    switch(c2){
 	    case 0xE2:
@@ -3185,9 +3208,6 @@ w_iconv_common(c1, c0, pp, psize, p2, p1)
     return 0;
 }
 
-#endif
-
-#ifdef UTF8_OUTPUT_ENABLE
 void
 nkf_each_char_to_hex(f, c)
     void (*f)PROTO((int c2,int c1));
@@ -3300,7 +3320,9 @@ encode_fallback_subchar(c)
     }
     return;
 }
+#endif
 
+#ifdef UTF8_OUTPUT_ENABLE
 int
 e2w_conv(c2, c1)
     int    c2, c1;
@@ -3378,9 +3400,12 @@ w_oconv(c2, c1)
         (*o_putc)(c1 | 0x080);
     } else {
         output_mode = UTF8;
+#ifdef UTF8_INPUT_ENABLE
 	if (internal_unicode_f && (iconv == w_iconv || iconv == w_iconv16))
 	    val = ((c2<<8)&0xff00) + c1;
-	else val = e2w_conv(c2, c1);
+	else
+#endif
+	    val = e2w_conv(c2, c1);
         if (val){
             w16w_conv(val, &c2, &c1, &c0);
             (*o_putc)(c2);
@@ -3413,8 +3438,11 @@ w_oconv16(c2, c1)
 	unicode_bom_f=1;
     }
 
+#ifdef UTF8_INPUT_ENABLE
     if (internal_unicode_f && (iconv == w_iconv || iconv == w_iconv16)){
-    } else if (c2 == ISO8859_1) {
+    } else
+#endif
+    if (c2 == ISO8859_1) {
         c2 = 0;
         c1 |= 0x80;
 #ifdef NUMCHAR_OPTION
@@ -4191,7 +4219,7 @@ const unsigned char *mime_pattern[] = {
     (const unsigned char *)"\075?ISO-8859-1?B?",
     (const unsigned char *)"\075?ISO-2022-JP?B?",
     (const unsigned char *)"\075?ISO-2022-JP?Q?",
-#if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
+#if defined(UTF8_INPUT_ENABLE)
     (const unsigned char *)"\075?UTF-8?B?",
     (const unsigned char *)"\075?UTF-8?Q?",
 #endif
@@ -4203,7 +4231,7 @@ const unsigned char *mime_pattern[] = {
 /* 該当するコードの優先度を上げるための目印 */
 int (*mime_priority_func[])PROTO((int c2, int c1, int c0)) = {
     e_iconv, s_iconv, 0, 0, 0, 0,
-#if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
+#if defined(UTF8_INPUT_ENABLE)
     w_iconv, w_iconv,
 #endif
     0,
@@ -4211,7 +4239,7 @@ int (*mime_priority_func[])PROTO((int c2, int c1, int c0)) = {
 
 const int mime_encode[] = {
     JAPANESE_EUC, SHIFT_JIS,ISO8859_1, ISO8859_1, X0208, X0201,
-#if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
+#if defined(UTF8_INPUT_ENABLE)
     UTF8, UTF8,
 #endif
     ASCII,
@@ -4220,7 +4248,7 @@ const int mime_encode[] = {
 
 const int mime_encode_method[] = {
     'B', 'B','Q', 'B', 'B', 'Q',
-#if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
+#if defined(UTF8_INPUT_ENABLE)
     'B', 'Q',
 #endif
     'Q',
@@ -5355,19 +5383,23 @@ reinit()
      x0201_f = NO_X0201;
 #endif
     iso2022jp_f = FALSE;
+#if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
+    ms_ucs_map_f = 0;
+#endif
 #if defined(UTF8_OUTPUT_ENABLE) && defined(UTF8_INPUT_ENABLE)
     internal_unicode_f = FALSE;
 #endif
-#ifdef UTF8_OUTPUT_ENABLE
-    unicode_bom_f = 0;
-    w_oconv16_LE = 0;
-    ms_ucs_map_f = FALSE;
+#ifdef UTF8_INPUT_ENABLE
     strict_mapping_f = TRUE;
     disable_cp932ext_f = FALSE;
     ignore_zwnbsp_f = TRUE;
     unicode_round_trip_f = FALSE;
     encode_fallback = NULL;
     unicode_subchar  = '?';
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+    unicode_bom_f = 0;
+    w_oconv16_LE = 0;
 #endif
 #ifdef UNICODE_NORMALIZATION
     nfc_f = FALSE;
