@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.89 2006/01/11 16:49:09 naruse Exp $ */
+/* $Id: nkf.c,v 1.90 2006/01/23 18:48:14 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2006-01-12"
+#define NKF_RELEASE_DATE "2006-01-24"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -4672,12 +4672,12 @@ FILE *f;
     if (mime_decode_mode == 'Q') {
         if ((c1 = (*i_mgetc)(f)) == EOF) return (EOF);
 restart_mime_q:
-        if (c1=='_') return ' ';
+        if (c1=='_' && mimebuf_f != FIXED_MIME) return ' ';
 	if (c1<=' ' || DEL<=c1) {
 	    mime_decode_mode = exit_mode; /* prepare for quit */
 	    return c1;
 	}
-        if (c1!='=' && c1!='?') {
+        if (c1!='=' && (c1!='?' || mimebuf_f == FIXED_MIME)) {
 	    return c1;
 	}
                 
@@ -5089,13 +5089,10 @@ mimeout_addchar(c)
 {
     switch(mimeout_mode) {
     case 'Q':
-	if(c==SPACE){
-	    (*o_mputc)('_');
-	    base64_count++;
-	} else if (c==CR||c==NL) {
+	if (c==CR||c==NL) {
 	    (*o_mputc)(c);
 	    base64_count = 0;
-	} else if(c<SPACE||c=='='||c=='?'||c=='_'||DEL<=c) {
+	} else if(!nkf_isalnum(c)) {
 	    (*o_mputc)('=');
 	    (*o_mputc)(itoh4(((c>>4)&0xf)));
 	    (*o_mputc)(itoh4((c&0xf)));
