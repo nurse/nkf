@@ -411,6 +411,18 @@ Unescape percent escaped characters.
 
 Decode character reference, such as "&#....;".
 
+=begin man
+
+=item B<--overwrite>
+
+Overwrite original file by converted result.
+
+=item B<--guess>
+
+Print guessed encoding.
+
+=end man
+
 =item B<-->
 
 Ignore rest of -option.
