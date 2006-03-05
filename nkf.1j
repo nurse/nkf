@@ -32,22 +32,29 @@ EUC$B%3!<%I$r=PNO$9$k!#(B
 .B \-s
 $B%7%U%H(BJIS$B%3!<%I$r=PNO$9$k!#(B
 .TP
-.B \-w
+.B "\-w -w8[0] -w16[BL][0]
+Unicode $B$r=PNO$9$k!#(B
+.RS
+.TP
+.B "\-w \-w80"
 UTF8$B%3!<%I$r=PNO$9$k!#!J(BBOM$BL5$7!K(B
+.TP
 .B \-w8
 UTF8$B%3!<%I$r=PNO$9$k!#(B
-.B \-w80
-UTF8$B%3!<%I$r=PNO$9$k!#!J(BBOM$BL5$7!K(B
-.B \-w16
+.TP
+.B "\-w16 \-w16B0"
 UTF16$B%3!<%I$r=PNO$9$k!#!J(BBig Endian / BOM$BL5$7!K(B
+.TP
 .B \-w16B
 UTF16$B%3!<%I$r=PNO$9$k!#!J(BBig Endian / BOM$BM-$j!K(B
-.B \-w16B0
-UTF16$B%3!<%I$r=PNO$9$k!#!J(BBig Endian / BOM$BL5$7!K(B
+.TP
 .B \-w16L
 UTF16$B%3!<%I$r=PNO$9$k!#!J(BLittle Endian / BOM$BM-$j!K(B
+.TP
 .B \-w16L0
 UTF16$B%3!<%I$r=PNO$9$k!#!J(BLittle Endian / BOM$BL5$7!K(B
+.RE
+.PD
 .TP
 .B \-m[BQSN0]
 MIME $B$r2rFI$9$k!#(B($B%G%U%)%k%H(B) ISO-2022-JP(base64)$B$H(BISO-8859-1(Q encode)
@@ -58,19 +65,19 @@ Q encode, B encode $B$5$l$F$$$k$b$N$H$7$F=hM}$9$k!#(B
 .RS
 .RS 3
 .TP 4
-\-mB
+.B \-mB
 MIME base64 stream $B$r2rFI$9$k!#%X%C%@$J$I$O<h$j=|$/$3$H!#(B
 .TP
-\-mQ
+.B \-mQ
 MIME quoted stream $B$r2rFI$9$k!#(B
 .TP
-\-mS
+.B \-mS
 MIME $B$N%A%'%C%/$r87$7$/$9$k(B ($B%G%U%)%k%H(B)
 .TP
-\-mN
+.B \-mN
 MIME $B$N%A%'%C%/$r4K$/$9$k(B
 .TP
-\-m0
+.B \-m0
 MIME $B$r2rFI$7$J$$!#(B
 .RE
 .PD
@@ -83,13 +90,13 @@ MIME $B$KJQ49$9$k!#(BJIS$B$K%3!<%IJQ49$7$F$+$i(Bbase64$B$5$l$k!#(B
 .RS 8
 .PD 0
 .TP
-\-M
+.B \-M
 $B%X%C%@7A<0$KJQ49$9$k(B
 .TP
-\-MB
+.B \-MB
 base64 stream $B$KJQ49$9$k(B
 .TP
-\-MQ
+.B \-MQ
 Quoted stream $B$KJQ49$9$k(B
 .RE
 .PD
@@ -164,8 +171,7 @@ JIS$B4A;z$r;X<($9$k%7!<%1%s%9$H$7$F(B \fBESC-'$'-\fP\fI?\fP$B$r;HMQ$9$k!#(B
 ($B%G%U%)%k%H$O!"(BESC-'$'-'B')
 .TP
 .BI \-o ?
-1$B%P%$%H1Q?tJ8;z%;%C%H$r;X<($9$k%7!<%1%s%9$H$7$F!"(B\fBESC-'('-\fP\fI?\fP$B$r;HMQ$9(B
-$B$k!#(B
+1$B%P%$%H1Q?tJ8;z%;%C%H$r;X<($9$k%7!<%1%s%9$H$7$F!"(B\fBESC-'('-\fP\fI?\fP$B$r;HMQ$9$k!#(B
 ($B%G%U%)%k%H$O!"(BESC-'('-'B')
 .TP
 .B \-r
@@ -222,9 +228,62 @@ mac (CR)
 .RE
 .PD
 .TP
-.B \-- $BD9$$L>A0$N%*%W%7%g%s!#$3$l$i$O!">e$N%*%W%7%g%s$NAH9g$;$NJLL>!#(B
+.B \-- $BD9$$L>A0$N%*%W%7%g%s!#(B
 .RS
 .PD 0
+.TP
+.B  "\--ic=<input_codeset> \--oc=<output_codeset>"
+$BF~NO!&=PNO$N4A;z%3!<%I7O$r;XDj$7$^$9!#(B
+.RS
+.TP
+.B ISO-2022-JP
+JIS$B%3!<%I!#(B\-j$B$^$?$O(B\-J$B$HF1$8!#(B
+.TP
+.B EUC-JP
+EUC$B%3!<%I!#(B\-e$B$^$?$O(B\-E$B$HF1$8!#(B
+.TP
+.B eucJP-ascii
+$B%*!<%W%s%0%k!<%WF|K\%Y%s%@6(5D2q$,Dj5A$7$?(BeucJP-ascii$B!#(B
+-x$B$,0EL[$N$&$A$K;XDj$5$l$k!#(B
+.TP
+.B eucJP-ms
+$B%*!<%W%s%0%k!<%WF|K\%Y%s%@6(5D2q$,Dj5A$7$?(Beuc-JPms$B!#(B
+-x$B$,0EL[$N$&$A$K;XDj$5$l$k!#(B
+.TP
+.B CP51932
+Micorosft Code Page 51932$B!#(B-x$B$,0EL[$N$&$A$K;XDj$5$l$k!#(B
+.TP
+.B Shift_JIS
+$B%7%U%H(BJIS$B!#(B\-s$B$^$?$O(B\-S$B$HF1$8!#(B
+.TP
+.B CP932
+Micorosft Code Page 932$B!#(B-x$B$,0EL[$N$&$A$K;XDj$5$l$k!#(B
+.TP
+.B UTF-8 UTF-8N
+BOM$BL5$7$N(BUTF-8$B!#(B\-w$B$^$?$O(B\-W$B$HF1$8!#(B
+.TP
+.B UTF-8-BOM
+BOM$BIU$-$N(BUTF-8$B!#(B\-w8$B$^$?$O(B\-W$B$HF1$8!#(B
+.TP
+.B UTF8-MAC
+UTF8-MAC$B!#8_49J,2r$5$l$?$R$i$,$J!&%+%?%+%JEy$r7k9g$7$^$9!#(B
+.TP
+.B UTF-16 UTF-16BE-BOM
+BOM $BM-$j$G(B Big Endian $B$N(B UTF-16$B!#(B
+\-w16B$B$^$?$O(B\-W16B$B$HF1$8!#(B
+.TP
+.B UTF-16BE
+BOM $BL5$7$G(B Big Endian $B$N(B UTF-16$B!#(B
+\-w16B0$B$^$?$O(B\-W16B$B$HF1$8!#(B
+.TP
+.B UTF-16LE-BOM
+BOM $BM-$j$G(B Little Endian $B$N(B UTF-16$B!#(B
+\-w16L$B$^$?$O(B\-W16L$B$HF1$8!#(B
+.TP
+.B UTF-16LE
+BOM $BL5$7$G(B Little Endian $B$N(B UTF-16$B!#(B
+\-w16L0$B$^$?$O(B\-W16L$B$HF1$8!#(B
+.RE
 .TP
 \--fj,\--unix,\--mac,\--msdos, \--windows
 $B$3$l$i$N%7%9%F%`$KE,$7$?JQ49$r$7$^$9!#(B
@@ -236,20 +295,38 @@ mac (CR)
 \--hirakana, \--katakana
 $BJ?2>L>!"JR2>L>JQ49(B
 .TP
+\--fb-{skip, html, xml, perl, java, subchar}
+Unicode $B$+$i(B Shift_JIS, EUC-JP, ISO-2022-JP $B$KJQ49$9$k:]$K!"(B
+$BJQ49$G$-$J$+$C$?J8;z$r$I$&07$&$+$r;XDj$G$-$^$9!#(B
+.TP
+\--prefix=escape character target character..
+
+EUC-JP $B$+$i(B Shift_JIS $B$X$NJQ49$N:]!"(B2 $B%P%$%HL\(B
+$B$K8=$l$?J8;z$NA0$K%(%9%1!<%WJ8;z$r$D$1$k$3$H$,$G$-$^$9!#(B
+$B0z?t$N(B 1 $BJ8;zL\$,%(%9%1!<%WJ8;z!"(B2$BJ8;zL\0J9_$K%(%9%1!<%W$5$l$k$Y$-J8;z$r;XDj$7$^$9!#(B
+
+$BNc$($P!"(B
+
+\--prefix=\$@ $B$H$9$k$H!"(BShift_JIS $B$N(B 2 $BJ8;zL\$K(B $, @ $B$,Mh$?$i!"$=$NA0$K(B \ $B$,A^F~$5$l$^$9(B
+\--prefix=@@ $B$H$9$k$H!"(BShift_JIS $B$N(B 2 $BJ8;zL\$K(B @ $B$,Mh$?$i!"$=$NA0$K(B @ $B$,A^F~$5$l$^$9(B
+.TP
+\--no-cp932ext
+CP932$B$K$*$$$F3HD%$5$l$?!"(B
+NEC$BFC<lJ8;z!"(BNEC$BA*Dj(BIBM$B3HD%J8;z(B(89$B!A(B92$B6h(B)$B!"(BIBM$B3HD%J8;z$rJQ49$7$^$;$s!#(B
+.TP
+\--no-best-fit-chars
+Unicode $B$+$i$NJQ49$N:]$K!"1}I|0BA4@-$,3NJ]$5$l$J$$J8;z$NJQ49$r9T$$$^$;$s!#(B
+Unicode $B$+$i(B Unicode $B$NJQ49$N:]$K(B -x $B$H6&$K;XDj$9$k$H!"(B
+nkf $B$r(B UTF $B7A<0$NJQ49$KMQ$$$k$3$H$,$G$-$^$9!#(B
+$B!J5U$K8@$($P!"$3$l$r;XDj$7$J$$$H0lIt$NJ8;z$,J]B8$5$l$^$;$s!K(B
+
+$B%Q%9$K4X$o$kJ8;zNs$rJQ49$9$k:]$K$O!"$3$N%*%W%7%g%s$r;XDj$9$k$3$H$r6/$/?d>)$7$^$9!#(B
+.TP
 \--cap-input, \--url-input
 $B$=$l$>$l(B ':', '%' $B$KB3$/(B 16 $B?J?t$rJ8;z$KJQ49$9$k(B
 .TP
 \--numchar-input
 &#....; $B$N$h$&$J!"(BUnicode$BJ8;z;2>H$rJQ49$9$k(B
-.TP
-\--no-cp932
-Shift_JIS $B$N!"(BFAxx-FCxx $B$r!"(BCP932 $B$GF1CM$JJ8;z$KFI$_49$($kF0:n$rL58z$K$9$k(B
-.TP
-\--cp932inv
-Shift_JIS $B$X$NJQ49$N:]!"(BEDxx-EFxx $B$r!"(BCP932 $B$GF1CM$J(B FAxx-FCxx $B$NJ8;z$KJQ49$9$k(B
-.TP
-\--ms-ucs-map
-Microsoft$B$N(BUCS$B%^%C%T%s%08_49$NJQ49$r9T$&(B
 .TP
 \--overwrite
 $B85$N%U%!%$%k$rJQ497k2L$GCV$-49$($k!#J#?t$N%U%!%$%k$r=q$-49$($k$3$H$b2DG=(B
@@ -302,7 +379,9 @@ Rei FURUKAWA    furukawa@tcp-ip.or.jp
 $B%I$K3F<R$K$h$j3d$jEv$F$i$l$?J8;zJQ49$7$J$$!#Bh;0?e=`$J$I$bJQ49$7$J$$!#(B
 UTF8$B$NF|K\8l0J30$NItJ,$K$bBP1~$7$F$$$J$$!#(B
 
-.SH "kono@csl.sony.co.jp (Shinji Kono) $B$K$h$kJQ99!#(B"
+.SH HISTORY
+
+.SS "kono@csl.sony.co.jp (Shinji Kono) $B$K$h$kJQ99!#(B"
 
 .PP
 X0201$B2>L>(B($B$$$o$f$kH>3Q$+$J(B)$B$O%G%U%)%k%H$G(BX0208($BA43Q2>L>(B)$B$KJQ49$5$l$k!#(B
@@ -326,19 +405,19 @@ Fold $B5!G=$O(Bfmt$B$H0[$J$j9TF,$N6uGr$rL5;k$9$k!#6XB'=hM}$O$"$k$,;XDj$5$l$?
 .PP
 X0201$B2>L>$O(Brot47$B$5$l$J$$!#(B
 
-.SH nkf 1.6 "kono@ie.u-ryukyu.ac.jp (Shinji Kono) $B$K$h$kJQ99!#(B"
+.SS nkf 1.6 "kono@ie.u-ryukyu.ac.jp (Shinji Kono) $B$K$h$kJQ99!#(B"
 
  -B $B$N(Blevel$B$r(B0,1,2 $B$KA}$d$7$?!#(BMIME$B$N(Bbase64, Q-Encoding$B$r2rFI$9$k(B
 $B5!G=$rIU$1$?!#%X%C%@$J$I$O2rFI$7$J$$$N$G!"(BEncode$B$5$l$?ItJ,$@$1$r(B
 $BDL$9I,MW$,$"$k!#(B -mB $B$O!"(Bnkf1.5$B$H0c$&F0$-$r$9$k$N$G!"(B-B -m $B$H$9$k$3$H!#(B
 
-.SH nkf 1.6.1
+.SS nkf 1.6.1
 
 \-Z1 $B$G(BX0208$B4V3V(B\->ASCII space$B$NJQ49$r$*$3$J$&!#(B
 \-Z2 $B$G(BX0208$B4V3V(B\->ASCII space 2$B8D$NJQ49$r$*$3$J$&!#(B
 .PP
 
-.SH nkf 1.7
+.SS nkf 1.7
 .PP
 ESC-$-(-B $B$J$I$K$bBP1~$9$k$h$&$K$J$C$?!#(B
 .PP
@@ -346,7 +425,7 @@ copy right $B$NHs1DMx$N>r7o$,ITMW$K$J$C$?!#;HMQ;~$NLd$$9g$o$;$bITMW!#(B
 .PP
 Perl Extension $B$H$7$F;H$($k$h$&$K$J$C$?!#(B
 
-.SH nkf 1.9
+.SS nkf 1.9
 .PP
 MIME $B%(%s%3!<%I$N5!G=;~$G$b!"%3!<%IJQ49$5$l$7$^$&$N$GCm0U!#(B
 base64 $B%(%s%3!<%I$G$O2~9T;~$K@hF,$K6uGr$,IU$/$N$G%a!<%k%X%C%@(B
@@ -366,7 +445,7 @@ base64 $B%(%s%3!<%I$G$O2~9T;~$K@hF,$K6uGr$,IU$/$N$G%a!<%k%X%C%@(B
     \--unix
 $B$J$I!#(B
 
-.SH
+.SS
 UTF-8 $B%5%]!<%H$K$D$$$F(B
 .PP
 furukawa@tcp-ip.or.jp $B$K$h$k!#(B
@@ -387,7 +466,7 @@ UTF-8 $B$HH=Dj$5$l$l$P!"$=$N$^$^(B euc-jp $B$KJQ49$5$l$k!#(B
         X0208 $B$N(B '$B!d(B', '$B!c(B', '$B!I(B', '$B!u(B'  $B$r$=$l$>$l(B
         '&gt;', '&lt;', '&quot;', '&amp;' $B$KJQ49$7$^$9(B
 
-.SH nkf 2.0 
+.SS nkf 2.0
 
 .PP
 newline $B$rJ]B8$9$k(B folding -F$B!#(Bfmt$B$K6a$$F0:n$r$9$k!#(B
@@ -403,7 +482,7 @@ nkf \-f40\-0
 $B!VK\J8(B    200 $BJ8;zL\$+$i(B 239 $BJ8;zL\$^$G!W(B
 $B$H$9$k!#(B
 
-.SH
+.TP
 MIME$B4X78(B
 
 .PP
@@ -424,7 +503,7 @@ non-strict mime \-MN $B$G$O!"6uGr!"2~9T$r$^$?$$$G!"(Bbase64 encoding
 $B$r2rFI$9$k!#$3$l$G!"%9%/%j!<%s$+$i(Bcut&paste$B$G(B
 $B%G%3!<%I$9$k$3$H$b2DG=!#;_$^$i$J$$2DG=@-$"$j!#(B
 
-.SH
+.TP
 $B$=$NB>(B
 
 .PP
@@ -452,7 +531,7 @@ hiragana/katakana $BJQ49$,$G$-$k$h$&$K$J$j$^$7$?!#(B
 
 \--overwrite $B$G!"0z?t$N%U%!%$%k$rD>@\!"CV$-49$($k$3$H$,$G$-$^$9!#(B
 
-.SH nkf 2.0.4
+.SS nkf 2.0.4
 
 .PP
 Shift_JIS $B$N(B FAxx-FCxx $B$K$D$$$F!"IaDL$N<0$G$O(B euc $B$KJQ49$G$-$^$;$s$,!"(BCP932 $B$GF1CM$JJ8;z$KFI$_49$($FJQ49$7$^$9!#$3$NF0:n$rL58z$K$9$k$K$O!"(B--no-cp932 $B$r$D$1$F$/$@$5$$!#(B
@@ -477,7 +556,7 @@ perl module $B$K(B
     $B$H$d$k$H!"(Bnkf $B$N=PNO$r(B cmd $B$NF~NO$H$7$^$9!#(B
 
 
-.SH nkf 2.0.5
+.SS nkf 2.0.5
 
 .PP
 --cp932inv $B$H$$$&%*%W%7%g%s$r$D$1$k$H(B Shift_JIS $B$X$NJQ49$N:]!"(BEDxx-EFxx $B$K$D$$$F$O!"(B
@@ -503,16 +582,53 @@ CP932 $B$GF1CM$J(B FAxx-FCxx $B$NJ8;z$KJQ49$7$^$9!#(B
 --ms-ucs-map $B$H$$$&%*%W%7%g%s$rIU$1$k$H!"(B
 Microsoft$B$N(BUCS$B%^%C%T%s%08_49$NJQ49$r9T$$$^$9!#(B
 
-.SH nkf 2.0.6
+.SS nkf 2.0.6
 
-.PP
+.TP 0
+.B $B$R$i$,$J%+%?%+%JJQ49$N%I%-%e%a%s%H(B
 $B$R$i$,$J%+%?%+%JJQ49$N%I%-%e%a%s%H$,5U$K$J$C$F$$$?$N$G!"$3$l$r=$@5$7$^$7$?!#(B
 $B@5$7$$%I%-%e%a%s%H$O0J2<$NDL$j$G$9!#(B
    \-h1   \--hiragana $B%+%?%+%J(B->$B$R$i$,$J(B
    \-h2   \--katakana $B$R$i$,$J(B->$B%+%?%+%J(B
    \-h3   \--katakana-hiragana $B%+%?%+%J(B<->$B$R$i$,$J(B
 
+.TP
+.B UTF8-MAC $B$NF~NO$X$NBP1~(B
+Mac OS X $B$GMQ$$$i$l$F$$$k!"$R$i$,$JEy$r@55,J,2r$7$?(B UTF-8 (UTF8-MAC)
+$B$NF~NO$KBP1~$7$^$7$?!#!J=PNO$OHsBP1~!K(B
 
+.TP
+.B \--no-best-fit-chars $B%*%W%7%g%s$NDI2C(B
+Unicode $B$+$i$NJQ49$N:]$K!"1}I|0BA4@-$,3NJ]$5$l$J$$J8;z$NJQ49$r9T$$$^$;$s!#(B
+Unicode $B$+$i(B Unicode $B$NJQ49$N:]$K(B -x $B$H6&$K;XDj$9$k$H!"(B
+nkf $B$r(B UTF $B7A<0$NJQ49$KMQ$$$k$3$H$,$G$-$^$9!#(B
+$B!J5U$K8@$($P!"$3$l$r;XDj$7$J$$$H0lIt$NJ8;z$,J]B8$5$l$^$;$s!K(B
+
+$B%Q%9$K4X$o$kJ8;zNs$rJQ49$9$k:]$K$O!"$3$N%*%W%7%g%s$r;XDj$9$k$3$H$r6/$/?d>)$7$^$9!#(B
+
+.TP
+.B fallback $B%*%W%7%g%s$NDI2C(B
+\--fb-{skip, html, xml, perl, java, subchar} $B%*%W%7%g%s$rDI2C$7$^$7$?!#(B
+Unicode $B$+$i(B Shift_JIS, EUC-JP, ISO-2022-JP $B$KJQ49$9$k:]$K!"(B
+$BJQ49$G$-$J$+$C$?J8;z$r$I$&07$&$+$r;XDj$G$-$^$9!#(B
+
+.TP
+.B \--ic \--oc $B%*%W%7%g%s$NDI2C(B
+\--ic=<input codeset> \--oc=<output codeset> $B%*%W%7%g%s$rDI2C$7$^$7$?!#(B
+Shift_JIS, CP932, EUC-JP, CP51932, eucJP-ms, ISO-2022-JP,
+UTF-8N (UTF-8), UTF-8-BOM,
+UTF-16BE, UTF-16BE-BOM(UTF-16), UTF-16LE, UTF-16LE-BOM
+$BF~NO$K$O(B UTF8-MAC $B$b;XDj$9$k$3$H$,$G$-$^$9!#(B
+
+.TP
+.B $B%^%C%T%s%0$NDI2C!"JQ99(B
+JIS $B7O$NJ8;z%3!<%I$H(B Unicode $B$H$NBP1~$rDj5A$9$k$3$H$K$7$^$7$?!#(B
+$B$3$l$i$+$i(B Unicode $B$X$N(B decode $B$O!"(B
+$BDj5A$5$l$F$$$kHO0O$G$NJQ49$,@5$7$/9T$o$l$k;v$rJ]>c$7$^$9!#(B
+$BDj5A$5$l$F$$$J$$HO0O$G$NJQ49$OJ]>c$7$^$;$s!#(B
+Unicode $B$+$i$N(B encode $B$O!"Dj5A$5$l$F$$$kHO0O$G$NJQ49$,@5$7$/9T$o$l$k;v$rJ]>c$7!"(B
+$BDj5A$5$l$F$$$J$$HO0O$G$NJQ49$O%(%i!<$H$J$j!J(Bfallback $B2DG=!K!"(B
+Unicode $B$H$7$FIT@5$JJ8;z$O%9%-%C%W$5$l$k;v$rJ]>c$7$^$9!#(B
 
 .SH ACKNOWLEDGE
 

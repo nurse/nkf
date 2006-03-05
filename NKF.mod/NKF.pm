@@ -385,9 +385,19 @@ When nkf converts to Shift_JIS,
 nkf adds a specified escape character to specified 2nd byte of Shift_JIS characters.
 1st byte of argument is the escape character and following bytes are target characters.
 
-=item B<--disable-cp932ext>
+=item B<--no-cp932ext>
 
 Handle the characters extended in CP932 as unassigned characters.
+
+=item B<--no-best-fit-chars>
+
+When Unicode to Encoded byte conversion,
+don't convert characters which is not round trip safe.
+When Unicode to Unicode conversion,
+with this and -x option, nkf can be used as UTF converter.
+(In other words, without this and -x option, nkf doesn't save some characters)
+
+When nkf convert string which related to path, you should use this opion.
 
 =item B<--cap-input>
 
@@ -396,6 +406,10 @@ Decode hex encoded characters.
 =item B<--url-input>
 
 Unescape percent escaped characters.
+
+=item B<--numchar-input>
+
+Decode character reference, such as "&#....;".
 
 =item B<-->
 
