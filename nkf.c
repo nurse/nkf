@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.91 2006/03/04 17:07:59 naruse Exp $ */
+/* $Id: nkf.c,v 1.92 2006/03/08 12:56:29 naruse Exp $ */
 #define NKF_VERSION "2.0.5"
 #define NKF_RELEASE_DATE "2006-03-04"
 #include "config.h"
@@ -3042,6 +3042,11 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
     STATIC const int no_best_fit_chars_table_C2[] =
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1,
+	0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0};
+    STATIC const int no_best_fit_chars_table_C2_ascii[] =
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0,
 	0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0};
     STATIC const int no_best_fit_chars_table_932_C2[] =
@@ -3070,8 +3075,10 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
 		    if(no_best_fit_chars_table_932_C3[c1&0x3F]) return 1;
 		    break;
 		}
-	    }else{
+	    }else if(cp51932_f){
 		if(c2 == 0xC2 && no_best_fit_chars_table_C2[c1&0x3F]) return 1;
+	    }else{
+		if(c2 == 0xC2 && no_best_fit_chars_table_C2_ascii[c1&0x3F]) return 1;
 	    }
 	}
 	pp =
@@ -3115,6 +3122,9 @@ unicode_to_jis_common(c2, c1, c0, p2, p1)
 		    switch(c1){
 		    case 0xBC:
 			if(c0 == 0x8D) return 1;
+			break;
+		    case 0xBD:
+			if(c0 == 0x9E && cp51932_f) return 1;
 			break;
 		    case 0xBF:
 			if(0xA0 <= c0 && c0 <= 0xA5) return 1;
