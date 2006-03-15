@@ -36,7 +36,7 @@ require DynaLoader;
 @EXPORT = qw(
 	nkf	nkf_continue	inputcode
 );
-$VERSION = '2.05';
+$VERSION = '2.06';
 
 bootstrap NKF $VERSION;
 
@@ -50,7 +50,7 @@ __END__
 
 =head1 NAME
 
-NKF - Perl extension for Network Kanji Filter 
+NKF - Perl extension for Network Kanji Filter
 
 =head1 SYNOPSIS
 
@@ -62,7 +62,6 @@ NKF - Perl extension for Network Kanji Filter
 This is a Perl Extension version of nkf (Netowrk Kanji Filter).
 It converts the last argument and return converted result. Conversion
 details are specified by flags before the last argument.
-
 
 B<Nkf> is a yet another kanji code converter among networks, hosts and terminals.
 It converts input kanji code to designated kanji code
@@ -120,13 +119,13 @@ Same as -J.
 
 No conversion.
 
-=item B<-i_>
+=item B<-i[@B]>
 
-Output sequence to designate JIS-kanji. (DEFAULT B)
+Specify the Esc Seq for JIS X 0208-1978/83. (DEFAULT B)
 
-=item B<-o_>
+=item B<-o[BJH]>
 
-Output sequence to designate ASCII. (DEFAULT B)
+Specify the Esc Seq for ASCII/Roman. (DEFAULT B)
 
 =item B<-r>
 
@@ -220,10 +219,6 @@ forces ASCII after NL.
 Replacing non iso-2022-jp char into a geta character
 (substitute character in Japanese).
 
-=item B<-d -c>
-
-Delete \r in line feed, Add \r in line feed.
-
 =item B<-m[BQN0]>
 
 MIME ISO-2022-JP/ISO8859-1 decode. (DEFAULT)
@@ -273,17 +268,17 @@ Perfome quoted encoding.
 Input and output code is ISO8859-1 (Latin-1) and ISO-2022-JP.
 B<-s>, B<-e> and B<-x> are not compatible with this option.
 
-=item B<-L[uwm]>
+=item B<-L[uwm] -d -c>
 
-new line mode
+Convert line breaks.
 
 =over
 
-=item B<-Lu>
+=item B<-Lu -d>
 
 unix (LF)
 
-=item B<-Lw>
+=item B<-Lw -c>
 
 windows (CRLF)
 
@@ -411,18 +406,6 @@ Unescape percent escaped characters.
 
 Decode character reference, such as "&#....;".
 
-=begin man
-
-=item B<--overwrite>
-
-Overwrite original file by converted result.
-
-=item B<--guess>
-
-Print guessed encoding.
-
-=end man
-
 =item B<-->
 
 Ignore rest of -option.
@@ -431,9 +414,10 @@ Ignore rest of -option.
 
 =head1 AUTHOR
 
-Network Kanji Filter Version 2.0.5
+Network Kanji Filter Version 2.0.6
 
-Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2005 Kono, Furukawa, Naruse
+Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW
+                     2002-2006 Kono, Furukawa, Naruse, mastodon
 
 =head1 SEE ALSO
 

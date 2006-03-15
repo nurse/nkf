@@ -128,10 +128,13 @@
 .rm #[ #] #H #V #F C
 .\" ========================================================================
 .\"
-.IX Title "NKF(1)"
-.TH NKF 1 "2006-03-05" "nkf 2.0.6"
+.IX Title "nkf 1"
+.TH nkf 1 "2006-03-15" "nkf 2.0.6" " "
 .SH "NAME"
-NKF \- Network Kanji Filter 
+nkf \- Network Kanji Filter
+.SH "SYNOPSIS"
+.IX Header "SYNOPSIS"
+nkf \fB\-[\fR\fIflags\fR\fB]\fR \fB[\fR\fIin_file\fR\fB]\fR .. \fB[\fR\fIout_file_for_\-O_flag\fR\fB]\fR
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 \&\fBNkf\fR is a yet another kanji code converter among networks, hosts and terminals.
@@ -180,12 +183,12 @@ Same as \-J.
 .IP "\fB\-t\fR" 4
 .IX Item "-t"
 No conversion.
-.IP "\fB\-i_\fR" 4
-.IX Item "-i_"
-Output sequence to designate JIS\-kanji. (\s-1DEFAULT\s0 B)
-.IP "\fB\-o_\fR" 4
-.IX Item "-o_"
-Output sequence to designate \s-1ASCII\s0. (\s-1DEFAULT\s0 B)
+.IP "\fB\-i[@B]\fR" 4
+.IX Item "-i[@B]"
+Specify the Esc Seq for \s-1JIS\s0 X 0208\-1978/83. (\s-1DEFAULT\s0 B)
+.IP "\fB\-o[\s-1BJH\s0]\fR" 4
+.IX Item "-o[BJH]"
+Specify the Esc Seq for ASCII/Roman. (\s-1DEFAULT\s0 B)
 .IP "\fB\-r\fR" 4
 .IX Item "-r"
 {de/en}crypt \s-1ROT13/47\s0
@@ -264,7 +267,7 @@ Replacing non iso\-2022\-jp char into a geta character
 (substitute character in Japanese).
 .IP "\fB\-d \-c\fR" 4
 .IX Item "-d -c"
-Delete \er in line feed, Add \er in line feed.
+Convert line breaks  \-d: \s-1LF\s0  \-c: \s-1CRLF\s0.
 .IP "\fB\-m[\s-1BQN0\s0]\fR" 4
 .IX Item "-m[BQN0]"
 \&\s-1MIME\s0 \s-1ISO\-2022\-JP/ISO8859\-1\s0 decode. (\s-1DEFAULT\s0)
@@ -419,24 +422,20 @@ Unescape percent escaped characters.
 .IP "\fB\-\-numchar\-input\fR" 4
 .IX Item "--numchar-input"
 Decode character reference, such as \*(L"&#....;\*(R".
-.IP "\fB\-\-overwrite\fR" 4
-.IX Item "--overwrite"
-Overwrite original file by converted result.
-
-.PD 0
+.IP "\fB\-\-in\-place[=\fR\fI\s-1SUFFIX\s0\fR\fB]\fR  \fB\-\-overwrite[=\fR\fI\s-1SUFFIX\s0\fR\fB]\fR" 4
+.IX Item "--in-place[=SUFFIX]  --overwrite[=SUFFIX]"
+Overwrite \fBoriginal\fR listed files by filtered result.
+.Sp
+\&\fBNote\fR \-\-overwrite preserves timestamp of original files.
 .IP "\fB\-\-guess\fR" 4
 .IX Item "--guess"
 Print guessed encoding.
-
 .IP "\fB\-\-\fR" 4
 .IX Item "--"
-.PD
 Ignore rest of \-option.
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Network Kanji Filter Version 2.0.6
 .PP
-Copyright (C) 1987, \s-1FUJITSU\s0 \s-1LTD\s0. (I.Ichikawa),2000 S. Kono, \s-1COW\s0, 2002\-2006 Kono, Furukawa, Naruse
-.SH "SEE ALSO"
-.IX Header "SEE ALSO"
-\&\fInkf\fR\|(1)
+Copyright (C) 1987, \s-1FUJITSU\s0 \s-1LTD\s0. (I.Ichikawa),2000 S. Kono, \s-1COW\s0
+                     2002\-2006 Kono, Furukawa, Naruse, mastodon
