@@ -39,13 +39,14 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.92 2006/03/08 12:56:29 naruse Exp $ */
-#define NKF_VERSION "2.0.5"
-#define NKF_RELEASE_DATE "2006-03-04"
+/* $Id: nkf.c,v 1.93 2006/03/14 15:55:58 naruse Exp $ */
+#define NKF_VERSION "2.0.6"
+#define NKF_RELEASE_DATE "2006-03-14"
 #include "config.h"
 
 #define COPY_RIGHT \
-    "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW, 2002-2006 Kono, Furukawa, Naruse"
+    "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
+    "                     2002-2006 Kono, Furukawa, Naruse, mastodon"
 
 
 /*
@@ -707,9 +708,13 @@ unsigned char fv[] = {
 
 #define    CRLF      1
 
-STATIC int             file_out = FALSE;
+STATIC int             file_out_f = FALSE;
 #ifdef OVERWRITE
-STATIC int             overwrite = FALSE;
+STATIC int             overwrite_f = FALSE;
+STATIC int             preserve_time_f = FALSE;
+STATIC int             backup_f = FALSE;
+STATIC char            *backup_suffix = "";
+STATIC char *get_backup_filename PROTO((const char *suffix, const char *filename));
 #endif
 
 STATIC int             crmode_f = 0;   /* CR, NL, CRLF */
@@ -820,9 +825,9 @@ main(argc, argv)
 #endif
 
 /* reopen file for stdout */
-              if (file_out == TRUE) {
+              if (file_out_f == TRUE) {
 #ifdef OVERWRITE
-                  if (overwrite){
+                  if (overwrite_f){
                       outfname = malloc(strlen(origfname)
                                         + strlen(".nkftmpXXXXXX")
                                         + 1);
@@ -844,7 +849,7 @@ main(argc, argv)
                       }
                       strcat(outfname, "ntXXXXXX");
                       mktemp(outfname);
-                      fd = open(outfname, O_WRONLY | O_CREAT | O_TRUNC,
+			fd = open(outfname, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL,
                                 S_IREAD | S_IWRITE);
 #else
                       strcat(outfname, ".nkftmpXXXXXX");
@@ -897,7 +902,7 @@ main(argc, argv)
               }
               fclose(fin);
 #ifdef OVERWRITE
-              if (overwrite) {
+              if (overwrite_f) {
                   struct stat     sb;
 #if defined(MSDOS) && !defined(__MINGW32__) && !defined(__WIN32__)
                   time_t tb[2];
@@ -919,23 +924,37 @@ main(argc, argv)
                   }
 
                   /* タイムスタンプを復元 */
+		    if(preserve_time_f){
 #if defined(MSDOS) && !defined(__MINGW32__) && !defined(__WIN32__)
-                  tb[0] = tb[1] = sb.st_mtime;
-                  if (utime(outfname, tb)) {
-                      fprintf(stderr, "Can't set timestamp %s\n", outfname);
-                  }
+			tb[0] = tb[1] = sb.st_mtime;
+			if (utime(outfname, tb)) {
+			    fprintf(stderr, "Can't set timestamp %s\n", outfname);
+			}
 #else
-                  tb.actime  = sb.st_atime;
-                  tb.modtime = sb.st_mtime;
-                  if (utime(outfname, &tb)) {
-                      fprintf(stderr, "Can't set timestamp %s\n", outfname);
-                  }
+			tb.actime  = sb.st_atime;
+			tb.modtime = sb.st_mtime;
+			if (utime(outfname, &tb)) {
+			    fprintf(stderr, "Can't set timestamp %s\n", outfname);
+			}
 #endif
+		    }
+		    if(backup_f){
+			char *backup_filename = get_backup_filename(backup_suffix, origfname);
 #ifdef MSDOS
-                  if (unlink(origfname)){
-                      perror(origfname);
-                  }
+			unlink(backup_filename);
 #endif
+			if (rename(origfname, backup_filename)) {
+			    perror(backup_filename);
+			    fprintf(stderr, "Can't rename %s to %s\n",
+				    origfname, backup_filename);
+			}
+		    }else{
+#ifdef MSDOS
+			if (unlink(origfname)){
+			    perror(origfname);
+			}
+#endif
+		    }
                   if (rename(outfname, origfname)) {
                       perror(origfname);
                       fprintf(stderr, "Can't rename %s to %s\n",
@@ -948,17 +967,60 @@ main(argc, argv)
       }
     }
 #ifdef EASYWIN /*Easy Win */
-    if (file_out == FALSE) 
+    if (file_out_f == FALSE) 
         scanf("%d",&end_check);
     else 
         fclose(stdout);
 #else /* for Other OS */
-    if (file_out == TRUE) 
+    if (file_out_f == TRUE) 
         fclose(stdout);
 #endif /*Easy Win */
     return (0);
 }
 #endif /* WIN32DLL */
+
+#ifdef OVERWRITE
+char *get_backup_filename(suffix, filename)
+    const char *suffix;
+    const char *filename;
+{
+    char *backup_filename = NULL;
+    int asterisk_count = 0;
+    int i, j;
+    int filename_length = strlen(filename);
+
+    for(i = 0; suffix[i]; i++){
+	if(suffix[i] == '*') asterisk_count++;
+    }
+
+    if(asterisk_count){
+	backup_filename = malloc(strlen(suffix) + (asterisk_count * (filename_length - 1)) + 1);
+	if (!backup_filename){
+	    perror("Can't malloc backup filename.");
+	    return NULL;
+	}
+
+	for(i = 0, j = 0; suffix[i];){
+	    if(suffix[i] == '*'){
+		backup_filename[j] = '\0';
+		strncat(backup_filename, filename, filename_length);
+		i++;
+		j += filename_length;
+	    }else{
+		backup_filename[j++] = suffix[i++];
+	    }
+	}
+	backup_filename[j] = '\0';
+    }else{
+	j = strlen(suffix) + filename_length;
+	backup_filename = malloc( + 1);
+	strcpy(backup_filename, filename);
+	strcat(backup_filename, suffix);
+	backup_filename[j] = '\0';
+    }
+    return backup_filename;
+}
+#endif
 
 STATIC const
 struct {
@@ -1018,6 +1080,9 @@ struct {
 #endif
 #ifdef OVERWRITE
     {"overwrite", ""},
+    {"overwrite=", ""},
+    {"in-place", ""},
+    {"in-place=", ""},
 #endif
 #ifdef INPUT_OPTION
     {"cap-input", ""},
@@ -1285,9 +1350,34 @@ options(cp)
 		}
 #ifdef OVERWRITE
                 if (strcmp(long_option[i].name, "overwrite") == 0){
-                    file_out = TRUE;
-                    overwrite = TRUE;
+                    file_out_f = TRUE;
+                    overwrite_f = TRUE;
+		    preserve_time_f = TRUE;
                     continue;
+                }
+                if (strcmp(long_option[i].name, "overwrite=") == 0){
+                    file_out_f = TRUE;
+                    overwrite_f = TRUE;
+		    preserve_time_f = TRUE;
+		    backup_f = TRUE;
+		    backup_suffix = malloc(strlen(p) + 1);
+		    strcpy(backup_suffix, p);
+                    continue;
+                }
+                if (strcmp(long_option[i].name, "in-place") == 0){
+                    file_out_f = TRUE;
+                    overwrite_f = TRUE;
+		    preserve_time_f = FALSE;
+		    continue;
+                }
+                if (strcmp(long_option[i].name, "in-place=") == 0){
+                    file_out_f = TRUE;
+                    overwrite_f = TRUE;
+		    preserve_time_f = FALSE;
+		    backup_f = TRUE;
+		    backup_suffix = malloc(strlen(p) + 1);
+		    strcpy(backup_suffix, p);
+		    continue;
                 }
 #endif
 #ifdef INPUT_OPTION
@@ -1648,7 +1738,7 @@ options(cp)
             continue;
 #ifndef PERL_XS
         case 'O':/* for Output file */
-            file_out = TRUE;
+            file_out_f = TRUE;
             continue;
 #endif
         case 'c':/* add cr code */
@@ -5440,7 +5530,7 @@ reinit()
     input_mode =  ASCII;
     shift_mode =  FALSE;
     mime_decode_mode = FALSE;
-    file_out = FALSE;
+    file_out_f = FALSE;
     crmode_f = 0;
     option_mode = 0;
     broken_counter = 0;
@@ -5483,26 +5573,27 @@ usage()
     fprintf(stderr,"Flags:\n");
     fprintf(stderr,"b,u      Output is buffered (DEFAULT),Output is unbuffered\n");
 #ifdef DEFAULT_CODE_SJIS
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS (DEFAULT), AT&T JIS (EUC), UTF-8N\n");
+    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift_JIS (DEFAULT), EUC-JP, UTF-8N\n");
 #endif
 #ifdef DEFAULT_CODE_JIS
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit (DEFAULT), Shift JIS, AT&T JIS (EUC), UTF-8N\n");
+    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit (DEFAULT), Shift JIS, EUC-JP, UTF-8N\n");
 #endif
 #ifdef DEFAULT_CODE_EUC
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, AT&T JIS (EUC) (DEFAULT), UTF-8N\n");
+    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, EUC-JP (DEFAULT), UTF-8N\n");
 #endif
 #ifdef DEFAULT_CODE_UTF8
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, AT&T JIS (EUC), UTF-8N (DEFAULT)\n");
+    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, EUC-JP, UTF-8N (DEFAULT)\n");
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-    fprintf(stderr,"         After 'w' you can add more options. (80?|16((B|L)0?)?) \n");
+    fprintf(stderr,"         After 'w' you can add more options. -w[ 8 [0], 16 [[BL] [0]] ]\n");
 #endif
-    fprintf(stderr,"J,S,E,W  Input assumption is JIS 7 bit , Shift JIS, AT&T JIS (EUC), UTF-8\n");
+    fprintf(stderr,"J,S,E,W  Input assumption is JIS 7 bit , Shift JIS, EUC-JP, UTF-8\n");
 #ifdef UTF8_INPUT_ENABLE
-    fprintf(stderr,"         After 'W' you can add more options. (8|16(B|L)?) \n");
+    fprintf(stderr,"         After 'W' you can add more options. -W[ 8, 16 [BL] ] \n");
 #endif
     fprintf(stderr,"t        no conversion\n");
-    fprintf(stderr,"i_/o_    Output sequence to designate JIS-kanji/ASCII (DEFAULT B)\n");
+    fprintf(stderr,"i[@B]    Specify the Esc Seq for JIS X 0208-1978/83 (DEFAULT B)\n");
+    fprintf(stderr,"o[BJH]   Specify the Esc Seq for ASCII/Roman        (DEFAULT B)\n");
     fprintf(stderr,"r        {de/en}crypt ROT13/47\n");
     fprintf(stderr,"h        1 katakana->hiragana, 2 hiragana->katakana, 3 both\n");
     fprintf(stderr,"v        Show this usage. V: show version\n");
@@ -5510,23 +5601,27 @@ usage()
     fprintf(stderr,"M[BQ]    MIME encode [B:base64 Q:quoted]\n");
     fprintf(stderr,"l        ISO8859-1 (Latin-1) support\n");
     fprintf(stderr,"f/F      Folding: -f60 or -f or -f60-10 (fold margin 10) F preserve nl\n");
-    fprintf(stderr,"Z[0-3]   Convert X0208 alphabet to ASCII  1: Kankaku to space,2: 2 spaces,\n");
-    fprintf(stderr,"                                          3: Convert HTML Entity\n");
+    fprintf(stderr,"Z[0-3]   Convert X0208 alphabet to ASCII\n");
+    fprintf(stderr,"         1: Kankaku to 1 space  2: to 2 spaces  3: Convert to HTML Entity\n");
     fprintf(stderr,"X,x      Assume X0201 kana in MS-Kanji, -x preserves X0201\n");
     fprintf(stderr,"B[0-2]   Broken input  0: missing ESC,1: any X on ESC-[($]-X,2: ASCII on NL\n");
 #ifdef MSDOS
     fprintf(stderr,"T        Text mode output\n");
 #endif
     fprintf(stderr,"O        Output to File (DEFAULT 'nkf.out')\n");
-    fprintf(stderr,"d,c      Delete \\r in line feed and \\032, Add \\r in line feed\n");
     fprintf(stderr,"I        Convert non ISO-2022-JP charactor to GETA\n");
+    fprintf(stderr,"d,c      Convert line breaks  -d: LF  -c: CRLF\n");
     fprintf(stderr,"-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n");
-    fprintf(stderr,"long name options\n");
-    fprintf(stderr," --ic=<input codeset> --oc=<output codeset>         set the input or output codeset\n");
-    fprintf(stderr," --fj,--unix,--mac,--windows                        convert for the system\n");
-    fprintf(stderr," --jis,--euc,--sjis,--utf8,--utf16,--mime,--base64  convert for the code\n");
-    fprintf(stderr," --hiragana, --katakana    Hiragana/Katakana Conversion\n");
-    fprintf(stderr," --prefix=    Insert escape before troublesome characters of Shift_JIS\n");
+    fprintf(stderr,"\n");
+    fprintf(stderr,"Long name options\n");
+    fprintf(stderr," --ic=<input codeset>  --oc=<output codeset>\n");
+    fprintf(stderr,"                   Specify the input or output codeset\n");
+    fprintf(stderr," --fj  --unix --mac  --windows\n");
+    fprintf(stderr," --jis  --euc  --sjis  --utf8  --utf16  --mime  --base64\n");
+    fprintf(stderr,"                   Convert for the system or code\n");
+    fprintf(stderr," --hiragana  --katakana  --katakana-hiragana\n");
+    fprintf(stderr,"                   To Hiragana/Katakana Conversion\n");
+    fprintf(stderr," --prefix=         Insert escape before troublesome characters of Shift_JIS\n");
 #ifdef INPUT_OPTION
     fprintf(stderr," --cap-input, --url-input  Convert hex after ':' or '%%'\n");
 #endif
@@ -5535,13 +5630,17 @@ usage()
 #endif
 #ifdef UTF8_INPUT_ENABLE
     fprintf(stderr," --fb-{skip, html, xml, perl, java, subchar}\n");
-    fprintf(stderr,"                   set the way nkf handles unassigned characters\n");
+    fprintf(stderr,"                   Specify how nkf handles unassigned characters\n");
 #endif
 #ifdef OVERWRITE
-    fprintf(stderr," --overwrite       Overwrite original listed files by filtered result\n");
+    fprintf(stderr," --in-place[=SUFFIX]  --overwrite[=SUFFIX]\n");
+    fprintf(stderr,"                   Overwrite original listed files by filtered result\n");
+    fprintf(stderr,"                   --overwrite preserves timestamp of original files\n");
 #endif
-    fprintf(stderr," -g, --guess       Guess the input code\n");
-    fprintf(stderr," --help,--version\n");
+    fprintf(stderr," -g  --guess       Guess the input code\n");
+    fprintf(stderr," --help  --version Show this help/the version\n");
+    fprintf(stderr,"                   For more information, see also man nkf\n");
+    fprintf(stderr,"\n");
     version();
 }
 
