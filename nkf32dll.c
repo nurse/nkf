@@ -4,11 +4,11 @@
 
 /*WIN32DLL*/
 /* こちらのバージョンも更新してください。 */
-#define NKF_VERSIONW L"2.0.5"
+#define NKF_VERSIONW L"2.0.6"
 /* NKF_VERSION のワイド文字 */
-#define DLL_VERSION   "2.0.5.0 2"
+#define DLL_VERSION   "2.0.6.0 1"
 /* DLLが返す */
-#define DLL_VERSIONW L"2.0.5.0 2"
+#define DLL_VERSIONW L"2.0.6.0 1"
 /* DLLが返す DLL_VERSION のワイド文字 */
 
 /* nkf32.dll main */
