@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.15 2006/03/04 21:55:36 naruse Exp $
+# $Id: nkf_test.pl,v 1.16 2006/03/24 06:12:11 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -297,21 +297,56 @@ eofeof
 
 printf "%-40s", "test_data/no-cp932inv";
     &test("$nkf -sE --no-cp932",$example{'test_data/cp932.ans'},$example{'test_data/no-cp932inv.ans'});
+# ISO-2022-JP-MS
+$example{'iso2022jpms_sjis'} = "\xA1\xDF\xF0\xA0\xF4\xFC\xF5\x40\xF9\xFC";
+$example{'iso2022jpms_euc'} = "\x8e\xa1\x8e\xdf\xf6\xa2\xfe\xfe\x8f\xf5\xa1\x8f\xfe\xfe";
+$example{'iso2022jpms_jis'} = "\x1b\x28\x49\x21\x5f\x1b\x24\x28\x3f\x22\x22\x2a\x7e\x2b\x21\x34\x7e\x1b\x28\x42";
+
+# printf "%-40s", "ISO-2022-JP-MS to CP932";
+#     &test("$nkf --ic=ISO-2022-JP-MS --oc=CP932",$example{'iso2022jpms_jis'},$example{'iso2022jpms_sjis'});
+# 
+# printf "%-40s", "CP932 to ISO-2022-JP-MS";
+#     &test("$nkf --ic=CP932 --oc=ISO-2022-JP-MS",$example{'iso2022jpms_sjis'},$example{'iso2022jpms_jis'});
+# 
+# printf "%-40s", "ISO-2022-JP-MS to eucJP-ms";
+#     &test("$nkf --ic=ISO-2022-JP-MS --oc=eucJP-ms",$example{'iso2022jpms_jis'},$example{'iso2022jpms_euc'});
+# 
+# printf "%-40s", "eucJP-ms to ISO-2022-JP-MS";
+#     &test("$nkf --ic=eucJP-ms --oc=ISO-2022-JP-MS",$example{'iso2022jpms_euc'},$example{'iso2022jpms_jis'});
+# JIS X 0212
+$example{'jisx0212_euc'} = "\x8F\xA2\xAF\x8F\xED\xE3";
+$example{'jisx0212_jis'} = "\x1b\x24\x28\x44\x22\x2f\x6d\x63\x1b\x28\x42";
+
+printf "%-40s", "ISO-2022-JP-1 to EUC-JP";
+    &test("$nkf --ic=ISO-2022-JP-1 --oc=EUC-JP",$example{'jisx0212_jis'},$example{'jisx0212_euc'});
+
+printf "%-40s", "EUC-JP to ISO-2022-JP-1";
+    &test("$nkf --ic=EUC-JP --oc=ISO-2022-JP-1",$example{'jisx0212_euc'},$example{'jisx0212_jis'});
 # JIS X 0213
 
 $example{'jisx0213_sjis'} = unpack('u',<<'eofeof');
-<@:V8G>JF[/SM0/O\[_?P0/I`^DGZ2OQ+_$S\]```
+0@:V(G9ATF)WJIN_W\$#\]```
 eofeof
 
 $example{'jisx0213_euc'} = unpack('u',<<'eofeof');
-DHJ_/_?2H^/[YH8_\_O[YCZ&AC_FAC_FJC_FKC_VLC_VMC_[V
+2HJ^O_<_5S_WTJ/[YCZ&AC_[V
 eofeof
 
-printf "%-40s", "JIS X 0213 Shift_JIS to EUC-JP";
+$example{'jisx0213_jis'} = unpack('u',<<'eofeof');
+;&R0H3R(O+WU/54]]="A^>1LD*%`A(7YV&RA"
+eofeof
+
+printf "%-40s", "Shift_JISX0213 to EUC-JISX0213";
     &test("$nkf --ic=Shift_JISX0213 --oc=EUC-JISX0213",$example{'jisx0213_sjis'},$example{'jisx0213_euc'});
 
-printf "%-40s", "JIS X 0213 EUC-JP to Shift_JIS";
+printf "%-40s", "EUC-JISX0213 to Shift_JISX0213";
     &test("$nkf --ic=EUC-JISX0213 --oc=Shift_JISX0213",$example{'jisx0213_euc'},$example{'jisx0213_sjis'});
+
+printf "%-40s", "ISO-2022-JP-3 to EUC-JISX0213";
+    &test("$nkf --ic=ISO-2022-JP-3 --oc=EUC-JISX0213",$example{'jisx0213_jis'},$example{'jisx0213_euc'});
+
+printf "%-40s", "EUC-JISX0213 to ISO-2022-JP-3";
+    &test("$nkf --ic=EUC-JISX0213 --oc=ISO-2022-JP-3",$example{'jisx0213_euc'},$example{'jisx0213_jis'});
 # test_data/no_best_fit_chars
 
 $example{'test_data/no_best_fit_chars'} = unpack('u',<<'eofeof');
@@ -435,7 +470,7 @@ printf "%-40s", "X0201 conversion: SJIS";
     &test("$nkf -jXZ",$example{'x0201.sjis'},$example{'x0201.x0208'});
 printf "%-40s", "X0201 conversion: JIS";
     &test("$nkf -jZ",$example{'x0201.jis'},$example{'x0201.x0208'});
-printf "%-40s", "X0201 conversion:SI/SO";
+printf "%-40s", "X0201 conversion: SI/SO";
     &test("$nkf -jZ",$example{'x0201.sosi'},$example{'x0201.x0208'});
 printf "%-40s", "X0201 conversion: EUC";
     &test("$nkf -jZ",$example{'x0201.euc'},$example{'x0201.x0208'});
