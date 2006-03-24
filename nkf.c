@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.93 2006/03/14 15:55:58 naruse Exp $ */
+/* $Id: nkf.c,v 1.94 2006/03/24 06:14:32 naruse Exp $ */
 #define NKF_VERSION "2.0.6"
-#define NKF_RELEASE_DATE "2006-03-14"
+#define NKF_RELEASE_DATE "2006-03-24"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -191,9 +191,9 @@
 #define         X0201           2
 #define         ISO8859_1       8
 #define         NO_X0201        3
-#define         X0212       0x2844
-#define         X0213_1     0x2850
-#define         X0213_2     0x2850
+#define         X0212      0x2844
+#define         X0213_1    0x284F
+#define         X0213_2    0x2850
 
 /* Input Assumption */
 
@@ -1154,6 +1154,17 @@ options(cp)
 		    codeset[i] = 0;
 		    if(strcmp(codeset, "ISO-2022-JP") == 0){
 			input_f = JIS_INPUT;
+		    }else if(strcmp(codeset, "ISO-2022-JP-1") == 0){
+			input_f = JIS_INPUT;
+#ifdef X0212_ENABLE
+			x0212_f = TRUE;
+#endif
+		    }else if(strcmp(codeset, "ISO-2022-JP-3") == 0){
+			input_f = JIS_INPUT;
+#ifdef X0212_ENABLE
+			x0212_f = TRUE;
+#endif
+			x0213_f = TRUE;
 		    }else if(strcmp(codeset, "SHIFT_JIS") == 0){
 			input_f = SJIS_INPUT;
 			if (x0201_f==NO_X0201) x0201_f=TRUE;
@@ -1164,10 +1175,10 @@ options(cp)
 			input_f = SJIS_INPUT;
 			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
-                    cp51932_f = TRUE;
+			cp51932_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = UCS_MAP_CP932;
+			ms_ucs_map_f = UCS_MAP_CP932;
 #endif
 		    }else if(strcmp(codeset, "EUCJP") == 0 ||
 			     strcmp(codeset, "EUC-JP") == 0){
@@ -1176,10 +1187,10 @@ options(cp)
 			input_f = JIS_INPUT;
 			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
-                    cp51932_f = TRUE;
+			cp51932_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = UCS_MAP_CP932;
+			ms_ucs_map_f = UCS_MAP_CP932;
 #endif
 		    }else if(strcmp(codeset, "EUC-JP-MS") == 0 ||
 			     strcmp(codeset, "EUCJP-MS") == 0 ||
@@ -1187,27 +1198,27 @@ options(cp)
 			input_f = JIS_INPUT;
 			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
-                    cp51932_f = FALSE;
+			cp51932_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = UCS_MAP_MS;
+			ms_ucs_map_f = UCS_MAP_MS;
 #endif
 		    }else if(strcmp(codeset, "EUC-JP-ASCII") == 0 ||
 			     strcmp(codeset, "EUCJP-ASCII") == 0){
 			input_f = JIS_INPUT;
 			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
-                    cp51932_f = FALSE;
+			cp51932_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = UCS_MAP_ASCII;
+			ms_ucs_map_f = UCS_MAP_ASCII;
 #endif
 		    }else if(strcmp(codeset, "SHIFT_JISX0213") == 0){
 			input_f = SJIS_INPUT;
 			x0213_f = TRUE;
 #ifdef SHIFTJIS_CP932
-                    cp51932_f = FALSE;
-                    cp932inv_f = FALSE;
+			cp51932_f = FALSE;
+			cp932inv_f = FALSE;
 #endif
 			if (x0201_f==NO_X0201) x0201_f=TRUE;
 		    }else if(strcmp(codeset, "EUC-JISX0213") == 0){
@@ -1215,8 +1226,8 @@ options(cp)
 			x0201_f = FALSE;
 			x0213_f = TRUE;
 #ifdef SHIFTJIS_CP932
-                    cp51932_f = FALSE;
-                    cp932inv_f = FALSE;
+			cp51932_f = FALSE;
+			cp932inv_f = FALSE;
 #endif
 #ifdef UTF8_INPUT_ENABLE
 		    }else if(strcmp(codeset, "UTF-8") == 0 ||
@@ -1251,6 +1262,32 @@ options(cp)
 		    codeset[i] = 0;
 		    if(strcmp(codeset, "ISO-2022-JP") == 0){
 			output_conv = j_oconv;
+		    }else if(strcmp(codeset, "ISO-2022-JP-1") == 0){
+			output_conv = j_oconv;
+#ifdef X0212_ENABLE
+			x0212_f = TRUE;
+#endif
+#ifdef SHIFTJIS_CP932
+			cp51932_f = FALSE;
+#endif
+		    }else if(strcmp(codeset, "ISO-2022-JP-3") == 0){
+			output_conv = j_oconv;
+#ifdef X0212_ENABLE
+			x0212_f = TRUE;
+#endif
+			x0213_f = TRUE;
+#ifdef SHIFTJIS_CP932
+			cp51932_f = FALSE;
+#endif
+		    }else if(strcmp(codeset, "ISO-2022-JP-MS") == 0){
+			output_conv = j_oconv;
+			x0201_f = FALSE;
+#ifdef X0212_ENABLE
+			x0212_f = TRUE;
+#endif
+#ifdef SHIFTJIS_CP932
+			cp51932_f = FALSE;
+#endif
 		    }else if(strcmp(codeset, "SHIFT_JIS") == 0){
 			output_conv = s_oconv;
 		    }else if(strcmp(codeset, "WINDOWS-31J") == 0 ||
@@ -1264,7 +1301,7 @@ options(cp)
 			cp932inv_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = UCS_MAP_CP932;
+			ms_ucs_map_f = UCS_MAP_CP932;
 #endif
 		    }else if(strcmp(codeset, "EUCJP") == 0 ||
 			     strcmp(codeset, "EUC-JP") == 0){
@@ -1276,7 +1313,7 @@ options(cp)
 			cp51932_f = TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = UCS_MAP_CP932;
+			ms_ucs_map_f = UCS_MAP_CP932;
 #endif
 		    }else if(strcmp(codeset, "EUC-JP-MS") == 0 ||
 			     strcmp(codeset, "EUCJP-MS") == 0 ||
@@ -1303,7 +1340,7 @@ options(cp)
 			cp51932_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = UCS_MAP_ASCII;
+			ms_ucs_map_f = UCS_MAP_ASCII;
 #endif
 		    }else if(strcmp(codeset, "SHIFT_JISX0213") == 0){
 			output_conv = s_oconv;
@@ -2483,7 +2520,8 @@ kanji_convert(f)
                         /* look like bogus code */
                         NEXT;
                     }
-                } else if (input_mode == X0208) {
+                } else if (input_mode == X0208 || input_mode == X0212 ||
+			   input_mode == X0213_1 || input_mode == X0213_2) {
                     /* in case of Kanji shifted */
                     c2 = c1;
                     NEXT;
@@ -2557,6 +2595,14 @@ kanji_convert(f)
                             shift_mode = FALSE;
                             NEXT;
 #endif /* X0212_ENABLE */
+                        } else if (c1 == (X0213_1&0x7F)){
+                            input_mode = X0213_1;
+                            shift_mode = FALSE;
+                            NEXT;
+                        } else if (c1 == (X0213_2&0x7F)){
+                            input_mode = X0213_2;
+                            shift_mode = FALSE;
+                            NEXT;
                         } else {
                             /* could be some special code */
                             (*oconv)(0, ESC);
@@ -2652,21 +2698,31 @@ kanji_convert(f)
                 SEND;
         }
         /* send: */
-        if (input_mode == X0208) 
-            (*oconv)(c2, c1);  /* this is JIS, not SJIS/EUC case */
+	switch(input_mode){
+	case ASCII:
+	    if ((*iconv)(c2, c1, 0) < 0){  /* can be EUC/SJIS */
+		int c0 = (*i_getc)(f);
+		if (c0 != EOF){
+		    code_status(c0);
+		    (*iconv)(c2, c1, c0);
+		}
+	    }
+	    break;
+	case X0208:
+	case X0213_1:
+	    (*oconv)(c2, c1); /* this is JIS, not SJIS/EUC case */
+	    break;
 #ifdef X0212_ENABLE
-        else if (input_mode == X0212) 
-            (*oconv)((0x8f << 8) | c2, c1);
+	case X0212:
+	    (*oconv)((0x8f << 8) | c2, c1);
+	    break;
 #endif /* X0212_ENABLE */
-        else if (input_mode) 
-            (*oconv)(input_mode, c1);  /* other special case */
-        else if ((*iconv)(c2, c1, 0) < 0){  /* can be EUC/SJIS */
-            int c0 = (*i_getc)(f);
-            if (c0 != EOF){
-                code_status(c0);
-                (*iconv)(c2, c1, c0);
-            }
-        }
+	case X0213_2:
+	    (*oconv)((0x8f << 8) | c2, c1);
+	    break;
+	default:
+	    (*oconv)(input_mode, c1);  /* other special case */
+	}
 
         c2 = 0;
         continue;
@@ -2800,8 +2856,6 @@ push_hold_buf(c2)
     return ((hold_count >= HOLD_SIZE*2) ? EOF : hold_count);
 }
 
-const int shift_jisx0213_s1a3_table[5][2] ={ { 1, 8}, { 3, 4}, { 5,12}, {13,14}, {15, 0} };
-
 int s2e_conv(c2, c1, p2, p1)
      int c2, c1;
      int *p2, *p1;
@@ -2809,6 +2863,7 @@ int s2e_conv(c2, c1, p2, p1)
 #if defined(SHIFTJIS_CP932) || defined(X0212_ENABLE)
     int val;
 #endif
+    STATIC const int shift_jisx0213_s1a3_table[5][2] ={ { 1, 8}, { 3, 4}, { 5,12}, {13,14}, {15, 0} };
 #ifdef SHIFTJIS_CP932
     if (cp51932_f && CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END){
         extern const unsigned short shiftjis_cp932[3][189];
@@ -2820,7 +2875,7 @@ int s2e_conv(c2, c1, p2, p1)
     }
 #endif /* SHIFTJIS_CP932 */
 #ifdef X0212_ENABLE
-    if (!x0213_f && x0212_f && 0xfa <= c2 && c2 <= 0xfc){
+    if (!x0213_f && 0xfa <= c2 && c2 <= 0xfc){
         extern const unsigned short shiftjis_x0212[3][189];
         val = shiftjis_x0212[c2 - 0xfa][c1 - 0x40];
         if (val){
@@ -2857,9 +2912,7 @@ int s2e_conv(c2, c1, p2, p1)
     }
 
 #ifdef X0212_ENABLE
-    if (x0212_f){
-        c2 = x0212_unshift(c2);
-    }
+    c2 = x0212_unshift(c2);
 #endif
     if (p2) *p2 = c2;
     if (p1) *p1 = c1;
@@ -3649,7 +3702,6 @@ e2s_conv(c2, c1, p2, p1)
 	    int val = 0;
 	    const unsigned short *ptr;
 	    extern const unsigned short *const x0212_shiftjis[];
-	    ndx = c2 & 0x7f;
 	    ptr = x0212_shiftjis[ndx - 0x21];
 	    if (ptr){
 		val = ptr[(c1 & 0x7f) - 0x21];
@@ -3761,16 +3813,20 @@ j_oconv(c2, c1)
 	if(x0213_f){
 	    if(output_mode!=X0213_2){
 		output_mode = X0213_2;
+		(*o_putc)(ESC);
+		(*o_putc)('$');
+		(*o_putc)('(');
+		(*o_putc)(X0213_2&0x7F);
 	    }
 	}else{
 	    if(output_mode!=X0212){
 		output_mode = X0212;
+		(*o_putc)(ESC);
+		(*o_putc)('$');
+		(*o_putc)('(');
+		(*o_putc)(X0212&0x7F);
 	    }
         }
-	(*o_putc)(ESC);
-	(*o_putc)('$');
-	(*o_putc)('(');
-	(*o_putc)(output_mode & 0x7F);
         (*o_putc)(c2 & 0x7f);
         (*o_putc)(c1);
 #endif
@@ -3797,13 +3853,14 @@ j_oconv(c2, c1)
         }
         (*o_putc)(c1);
     } else {
+	if(c2<0x20 || 0x7e<c2 || c1<0x20 || 0x7e<c1) return;
 	if(x0213_f){
 	    if (output_mode!=X0213_1) {
 		output_mode = X0213_1;
 		(*o_putc)(ESC);
 		(*o_putc)('$');
 		(*o_putc)('(');
-		(*o_putc)(output_mode & 0x7F);
+		(*o_putc)(X0213_1&0x7F);
 	    }
 	}else if (output_mode != X0208) {
             output_mode = X0208;
@@ -3811,10 +3868,6 @@ j_oconv(c2, c1)
             (*o_putc)('$');
             (*o_putc)(kanji_intro);
         }
-        if (c1<0x20 || 0x7e<c1) 
-            return;
-        if (c2<0x20 || 0x7e<c2) 
-            return;
         (*o_putc)(c2);
         (*o_putc)(c1);
     }
