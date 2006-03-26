@@ -1,4 +1,4 @@
-.TH NKF 1 01/Apr/2006
+.TH NKF 1 26/Mar/2006
 .SH NAME
 nkf \- ネットワーク用漢字コード変換フィルタ v2.0.6
 .SH SYNOPSIS
@@ -237,10 +237,22 @@ mac (CR)
 .RS
 .TP
 .B ISO-2022-JP
-JISコード。\-jまたは\-Jと同じ。
+いわゆる JIS コード。\-jまたは\-Jと同じ。
+.TP
+.B ISO-2022-JP-1
+RFC 2237 に定められた形式。 JIS X 0212 を含む。
+.TP
+.B ISO-2022-JP-3
+RFC 2237 に定められた形式。 JIS X 0213 を含む。
 .TP
 .B EUC-JP
 EUCコード。\-eまたは\-Eと同じ。
+.TP
+.B EUC-JISX0213
+文字集合に JIS X 0213:2000 を用いた EUC-JP。
+.TP
+.B EUC-JIS-2004
+文字集合に JIS X 0213:2004 を用いた EUC-JP。
 .TP
 .B eucJP-ascii
 オープングループ日本ベンダ協議会が定義したeucJP-ascii。
@@ -255,6 +267,12 @@ Micorosft Code Page 51932。-xが暗黙のうちに指定される。
 .TP
 .B Shift_JIS
 シフトJIS。\-sまたは\-Sと同じ。
+.TP
+.B Shift_JISX0213
+文字集合に JIS X 0213:2000 を用いた Shift_JIS。
+.TP
+.B Shift_JIS-2004
+文字集合に JIS X 0213:2004 を用いた Shift_JIS。
 .TP
 .B CP932
 Micorosft Code Page 932。-xが暗黙のうちに指定される。
