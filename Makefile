@@ -1,13 +1,11 @@
 CC = cc
-CFLAGS = -O
+CFLAGS = -O -Wall
 # CFLAGS = -O3
 SHAR = shar 
 # SHAR = shar -T
 PERL = perl
 RM = rm -rf
-VERSION = 205
-EXIST = test -f
-#EXIST = exist #nmake
+VERSION = 206
 
 nkf : nkf.c config.h utf8tbl.o
 	$(CC) $(CFLAGS) -o nkf nkf.c utf8tbl.o
@@ -17,7 +15,8 @@ utf8tbl.o : utf8tbl.c config.h
 
 clean:
 	-$(RM) nkf.o nkf nkf.in nkf.out nkf$(VERSION) *~ *.bad utf8tbl.o
-	cd NKF.mod; if $(EXIST) Makefile; then make clean; fi
+	cd NKF.mod; if [ -f Makefile ]; then make clean; fi
+
 test:	nkf
 	$(PERL) test.pl
 
