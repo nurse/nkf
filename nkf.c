@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.96 2006/04/01 16:29:01 naruse Exp $ */
-#define NKF_VERSION "2.0.6"
-#define NKF_RELEASE_DATE "2006-03-26"
+/* $Id: nkf.c,v 1.97 2006/04/01 18:19:25 naruse Exp $ */
+#define NKF_VERSION "2.0.7"
+#define NKF_RELEASE_DATE "2006-04-01"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -3142,19 +3142,6 @@ int unicode_to_jis_common(int c2, int c1, int c0, int *p2, int *p1)
 	    }else if(ms_ucs_map_f == UCS_MAP_MS){
 		if(c2 == 0xC2 && no_best_fit_chars_table_C2_ms[c1&0x3F]) return 1;
 	    }
-	}else if(!x0212_f && ms_ucs_map_f != UCS_MAP_CP932){
-	    switch(c2){
-	    case 0xC2:
-		if(cp51932_f){
-		    if(no_best_fit_chars_table_C2[c1&0x3F]&1) return 1;
-		}else{
-		    if(no_best_fit_chars_table_C2[c1&0x3F]) return 1;
-		}
-		break;
-	    case 0xC3:
-		if(no_best_fit_chars_table_932_C3[c1&0x3F]) return 1;
-		break;
-	    }
 	}
 	pp =
 	    ms_ucs_map_f == UCS_MAP_CP932 ? utf8_to_euc_2bytes_932 :
@@ -3215,6 +3202,16 @@ int unicode_to_jis_common(int c2, int c1, int c0, int *p2, int *p1)
 	    utf8_to_euc_3bytes;
 	ret = w_iconv_common(c1, c0, ppp[c2 - 0xE0], sizeof_utf8_to_euc_C2, p2, p1);
     }else return -1;
+#ifdef SHIFTJIS_CP932
+    if (!ret && cp51932_f && (*p2 & 0xff00) >> 8 == 0x8f) {
+	int s2, s1;
+	if (e2s_conv(*p2, *p1, &s2, &s1) == 0) {
+	    s2e_conv(s2, s1, p2, p1);
+	}else{
+	    ret = 1;
+	}
+    }
+#endif
     return ret;
 }
 
