@@ -4,11 +4,11 @@
 
 /*WIN32DLL*/
 /* こちらのバージョンも更新してください。 */
-#define NKF_VERSIONW L"2.0.6"
+#define NKF_VERSIONW L"2.0.7"
 /* NKF_VERSION のワイド文字 */
-#define DLL_VERSION   "2.0.6.0 1"
+#define DLL_VERSION   "2.0.7.0 1"
 /* DLLが返す */
-#define DLL_VERSIONW L"2.0.6.0 1"
+#define DLL_VERSIONW L"2.0.7.0 1"
 /* DLLが返す DLL_VERSION のワイド文字 */
 
 /* nkf32.dll main */
@@ -153,7 +153,7 @@ FILE *f;
     return EOF;
 }
 
-static FILE *fout = stdout;
+static FILE *fout = NULL;
 static unsigned char *cout = NULL;
 static int nout = -1;
 static int noutmax = -1;

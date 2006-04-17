@@ -1,0 +1,27 @@
+LIBRARY nkf32.dll
+
+EXPORTS
+	GetNkfVersion
+	SetNkfOption
+	NkfConvert
+	ToHankaku
+	ToZenkakuKana
+	EncodeSubject
+	ToMime
+	NkfGetKanjiCode
+	NkfFileConvert1
+	NkfFileConvert2
+	NkfConvertSafe
+	ToHankakuSafe
+	ToZenkakuKanaSafe
+	EncodeSubjectSafe
+	GetNkfVersionSafeA
+	NkfFileConvert1SafeA
+	NkfFileConvert2SafeA
+	GetNkfGuessA
+	GetNkfVersionSafeW
+	NkfFileConvert1SafeW
+	NkfFileConvert2SafeW
+	GetNkfGuessW
+	GetNkfSupportFunctions
+	NkfUsage
