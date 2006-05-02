@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.16 2006/03/24 06:12:11 naruse Exp $
+# $Id: nkf_test.pl,v 1.17 2006/05/01 19:51:31 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -825,6 +825,14 @@ eofeof
 
 printf "%-40s", "test_data/mime_out2";
     &test("$nkf -jM",$example{'test_data/mime_out2'},$example{'test_data/mime_out2.ans'},$example{'test_data/mime_out2.ans.alt'},$example{'test_data/mime_out2.ans.alt2'});
+# test_data/mime_out
+
+$example{'test_data/mime_out3'} = "\x82\xD9\x82\xB0 A";
+
+$example{'test_data/mime_out3.ans'} = "=?ISO-2022-JP?B?GyRCJFskMhsoQg==?= A";
+
+printf "%-40s", "test_data/mime_out3";
+    &test("$nkf -jSM",$example{'test_data/mime_out3'},$example{'test_data/mime_out3.ans'});
 # test_data/multi-line
 
 $example{'test_data/multi-line'} = unpack('u',<<'eofeof');

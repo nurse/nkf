@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.97 2006/04/01 18:19:25 naruse Exp $ */
+/* $Id: nkf.c,v 1.98 2006/05/01 19:51:31 naruse Exp $ */
 #define NKF_VERSION "2.0.7"
-#define NKF_RELEASE_DATE "2006-04-01"
+#define NKF_RELEASE_DATE "2006-04-22"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -1580,7 +1580,21 @@ void options(unsigned char *cp)
             unbuf_f = TRUE;
             continue;
         case 't':           /* transparent mode */
-            nop_f = TRUE;
+            if (*cp=='1') {
+		/* alias of -t */
+		nop_f = TRUE;
+		*cp++;
+	    } else if (*cp=='2') {
+		/*
+		 * -t with put/get
+		 *
+		 * nkf -t2MB hoge.bin | nkf -t2mB | diff -s - hoge.bin
+		 *
+		 */
+		nop_f = 2;
+		*cp++;
+            } else
+		nop_f = TRUE;
             continue;
         case 'j':           /* JIS output */
         case 'n':
@@ -2229,8 +2243,11 @@ int noconvert(FILE *f)
 {
     int    c;
 
+    if (nop_f == 2)
+	module_connection();
     while ((c = (*i_getc)(f)) != EOF)
       (*o_putc)(c);
+    (*o_putc)(EOF);
     return 1;
 }
 #endif
@@ -5081,16 +5098,21 @@ void mime_putc(int c)
 	j = mimeout_buf_count;
 	mimeout_buf_count = 0;
 	i = 0;
-	for (;i<j;i++) {
-	    /*if (nkf_isspace(mimeout_buf[i])){
-		break;
-            }*/
-	    mimeout_addchar(mimeout_buf[i]);
-	}
-        eof_mime();
-	for (;i<j;i++) {
-	    (*o_mputc)(mimeout_buf[i]);
-	    base64_count++;
+	if (mimeout_mode) {
+	    for (;i<j;i++) {
+		if (nkf_isspace(mimeout_buf[i]) && base64_count < 71){
+		    break;
+		}
+		mimeout_addchar(mimeout_buf[i]);
+	    }
+	    eof_mime();
+	    for (;i<j;i++) {
+		mimeout_addchar(mimeout_buf[i]);
+	    }
+	} else {
+	    for (;i<j;i++) {
+		mimeout_addchar(mimeout_buf[i]);
+	    }
 	}
         return;
     }
