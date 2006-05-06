@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.98 2006/05/01 19:51:31 naruse Exp $ */
+/* $Id: nkf.c,v 1.99 2006/05/06 11:55:07 naruse Exp $ */
 #define NKF_VERSION "2.0.7"
 #define NKF_RELEASE_DATE "2006-04-22"
 #include "config.h"
@@ -96,7 +96,7 @@
 **
 **/
 
-#if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C) || defined(__MINGW32__)) && !defined(MSDOS)
+#if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C) || defined(__MINGW32__) || defined(__EMX__) || defined(__MSDOS__) || defined(__WINDOWS__) || defined(__DOS__) || defined(__OS2__)) && !defined(MSDOS)
 #define MSDOS
 #if (defined(__Win32__) || defined(_WIN32)) && !defined(__WIN32__)
 #define __WIN32__
@@ -117,16 +117,33 @@
 #if defined(MSDOS) || defined(__OS2__)
 #include <fcntl.h>
 #include <io.h>
+#if defined(_MSC_VER) || defined(__WATCOMC__)
+#define mktemp _mktemp
+#endif
 #endif
 
 #ifdef MSDOS
 #ifdef LSI_C
 #define setbinmode(fp) fsetbin(fp)
+#elif defined(__DJGPP__)
+#include <libc/dosio.h>
+#define setbinmode(fp) djgpp_setbinmode(fp)
 #else /* Microsoft C, Turbo C */
 #define setbinmode(fp) setmode(fileno(fp), O_BINARY)
 #endif
-#else /* UNIX,OS/2 */
+#else /* UNIX */
 #define setbinmode(fp)
+#endif
+
+#if defined(__DJGPP__)
+void  djgpp_setbinmode(FILE *fp)
+{
+    /* we do not use libc's setmode(), which changes COOKED/RAW mode in device. */
+    int fd, m;
+    fd = fileno(fp);
+    m = (__file_handle_modes[fd] & (~O_TEXT)) | O_BINARY;
+    __file_handle_set(fd, m);
+}
 #endif
 
 #ifdef _IOFBF /* SysV and MSDOS, Windows */
@@ -146,10 +163,17 @@
 
 #ifdef OVERWRITE
 /* added by satoru@isoternet.org */
+#if defined(__EMX__)
+#include <sys/types.h>
+#endif
 #include <sys/stat.h>
-#ifndef MSDOS /* UNIX, OS/2 */
+#if !defined(MSDOS) || defined(__DJGPP__) /* UNIX, djgpp */
 #include <unistd.h>
+#if defined(__WATCOMC__)
+#include <sys/utime.h>
+#else
 #include <utime.h>
+#endif
 #else /* defined(MSDOS) */
 #ifdef __WIN32__
 #ifdef __BORLANDC__ /* BCC32 */
@@ -158,7 +182,7 @@
 #include <sys/utime.h>
 #endif /* (__BORLANDC__) */
 #else /* !defined(__WIN32__) */
-#if defined(_MSC_VER) || defined(__MINGW32__) /* VC++, MinGW */
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WATCOMC__) || defined(__OS2__) || defined(__EMX__) || defined(__IBMC__) || defined(__IBMCPP__)  /* VC++, MinGW, Watcom, emx+gcc, IBM VAC++ */
 #include <sys/utime.h>
 #elif defined(__TURBOC__) /* BCC */
 #include <utime.h>
@@ -773,7 +797,7 @@ int main(int argc, char **argv)
          x0201_f = ((!iso2022jp_f)? TRUE : NO_X0201);
 
     if (binmode_f == TRUE)
-#ifdef __OS2__
+#if defined(__OS2__) && (defined(__IBMC__) || defined(__IBMCPP__))
     if (freopen("","wb",stdout) == NULL) 
         return (-1);
 #else
@@ -787,7 +811,7 @@ int main(int argc, char **argv)
 
     if (argc == 0) {
       if (binmode_f == TRUE)
-#ifdef __OS2__
+#if defined(__OS2__) && (defined(__IBMC__) || defined(__IBMCPP__))
       if (freopen("","rb",stdin) == NULL) return (-1);
 #else
       setbinmode(stdin);
@@ -869,7 +893,7 @@ int main(int argc, char **argv)
 		      return (-1);
 		  }
                   if (binmode_f == TRUE) {
-#ifdef __OS2__
+#if defined(__OS2__) && (defined(__IBMC__) || defined(__IBMCPP__))
                       if (freopen("","wb",stdout) == NULL) 
                            return (-1);
 #else
@@ -878,7 +902,7 @@ int main(int argc, char **argv)
                   }
               }
               if (binmode_f == TRUE)
-#ifdef __OS2__
+#if defined(__OS2__) && (defined(__IBMC__) || defined(__IBMCPP__))
                  if (freopen("","rb",fin) == NULL) 
                     return (-1);
 #else
@@ -897,7 +921,7 @@ int main(int argc, char **argv)
 #ifdef OVERWRITE
               if (overwrite_f) {
                   struct stat     sb;
-#if defined(MSDOS) && !defined(__MINGW32__) && !defined(__WIN32__)
+#if defined(MSDOS) && !defined(__MINGW32__) && !defined(__WIN32__) && !defined(__WATCOMC__) && !defined(__EMX__) && !defined(__OS2__) && !defined(__DJGPP__)
                   time_t tb[2];
 #else
                   struct utimbuf  tb;
@@ -918,7 +942,7 @@ int main(int argc, char **argv)
 
                   /* タイムスタンプを復元 */
 		    if(preserve_time_f){
-#if defined(MSDOS) && !defined(__MINGW32__) && !defined(__WIN32__)
+#if defined(MSDOS) && !defined(__MINGW32__) && !defined(__WIN32__) && !defined(__WATCOMC__) && !defined(__EMX__) && !defined(__OS2__) && !defined(__DJGPP__)
 			tb[0] = tb[1] = sb.st_mtime;
 			if (utime(outfname, tb)) {
 			    fprintf(stderr, "Can't set timestamp %s\n", outfname);
@@ -5484,7 +5508,7 @@ void usage(void)
 void version(void)
 {
     fprintf(stderr,"Network Kanji Filter Version %s (%s) "
-#if defined(MSDOS) && !defined(__WIN32__) && !defined(__WIN16__)
+#if defined(MSDOS) && !defined(__WIN32__) && !defined(__WIN16__) && !defined(__OS2__)
                   "for DOS"
 #endif
 #if defined(MSDOS) && defined(__WIN16__)
