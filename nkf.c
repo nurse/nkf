@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.99 2006/05/06 11:55:07 naruse Exp $ */
+/* $Id: nkf.c,v 1.100 2006/05/06 12:40:44 naruse Exp $ */
 #define NKF_VERSION "2.0.7"
-#define NKF_RELEASE_DATE "2006-04-22"
+#define NKF_RELEASE_DATE "2006-05-06"
 #include "config.h"
 
 #define COPY_RIGHT \
@@ -4159,11 +4159,34 @@ void rot_conv(int c2, int c1)
 
 void hira_conv(int c2, int c1)
 {
-    if ((hira_f & 1) && c2==0x25 && 0x20<c1 && c1<0x74) {
-	c2 = 0x24;
-    } else if ((hira_f & 2) && c2==0x24 && 0x20<c1 && c1<0x74) {
-	c2 = 0x25;
-    } 
+    if (hira_f & 1) {
+        if (c2 == 0x25) {
+            if (0x20 < c1 && c1 < 0x74) {
+                c2 = 0x24;
+                (*o_hira_conv)(c2,c1);
+                return;
+            } else if (c1 == 0x74 && (output_conv == w_oconv || output_conv == w_oconv16)) {
+                c2 = 0;
+                c1 = CLASS_UTF16 | 0x3094;
+                (*o_hira_conv)(c2,c1);
+                return;
+            }
+        } else if (c2 == 0x21 && (c1 == 0x33 || c1 == 0x34)) {
+            c1 += 2;
+            (*o_hira_conv)(c2,c1);
+            return;
+        }
+    }
+    if (hira_f & 2) {
+        if (c2 == 0 && c1 == (CLASS_UTF16 | 0x3094)) {
+            c2 = 0x25;
+            c1 = 0x74;
+        } else if (c2 == 0x24 && 0x20 < c1 && c1 < 0x74) {
+            c2 = 0x25;
+        } else if (c2 == 0x21 && (c1 == 0x35 || c1 == 0x36)) {
+            c1 -= 2;
+        }
+    }
     (*o_hira_conv)(c2,c1);
 }
 
