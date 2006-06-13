@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.102 2006/06/12 16:34:42 naruse Exp $ */
+/* $Id: nkf.c,v 1.103 2006/06/12 17:06:27 naruse Exp $ */
 #define NKF_VERSION "2.0.7"
 #define NKF_RELEASE_DATE "2006-06-13"
 #include "config.h"
@@ -2913,7 +2913,7 @@ nkf_char s2e_conv(nkf_char c2, nkf_char c1, nkf_char *p2, nkf_char *p1)
     if(c2 >= 0x80){
 	if(x0213_f && c2 >= 0xF0){
 	    if(c2 <= 0xF3 || (c2 == 0xF4 && c1 < 0x9F)){ /* k=1, 3<=k<=5, k=8, 12<=k<=15 */
-		c2 = PREFIX_EUCG3 | 0x20 + shift_jisx0213_s1a3_table[c2 - 0xF0][0x9E < c1];
+		c2 = PREFIX_EUCG3 | 0x20 | shift_jisx0213_s1a3_table[c2 - 0xF0][0x9E < c1];
 	    }else{ /* 78<=k<=94 */
 		c2 = PREFIX_EUCG3 | (c2 * 2 - 0x17B);
 		if (0x9E < c1) c2++;
@@ -3470,7 +3470,7 @@ void w_oconv(nkf_char c2, nkf_char c1)
 
 #ifdef NUMCHAR_OPTION
     if (c2 == 0 && is_unicode_capsule(c1)){
-        val &= VALUE_MASK;
+        val = c1 & VALUE_MASK;
         if (val < 0x80){
             (*o_putc)(val);
         }else if (val < 0x800){
@@ -3547,10 +3547,10 @@ void w_oconv16(nkf_char c2, nkf_char c1)
                     (*o_putc)(c1 & 0xff);
                     (*o_putc)((c1 >> 8) & 0xff);
                 }else{
-                    (*o_putc)(c2 & 0xff);
                     (*o_putc)((c2 >> 8) & 0xff);
-                    (*o_putc)(c1 & 0xff);
+                    (*o_putc)(c2 & 0xff);
                     (*o_putc)((c1 >> 8) & 0xff);
+                    (*o_putc)(c1 & 0xff);
                 }
             }
             return;
