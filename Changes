@@ -209,3 +209,268 @@ namazu ML で、「utf-8 のファイルを検索できないか」という話題が
 できるようになっています。(utf-7 や utf-16 などには対応してい
 ません)
 
+.SS "kono@csl.sony.co.jp (Shinji Kono) による変更。"
+
+
+X0201仮名(いわゆる半角かな)はデフォルトでX0208(全角仮名)に変換される。
+ただし、 Shift_JIS のX0201仮名
+はデフォルトではEUCだと解釈されてしまう。これが望ましくない時には -S や
+- -X などのフラグを使えば良い。-Xを指定すると一旦確定した Shift_JIS から
+EUCに移行することはない。ESC-(-Iによる X0201は常に認識される。SI/SO
+SSOは、-lが指定されていなければX0201と解釈する。
+
+MIME decodeは、ISO-2022-JPのbase64と、ISO-8859-1の16進encodeのみ
+decodeする。 MIME decodeは、単純な改行や空白は安全に読み飛ばされる。
+ということは、 MIME decode中の空白は保存されない。変換は可逆ではない。
+lessやrnで行が分割された時は、 Terminalによって異なる ESC-[-K などが挿入
+されるので、完全にはdecode できない。-mN では、チェックが緩いので
+decodeできる場合もある。
+ISO-8859-1 出力はJIS コード出力としか両立しない。
+
+Fold 機能はfmtと異なり行頭の空白を無視する。禁則処理はあるが指定された
+長さ+10で強制改行する。-f60-10 などとすると強制改行の余地(fold-margin)
+を調整できる。-f40-0とすると禁則処理なしとなる。
+
+X0201仮名はrot47されない。
+
+.SS nkf 1.6 "kono@ie.u-ryukyu.ac.jp (Shinji Kono) による変更。"
+
+ -B のlevelを0,1,2 に増やした。MIMEのbase64, Q-Encodingを解読する
+機能を付けた。ヘッダなどは解読しないので、Encodeされた部分だけを
+通す必要がある。 -mB は、nkf1.5と違う動きをするので、-B -m とすること。
+
+.SS nkf 1.6.1
+
+-Z1 でX0208間隔->ASCII spaceの変換をおこなう。
+-Z2 でX0208間隔->ASCII space 2個の変換をおこなう。
+
+
+.SS nkf 1.7
+
+ESC-$-(-B などにも対応するようになった。
+
+copy right の非営利の条件が不要になった。使用時の問い合わせも不要。
+
+Perl Extension として使えるようになった。
+
+.SS nkf 1.9
+
+MIME エンコードの機能時でも、コード変換されしまうので注意。
+base64 エンコードでは改行時に先頭に空白が付くのでメールヘッダ
+に使用できる。
+
+コード変換モジュールは、サブルーチンを継続によって接続する
+形式となった。複数の変換を自由に接続できるようになった。
+
+      getc <-- iconv --> oconv --> other conversion --> putc
+
+という形で、順に呼び出される。
+
+
+長いオプション名を許すようになった。
+    --mac
+    --jis
+    --unix
+など。
+
+.SS
+UTF-8 サポートについて
+
+furukawa@tcp-ip.or.jp による。
+
+従来の nkf と同様に、nkf -e として起動すると、自動判別で
+UTF-8 と判定されれば、そのまま euc-jp に変換される。
+
+
+オプションで、文字コードを指定できる。
+
+    -w   出力を utf-8 に指定します
+    -W   入力を utf-8 と仮定します
+
+特に自動判別、コード混在、エラー処理系には判定を失敗することがある。
+
+
+  -Z3 オプションの新設
+        X0208 の '＞', '＜', '”', '＆'  をそれぞれ
+        '&gt;', '&lt;', '&quot;', '&amp;' に変換します
+
+.SS nkf 2.0
+
+
+newline を保存する folding -F。fmtに近い動作をする。
+
+
+folding のマージン。-f60-0 などと、0にすると禁
+則せずに、強制的にfoldingする。携帯にメールを送るときに使う。
+
+
+nkf -f40-0
+などとしてメールを 40 文字づつ切り出して、
+「Subject 160 文字目から 199 文字目まで」
+「本文    200 文字目から 239 文字目まで」
+とする。
+
+
+MIME関係
+
+
+fixed mime mode ( -mQ ) で =? で Q-encode が抜けてしまうバグの修正。
+
+
+Q encode の Soft Wrap に対応。
+
+
+MIME encode のWrapでは、先頭に一文字の空白挿入。
+した。あA の MIME 変換は、A を含んで変換しないといけ
+ないが、対応していない。RFCには反した動作だが、
+encoded word 間のwhite spaceは無視される。
+nkf_test.pl では、MIMEの空白を削除してから比較している。
+
+
+non-strict mime -MN では、空白、改行をまたいで、base64 encoding
+を解読する。これで、スクリーンからcut&pasteで
+デコードすることも可能。止まらない可能性あり。
+
+
+その他
+
+
+nkf_test.pl のバグチェックを増やした。
+test が失敗したときにdiffを取るようにした。
+make_test.pl でテスト作成可能。
+
+
+Perl moduleで、\\0を含む文字列も変換できるようになった。
+Perl XSでの文字列の長さの扱いを修正。
+
+NKFをNKF.modにしたので、Mac OS X でMakeでコンパイル化。
+
+
+rot13が1.9で動かなくなっていたのを修正。
+
+
+-Z の間隔やおかしな変換の修正
+
+
+hiragana/katakana 変換ができるようになりました。
+   -h1   --hiragana カタカナ->ひらがな
+   -h2   --katakana ひらがな->カタカナ
+   -h3   --katakana-hiragana カタカナ<->ひらがな
+
+--overwrite で、引数のファイルを直接、置き換えることができます。
+
+.SS nkf 2.0.4
+
+
+Shift_JIS の FAxx-FCxx について、普通の式では euc に変換できませんが、CP932 で同値な文字に読み換えて変換します。この動作を無効にするには、--no-cp932 をつけてください。
+
+
+perl module に
+   nkf_continue     オプション、自動判別の状態などを引き継いで変換
+   inputcode        自動判別結果の文字コードを返す
+を追加しました。
+
+
+--numchar-input オプションを新設
+    mhonarc など、日本語を UTF-16 の &#....; のパターンで出力するものを変換します。
+
+
+--exec-in, --exec-out オプションを新設 (config.h で EXEC_IO を define してコンパイルした時のみ有効)
+
+    nkf -e --exec-in cmd args...
+    とやると、cmd の出力を nkf の入力とします。
+
+    nkf -e --exec-out cmd args...
+    とやると、nkf の出力を cmd の入力とします。
+
+
+.SS nkf 2.0.5
+
+
+--cp932inv というオプションをつけると Shift_JIS への変換の際、EDxx-EFxx については、
+CP932 で同値な FAxx-FCxx の文字に変換します。
+
+
+--guess または -g というオプションをつけると自動判別の結果を出力します。
+
+
+--prefix= というオプションをつけると、EUC-JP から Shift_JIS への変換の際、2 バイト目
+に現れた文字の前にエスケープ文字をつけることができます。
+引数の 1 文字目がエスケープ文字、2文字目以降にエスケープされるべき文字を指定します。
+
+例えば、
+
+--prefix=\$@ とすると、Shift_JIS の 2 文字目に $, @ が来たら、その前に \ が挿入されます
+--prefix=@@ とすると、Shift_JIS の 2 文字目に @ が来たら、その前に @ が挿入されます
+
+
+-w8, -w16B, -w16L, -W8, -W16B, -W16L というオプションを追加しました。
+
+
+--ms-ucs-map というオプションを付けると、
+MicrosoftのUCSマッピング互換の変換を行います。
+
+.SS nkf 2.0.6
+
+
+=item B<ひらがなカタカナ変換のドキュメント>
+
+ひらがなカタカナ変換のドキュメントが逆になっていたので、これを修正しました。
+正しいドキュメントは以下の通りです。
+   -h1   --hiragana カタカナ->ひらがな
+   -h2   --katakana ひらがな->カタカナ
+   -h3   --katakana-hiragana カタカナ<->ひらがな
+
+
+=item B<--no-best-fit-chars オプションの追加>
+
+Unicode からの変換の際に、往復安全性が確保されない文字の変換を行いません。
+Unicode から Unicode の変換の際に -x と共に指定すると、
+nkf を UTF 形式の変換に用いることができます。
+（逆に言えば、これを指定しないと一部の文字が保存されません）
+
+パスに関わる文字列を変換する際には、このオプションを指定することを強く推奨します。
+
+
+=item B<--in-place[=SUFFIX] オプションの追加>
+
+タイムスタンプを保持する --overwrite に対し、
+タイムスタンプを更新する --in-place オプションを追加しました。
+
+
+=item B<fallback オプションの追加>
+
+--fb-{skip, html, xml, perl, java, subchar} オプションを追加しました。
+Unicode から Shift_JIS, EUC-JP, ISO-2022-JP に変換する際に、
+変換できなかった文字をどう扱うかを指定できます。
+
+
+=item B<--ic --oc オプションの追加>
+
+--ic=<input codeset> --oc=<output codeset> オプションを追加しました。
+Shift_JIS, CP932, EUC-JP, CP51932, eucJP-ms, ISO-2022-JP,
+UTF-8N (UTF-8), UTF-8-BOM,
+UTF-16BE, UTF-16BE-BOM(UTF-16), UTF-16LE, UTF-16LE-BOM
+入力には UTF8-MAC も指定することができます。
+
+
+=item B<マッピングの追加、変更>
+
+JIS 系の文字コードと Unicode との対応を定義することにしました。
+これらから Unicode への decode は、
+定義されている範囲での変換が正しく行われる事を保障します。
+定義されていない範囲での変換は保障しません。
+Unicode からの encode は、定義されている範囲での変換が正しく行われる事を保障し、
+定義されていない範囲での変換はエラーとなり（fallback 可能）、
+Unicode として不正な文字はスキップされる事を保障します。
+
+
+その他、"Q" encodingのデコードやfold-margin等のバグを修正。
+
+.SS nkf 2.0.7
+
+* CP51932 の文字が fallback されないのを修正。
+* gcc 以外でコンパイルできないのを修正。
+* ANSI C 化.
+* MIME encode の改行周りのバグを修正。
+* -t2MB でバイナリファイルも base64 できるようになった。
