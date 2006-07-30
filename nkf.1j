@@ -129,13 +129,13 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2006-05-14" "nkf 2.0.7" " "
+.TH nkf 1 "2006-07-03" "nkf 2.0.7" " "
 .SH "NAME"
 nkf \- ネットワーク用漢字コード変換フィルタ v2.0.7
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 .Vb 1
-\&  nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
+\&  nkf [-butjnesliohrTVvwWJESZxXFfmMBOcdILg] [file ...]
 .Ve
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"

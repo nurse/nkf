@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.103 2006/06/12 17:06:27 naruse Exp $ */
+/* $Id: nkf.c,v 1.104 2006/07/30 05:01:18 naruse Exp $ */
 #define NKF_VERSION "2.0.7"
 #define NKF_RELEASE_DATE "2006-06-13"
 #include "config.h"
@@ -62,7 +62,7 @@
 **
 ** t    no operation
 **
-** j    Outout code is JIS 7 bit        (DEFAULT SELECT) 
+** j    Output code is JIS 7 bit        (DEFAULT SELECT) 
 ** s    Output code is MS Kanji         (DEFAULT SELECT) 
 ** e    Output code is AT&T JIS         (DEFAULT SELECT) 
 ** w    Output code is AT&T JIS         (DEFAULT SELECT) 
@@ -5525,16 +5525,16 @@ void usage(void)
     fprintf(stderr,"Flags:\n");
     fprintf(stderr,"b,u      Output is buffered (DEFAULT),Output is unbuffered\n");
 #ifdef DEFAULT_CODE_SJIS
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift_JIS (DEFAULT), EUC-JP, UTF-8N\n");
+    fprintf(stderr,"j,s,e,w  Output code is JIS 7 bit, Shift_JIS (DEFAULT), EUC-JP, UTF-8N\n");
 #endif
 #ifdef DEFAULT_CODE_JIS
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit (DEFAULT), Shift JIS, EUC-JP, UTF-8N\n");
+    fprintf(stderr,"j,s,e,w  Output code is JIS 7 bit (DEFAULT), Shift JIS, EUC-JP, UTF-8N\n");
 #endif
 #ifdef DEFAULT_CODE_EUC
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, EUC-JP (DEFAULT), UTF-8N\n");
+    fprintf(stderr,"j,s,e,w  Output code is JIS 7 bit, Shift JIS, EUC-JP (DEFAULT), UTF-8N\n");
 #endif
 #ifdef DEFAULT_CODE_UTF8
-    fprintf(stderr,"j,s,e,w  Outout code is JIS 7 bit, Shift JIS, EUC-JP, UTF-8N (DEFAULT)\n");
+    fprintf(stderr,"j,s,e,w  Output code is JIS 7 bit, Shift JIS, EUC-JP, UTF-8N (DEFAULT)\n");
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
     fprintf(stderr,"         After 'w' you can add more options. -w[ 8 [0], 16 [[BL] [0]] ]\n");

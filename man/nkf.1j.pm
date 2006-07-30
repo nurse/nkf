@@ -6,7 +6,7 @@ nkf - ネットワーク用漢字コード変換フィルタ v2.0.7
 
 =head1 SYNOPSIS
 
-  nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
+  nkf [-butjnesliohrTVvwWJESZxXFfmMBOcdILg] [file ...]
 
 =head1 DESCRIPTION
 
