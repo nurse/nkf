@@ -14,7 +14,7 @@ utf8tbl.o : utf8tbl.c config.h
 	$(CC) $(CFLAGS) -c utf8tbl.c
 
 clean:
-	-$(RM) nkf.o nkf nkf.in nkf.out nkf$(VERSION) *~ *.bad utf8tbl.o
+	-$(RM) nkf.o nkf nkf.exe nkf.in nkf.out nkf$(VERSION) *~ *.bad utf8tbl.o
 	cd NKF.mod; if [ -f Makefile ]; then make clean; fi
 
 test:	nkf
