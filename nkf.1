@@ -129,14 +129,12 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2006-07-30" "nkf 2.0.7" " "
+.TH nkf 1 "2006-08-22" "nkf 2.0.8" " "
 .SH "NAME"
 nkf \- Network Kanji Filter
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-.Vb 1
-\&  nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
-.Ve
+nkf \fB[\-butjnesliohrTVvwWJESZxXFfmMBOcdILg]\fR \fB[\fR\fIfile ...\fR\fB]\fR
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 \&\fBNkf\fR is a yet another kanji code converter among networks, hosts and terminals.
@@ -369,6 +367,9 @@ same as \s-1UTF\-8N\s0
 .IP "\s-1UTF\-8\-BOM\s0" 4
 .IX Item "UTF-8-BOM"
 \&\s-1UTF\-8\s0 with \s-1BOM\s0
+.IP "\s-1UTF8\-MAC\s0 (input only)" 4
+.IX Item "UTF8-MAC (input only)"
+decomposed \s-1UTF\-8\s0
 .IP "\s-1UTF\-16\s0" 4
 .IX Item "UTF-16"
 same as \s-1UTF\-16BE\s0
@@ -384,15 +385,11 @@ same as \s-1UTF\-16BE\s0
 .IP "\s-1UTF\-16LE\-BOM\s0" 4
 .IX Item "UTF-16LE-BOM"
 \&\s-1UTF\-16\s0 Little Endian with \s-1BOM\s0
-.IP "\s-1UTF8\-MAC\s0 (input only)" 4
-.IX Item "UTF8-MAC (input only)"
 .RE
 .RS 4
 .RE
-.PD 0
 .IP "\fB\-\-fb\-{skip, html, xml, perl, java, subchar}\fR" 4
 .IX Item "--fb-{skip, html, xml, perl, java, subchar}"
-.PD
 Specify the way that nkf handles unassigned characters.
 Without this option, \-\-fb\-skip is assumed.
 .IP "\fB\-\-prefix=\f(BIescape character\fB\f(BItarget character\fB..\fR" 4

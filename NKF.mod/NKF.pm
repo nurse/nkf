@@ -36,7 +36,7 @@ require DynaLoader;
 @EXPORT = qw(
 	nkf	nkf_continue	inputcode
 );
-$VERSION = '2.07';
+$VERSION = '2.08';
 
 bootstrap NKF $VERSION;
 
@@ -73,7 +73,7 @@ nkf - Network Kanji Filter
 
 =begin COMMAND
 
-  nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
+nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
 
 =end
 
@@ -369,6 +369,10 @@ UTF-8 without BOM
 
 UTF-8 with BOM
 
+=item UTF8-MAC (input only)
+
+decomposed UTF-8
+
 =item UTF-16
 
 same as UTF-16BE
@@ -388,8 +392,6 @@ UTF-16 Little Endian without BOM
 =item UTF-16LE-BOM
 
 UTF-16 Little Endian with BOM
-
-=item UTF8-MAC (input only)
 
 =back
 

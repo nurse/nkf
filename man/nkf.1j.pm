@@ -2,11 +2,11 @@
 
 =head1 NAME
 
-nkf - ネットワーク用漢字コード変換フィルタ v2.0.7
+nkf - ネットワーク用漢字コード変換フィルタ
 
 =head1 SYNOPSIS
 
-  nkf [-butjnesliohrTVvwWJESZxXFfmMBOcdILg] [file ...]
+nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
 
 =head1 DESCRIPTION
 
@@ -455,6 +455,7 @@ Unicode から Unicode の変換の際に -x と共に指定すると、nkf を UTF 形式の変換に用
 &#....; のような Unicode 文字参照を変換する
 
 =item B<--in-place[=I<SUFFIX>]  --overwrite[=I<SUFFIX>]>
+
 元のファイルを変換結果で置き換える。
 複数のファイルを書き換えることも可能。
 元のファイルのタイムスタンプとパーミッションが保持される。
@@ -477,6 +478,7 @@ nkf のバージョンを表示する。
 これ以降のオプションを無視する
 
 =item B<--exec-in>
+
 nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf の入力とする
 (config.h で EXEC_IO を define してコンパイルした時のみ有効)
 

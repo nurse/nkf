@@ -129,14 +129,12 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2006-07-03" "nkf 2.0.7" " "
+.TH nkf 1 "2006-08-22" "nkf 2.0.8" " "
 .SH "NAME"
-nkf \- $B%M%C%H%o!<%/MQ4A;z%3!<%IJQ49%U%#%k%?(B v2.0.7
+nkf \- $B%M%C%H%o!<%/MQ4A;z%3!<%IJQ49%U%#%k%?(B
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-.Vb 1
-\&  nkf [-butjnesliohrTVvwWJESZxXFfmMBOcdILg] [file ...]
-.Ve
+nkf \fB[\-butjnesliohrTVvwWJESZxXFfmMBOcdILg]\fR \fB[\fR\fIfile ...\fR\fB]\fR
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
 \&\fBnkf\fR $B$O%M%C%H%o!<%/$G%a!<%k$d%K%e!<%9$NFI$_=q$-$r$9$k$?$a$K:n$i$l$?!"4A;z%3!<%I$NJQ49%U%#%k%?$G$"$k!#(B
@@ -491,12 +489,14 @@ Unicode $B$+$i(B Unicode $B$NJQ49$N:]$K(B \-x $B$H6&$K;XDj$9$k$H!"(Bnkf $
 .IP "\fB\-\-numchar\-input\fR" 4
 .IX Item "--numchar-input"
 &#....; $B$N$h$&$J(B Unicode $BJ8;z;2>H$rJQ49$9$k(B
-.IP "\fB\-\-in\-place[=\f(BI\s-1SUFFIX\s0\fB]  \-\-overwrite[=\f(BI\s-1SUFFIX\s0\fB]\fR $B85$N%U%!%$%k$rJQ497k2L$GCV$-49$($k!#(B $BJ#?t$N%U%!%$%k$r=q$-49$($k$3$H$b2DG=!#(B $B85$N%U%!%$%k$N%?%$%`%9%?%s%W$H%Q!<%_%C%7%g%s$,J];}$5$l$k!#(B $B8=:_!":n@.F|;~$d(B inode $B$OJQ99$5$l$k$,!">-Mh$K$o$?$C$F$3$N<BAu$N$^$^$G$"$kJ]>Z$OL5$$!#(B" 4
-.IX Item "--in-place[=SUFFIX]  --overwrite[=SUFFIX] $B85$N%U%!%$%k$rJQ497k2L$GCV$-49$($k!#(B $BJ#?t$N%U%!%$%k$r=q$-49$($k$3$H$b2DG=!#(B $B85$N%U%!%$%k$N%?%$%`%9%?%s%W$H%Q!<%_%C%7%g%s$,J];}$5$l$k!#(B $B8=:_!":n@.F|;~$d(B inode $B$OJQ99$5$l$k$,!">-Mh$K$o$?$C$F$3$N<BAu$N$^$^$G$"$kJ]>Z$OL5$$!#(B"
-.PD 0
+.IP "\fB\-\-in\-place[=\f(BI\s-1SUFFIX\s0\fB]  \-\-overwrite[=\f(BI\s-1SUFFIX\s0\fB]\fR" 4
+.IX Item "--in-place[=SUFFIX]  --overwrite[=SUFFIX]"
+$B85$N%U%!%$%k$rJQ497k2L$GCV$-49$($k!#(B
+$BJ#?t$N%U%!%$%k$r=q$-49$($k$3$H$b2DG=!#(B
+$B85$N%U%!%$%k$N%?%$%`%9%?%s%W$H%Q!<%_%C%7%g%s$,J];}$5$l$k!#(B
+$B8=:_!":n@.F|;~$d(B inode $B$OJQ99$5$l$k$,!">-Mh$K$o$?$C$F$3$N<BAu$N$^$^$G$"$kJ]>Z$OL5$$!#(B
 .IP "\fB\-\-guess\fR" 4
 .IX Item "--guess"
-.PD
 $B<+F0H=JL$N7k2L$r=PNO$9$k(B
 .IP "\fB\-\-help\fR" 4
 .IX Item "--help"
@@ -507,12 +507,12 @@ nkf $B$N%P!<%8%g%s$rI=<($9$k!#(B
 .IP "\fB\-\-\fR" 4
 .IX Item "--"
 $B$3$l0J9_$N%*%W%7%g%s$rL5;k$9$k(B
-.IP "\fB\-\-exec\-in\fR nkf [options] \-\-exec\-in cmd args... $B$H$d$k$H!"(Bcmd $B$N=PNO$r(B nkf $B$NF~NO$H$9$k(B (config.h $B$G(B \s-1EXEC_IO\s0 $B$r(B define $B$7$F%3%s%Q%$%k$7$?;~$N$_M-8z(B)" 4
-.IX Item "--exec-in nkf [options] --exec-in cmd args... $B$H$d$k$H!"(Bcmd $B$N=PNO$r(B nkf $B$NF~NO$H$9$k(B (config.h $B$G(B EXEC_IO $B$r(B define $B$7$F%3%s%Q%$%k$7$?;~$N$_M-8z(B)"
-.PD 0
+.IP "\fB\-\-exec\-in\fR" 4
+.IX Item "--exec-in"
+nkf [options] \-\-exec\-in cmd args... $B$H$d$k$H!"(Bcmd $B$N=PNO$r(B nkf $B$NF~NO$H$9$k(B
+(config.h $B$G(B \s-1EXEC_IO\s0 $B$r(B define $B$7$F%3%s%Q%$%k$7$?;~$N$_M-8z(B)
 .IP "\fB\-\-exec\-out\fR" 4
 .IX Item "--exec-out"
-.PD
 nkf [options] \-\-exec\-out cmd args... $B$H$d$k$H!"(Bnkf $B$N=PNO$r(B cmd $B$NF~NO$H$9$k(B
 (config.h $B$G(B \s-1EXEC_IO\s0 $B$r(B define $B$7$F%3%s%Q%$%k$7$?;~$N$_M-8z(B)
 .SH "BUGS"

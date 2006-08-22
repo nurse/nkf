@@ -1,8 +1,8 @@
 NAME
-    nkf - ネットワーク用漢字コード変換フィルタ v2.0.7
+    nkf - ネットワーク用漢字コード変換フィルタ
 
 SYNOPSIS
-      nkf [-butjnesliohrTVvwWJESZxXFfmMBOcdILg] [file ...]
+    nkf [-butjnesliohrTVvwWJESZxXFfmMBOcdILg] [*file ...*]
 
 DESCRIPTION
     nkf
@@ -292,11 +292,12 @@ OPTIONS
         &#....; のような Unicode 文字参照を変換する
 
     --in-place[=*SUFFIX*] --overwrite[=*SUFFIX*]
-    元のファイルを変換結果で置き換える。
-    複数のファイルを書き換えることも可能。
-    元のファイルのタイムスタンプとパーミッションが保持される。
-    現在、作成日時や inode
-    は変更されるが、将来にわたってこの実装のままである保証は無い。
+        元のファイルを変換結果で置き換える。
+        複数のファイルを書き換えることも可能。
+        元のファイルのタイムスタンプとパーミッションが保持される。
+        現在、作成日時や inode
+        は変更されるが、将来にわたってこの実装のままである保証は無い。
+
     --guess
         自動判別の結果を出力する
 
@@ -308,9 +309,11 @@ OPTIONS
 
     --  これ以降のオプションを無視する
 
-    --exec-in nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf
-    の入力とする (config.h で EXEC_IO を define
-    してコンパイルした時のみ有効)
+    --exec-in
+        nkf [options] --exec-in cmd args... とやると、cmd の出力を nkf
+        の入力とする (config.h で EXEC_IO を define
+        してコンパイルした時のみ有効)
+
     --exec-out
         nkf [options] --exec-out cmd args... とやると、nkf の出力を cmd
         の入力とする (config.h で EXEC_IO を define
