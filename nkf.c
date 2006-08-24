@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.104 2006/07/30 05:01:18 naruse Exp $ */
-#define NKF_VERSION "2.0.7"
-#define NKF_RELEASE_DATE "2006-06-13"
+/* $Id: nkf.c,v 1.105 2006/08/23 17:30:32 naruse Exp $ */
+#define NKF_VERSION "2.0.8"
+#define NKF_RELEASE_DATE "2006-08-24"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -219,6 +219,7 @@ void  djgpp_setbinmode(FILE *fp)
 /* Input Assumption */
 
 #define         JIS_INPUT       4
+#define         EUC_INPUT      16
 #define         SJIS_INPUT      5
 #define         LATIN1_INPUT    6
 #define         FIXED_MIME      7
@@ -1220,9 +1221,9 @@ void options(unsigned char *cp)
 #endif
 		    }else if(strcmp(codeset, "EUCJP") == 0 ||
 			     strcmp(codeset, "EUC-JP") == 0){
-			input_f = JIS_INPUT;
+			input_f = EUC_INPUT;
 		    }else if(strcmp(codeset, "CP51932") == 0){
-			input_f = JIS_INPUT;
+			input_f = EUC_INPUT;
 			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = TRUE;
@@ -1233,7 +1234,7 @@ void options(unsigned char *cp)
 		    }else if(strcmp(codeset, "EUC-JP-MS") == 0 ||
 			     strcmp(codeset, "EUCJP-MS") == 0 ||
 			     strcmp(codeset, "EUCJPMS") == 0){
-			input_f = JIS_INPUT;
+			input_f = EUC_INPUT;
 			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = FALSE;
@@ -1243,7 +1244,7 @@ void options(unsigned char *cp)
 #endif
 		    }else if(strcmp(codeset, "EUC-JP-ASCII") == 0 ||
 			     strcmp(codeset, "EUCJP-ASCII") == 0){
-			input_f = JIS_INPUT;
+			input_f = EUC_INPUT;
 			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = FALSE;
@@ -1262,7 +1263,7 @@ void options(unsigned char *cp)
 			if (x0201_f==NO_X0201) x0201_f=TRUE;
 		    }else if(strcmp(codeset, "EUC-JISX0213") == 0 ||
 			     strcmp(codeset, "EUC-JIS-2004") == 0){
-			input_f = JIS_INPUT;
+			input_f = EUC_INPUT;
 			x0201_f = FALSE;
 			x0213_f = TRUE;
 #ifdef SHIFTJIS_CP932
@@ -1743,8 +1744,10 @@ void options(unsigned char *cp)
 #endif
         /* Input code assumption */
         case 'J':   /* JIS input */
-        case 'E':   /* AT&T EUC input */
             input_f = JIS_INPUT;
+            continue;
+        case 'E':   /* AT&T EUC input */
+            input_f = EUC_INPUT;
             continue;
         case 'S':   /* MS Kanji input */
             input_f = SJIS_INPUT;
@@ -2374,7 +2377,7 @@ void module_connection(void)
 	i_bgetc = i_getc; i_getc = broken_getc;
 	i_bungetc = i_ungetc; i_ungetc = broken_ungetc;
     }
-    if (input_f == JIS_INPUT || input_f == LATIN1_INPUT) {
+    if (input_f == JIS_INPUT || input_f == EUC_INPUT || input_f == LATIN1_INPUT) {
         set_iconv(-TRUE, e_iconv);
     } else if (input_f == SJIS_INPUT) {
         set_iconv(-TRUE, s_iconv);
@@ -2411,7 +2414,7 @@ nkf_char kanji_convert(FILE *f)
     module_connection();
     c2 = 0;
 
-    if(input_f == SJIS_INPUT
+    if(input_f == SJIS_INPUT || input_f == EUC_INPUT
 #ifdef UTF8_INPUT_ENABLE
        || input_f == UTF8_INPUT || input_f == UTF16BE_INPUT || input_f == UTF16LE_INPUT
 #endif
@@ -2482,7 +2485,6 @@ nkf_char kanji_convert(FILE *f)
                 /* 8 bit code */
                 if (!estab_f && !iso8859_f) {
                     /* not established yet */
-		    if (!is_8bit) is_8bit = TRUE;
                     c2 = c1;
                     NEXT;
                 } else { /* estab_f==TRUE */
