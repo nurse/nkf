@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.108 2006/09/15 08:06:14 naruse Exp $ */
+/* $Id: nkf.c,v 1.109 2006/09/15 09:05:45 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2006-09-15"
 #include "config.h"
@@ -2419,8 +2419,11 @@ void check_bom(FILE *f)
 		    if(!input_f){
 			set_iconv(TRUE, w_iconv32);
 		    }
-		    input_endian = ENDIAN_BIG;
-		    return;
+		    if (iconv == w_iconv32) {
+			input_endian = ENDIAN_BIG;
+			return;
+		    }
+		    (*i_ungetc)(0xFF,f);
 		}else (*i_ungetc)(c2,f);
 		(*i_ungetc)(0xFE,f);
 	    }else if(c2 == 0xFF){
@@ -2428,8 +2431,11 @@ void check_bom(FILE *f)
 		    if(!input_f){
 			set_iconv(TRUE, w_iconv32);
 		    }
-		    input_endian = ENDIAN_2143;
-		    return;
+		    if (iconv == w_iconv32) {
+			input_endian = ENDIAN_2143;
+			return;
+		    }
+		    (*i_ungetc)(0xFF,f);
 		}else (*i_ungetc)(c2,f);
 		(*i_ungetc)(0xFF,f);
 	    }else (*i_ungetc)(c2,f);
@@ -2443,7 +2449,10 @@ void check_bom(FILE *f)
 		if(!input_f){
 		    set_iconv(TRUE, w_iconv);
 		}
-		return;
+		if (iconv == w_iconv) {
+		    return;
+		}
+		(*i_ungetc)(0xBF,f);
 	    }else (*i_ungetc)(c2,f);
 	    (*i_ungetc)(0xBB,f);
 	}else (*i_ungetc)(c2,f);
@@ -2456,16 +2465,22 @@ void check_bom(FILE *f)
 		    if(!input_f){
 			set_iconv(TRUE, w_iconv32);
 		    }
-		    input_endian = ENDIAN_3412;
-		    return;
+		    if (iconv == w_iconv32) {
+			input_endian = ENDIAN_3412;
+			return;
+		    }
+		    (*i_ungetc)(0x00,f);
 		}else (*i_ungetc)(c2,f);
 		(*i_ungetc)(0x00,f);
 	    }else (*i_ungetc)(c2,f);
 	    if(!input_f){
 		set_iconv(TRUE, w_iconv16);
 	    }
-	    input_endian = ENDIAN_BIG;
-	    return;
+	    if (iconv == w_iconv16) {
+		input_endian = ENDIAN_BIG;
+		return;
+	    }
+	    (*i_ungetc)(0xFF,f);
 	}else (*i_ungetc)(c2,f);
 	(*i_ungetc)(0xFE,f);
 	break;
@@ -2476,16 +2491,22 @@ void check_bom(FILE *f)
 		    if(!input_f){
 			set_iconv(TRUE, w_iconv32);
 		    }
-		    input_endian = ENDIAN_LITTLE;
-		    return;
+		    if (iconv == w_iconv32) {
+			input_endian = ENDIAN_LITTLE;
+			return;
+		    }
+		    (*i_ungetc)(0x00,f);
 		}else (*i_ungetc)(c2,f);
 		(*i_ungetc)(0x00,f);
 	    }else (*i_ungetc)(c2,f);
 	    if(!input_f){
 		set_iconv(TRUE, w_iconv16);
 	    }
-	    input_endian = ENDIAN_LITTLE;
-	    return;
+	    if (iconv == w_iconv16) {
+		input_endian = ENDIAN_LITTLE;
+		return;
+	    }
+	    (*i_ungetc)(0xFE,f);
 	}else (*i_ungetc)(c2,f);
 	(*i_ungetc)(0xFF,f);
 	break;
