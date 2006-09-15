@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.106 2006/09/14 19:30:03 naruse Exp $ */
+/* $Id: nkf.c,v 1.107 2006/09/15 07:23:20 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2006-09-15"
 #include "config.h"
@@ -1293,6 +1293,15 @@ void options(unsigned char *cp)
 			     strcmp(codeset, "UTF-16LE-BOM") == 0){
 			input_f = UTF16_INPUT;
 			input_endian = ENDIAN_LITTLE;
+		    }else if(strcmp(codeset, "UTF-32") == 0 ||
+			     strcmp(codeset, "UTF-32BE") == 0 ||
+			     strcmp(codeset, "UTF-32BE-BOM") == 0){
+			input_f = UTF32_INPUT;
+			input_endian = ENDIAN_BIG;
+		    }else if(strcmp(codeset, "UTF-32LE") == 0 ||
+			     strcmp(codeset, "UTF-32LE-BOM") == 0){
+			input_f = UTF32_INPUT;
+			input_endian = ENDIAN_LITTLE;
 #endif
 		    }
                     continue;
@@ -1901,12 +1910,7 @@ void options(unsigned char *cp)
     }
 }
 
-#ifdef ANSI_C_PROTOTYPE
 struct input_code * find_inputcode_byfunc(nkf_char (*iconv_func)(nkf_char c2,nkf_char c1,nkf_char c0))
-#else
-struct input_code * find_inputcode_byfunc(iconv_func)
-     nkf_char (*iconv_func)();
-#endif
 {
     if (iconv_func){
         struct input_code *p = input_code_list;
@@ -2227,6 +2231,8 @@ void code_status(nkf_char c)
     struct input_code *result = 0;
     struct input_code *p = input_code_list;
     while (p->name){
+        if (!p->status_func)
+	    continue;
         (p->status_func)(p, c);
         if (p->stat > 0){
             action_flag = 0;
@@ -2565,8 +2571,8 @@ nkf_char kanji_convert(FILE *f)
 		    if ((c2 = (*i_getc)(f)) != EOF) {
 			if (0xD8 <= c2 && c2 <= 0xDB) {
 			    if ((c3 = (*i_getc)(f)) != EOF) {
-				c3 <<= 8;
 				if ((c0 = (*i_getc)(f)) != EOF) {
+				    c0 <<= 8;
 				    c0 |= c3;
 				} else c1 = EOF;
 			    } else c1 = EOF;
