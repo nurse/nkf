@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.107 2006/09/15 07:23:20 naruse Exp $ */
+/* $Id: nkf.c,v 1.108 2006/09/15 08:06:14 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2006-09-15"
 #include "config.h"
@@ -581,6 +581,8 @@ struct input_code input_code_list[] = {
     {"Shift_JIS", 0, 0, 0, {0, 0, 0}, s_status, s_iconv, 0},
 #ifdef UTF8_INPUT_ENABLE
     {"UTF-8",     0, 0, 0, {0, 0, 0}, w_status, w_iconv, 0},
+    {"UTF-16",    0, 0, 0, {0, 0, 0},     NULL, w_iconv16, 0},
+    {"UTF-32",    0, 0, 0, {0, 0, 0},     NULL, w_iconv32, 0},
 #endif
     {0}
 };
@@ -2231,6 +2233,10 @@ void code_status(nkf_char c)
     struct input_code *result = 0;
     struct input_code *p = input_code_list;
     while (p->name){
+        if (!p->status_func) {
+	    ++p;
+	    continue;
+	}
         if (!p->status_func)
 	    continue;
         (p->status_func)(p, c);
