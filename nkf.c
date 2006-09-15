@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.109 2006/09/15 09:05:45 naruse Exp $ */
+/* $Id: nkf.c,v 1.110 2006/09/15 11:04:36 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2006-09-15"
 #include "config.h"
@@ -2590,10 +2590,10 @@ nkf_char kanji_convert(FILE *f)
 				c0 <<= 8;
 				if ((c3 = (*i_getc)(f)) != EOF) {
 				    c0 |= c3;
-				} else c1 = EOF;
-			    } else c1 = EOF;
+				} else c2 = EOF;
+			    } else c2 = EOF;
 			}
-		    }
+		    } else c2 = EOF;
 		} else {
 		    if ((c2 = (*i_getc)(f)) != EOF) {
 			if (0xD8 <= c2 && c2 <= 0xDB) {
@@ -2601,10 +2601,10 @@ nkf_char kanji_convert(FILE *f)
 				if ((c0 = (*i_getc)(f)) != EOF) {
 				    c0 <<= 8;
 				    c0 |= c3;
-				} else c1 = EOF;
-			    } else c1 = EOF;
+				} else c2 = EOF;
+			    } else c2 = EOF;
 			}
-		    } else c1 = EOF;
+		    } else c2 = EOF;
 		}
 		SEND;
             } else if(iconv == w_iconv32){
@@ -2628,7 +2628,7 @@ nkf_char kanji_convert(FILE *f)
 		    }
 		    c2 = 0;
 		}else{
-		    c1 = EOF;
+		    c2 = EOF;
 		}
 		SEND;
             } else
