@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.111 2006/10/08 03:02:34 naruse Exp $ */
+/* $Id: nkf.c,v 1.112 2006/10/11 16:59:31 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2006-09-15"
+#define NKF_RELEASE_DATE "2006-10-12"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -863,8 +863,8 @@ int main(int argc, char **argv)
 #endif
           if ((fin = fopen((origfname = *argv++), "r")) == NULL) {
               perror(*--argv);
+		*argv++;
 		continue;
-              return(-1);
           } else {
 #ifdef OVERWRITE
               int fd = 0;
