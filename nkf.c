@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.112 2006/10/11 16:59:31 naruse Exp $ */
+/* $Id: nkf.c,v 1.113 2006/10/12 16:41:25 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2006-10-12"
+#define NKF_RELEASE_DATE "2006-10-13"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -854,6 +854,7 @@ int main(int argc, char **argv)
       }
     } else {
       int nfiles = argc;
+	int is_argument_error = FALSE;
       while (argc--) {
 	    is_inputcode_mixed = FALSE;
 	    is_inputcode_set   = FALSE;
@@ -864,6 +865,7 @@ int main(int argc, char **argv)
           if ((fin = fopen((origfname = *argv++), "r")) == NULL) {
               perror(*--argv);
 		*argv++;
+		is_argument_error = TRUE;
 		continue;
           } else {
 #ifdef OVERWRITE
@@ -1012,6 +1014,8 @@ int main(int argc, char **argv)
 #endif
           }
       }
+	if (is_argument_error)
+	    return(-1);
     }
 #ifdef EASYWIN /*Easy Win */
     if (file_out_f == FALSE) 
