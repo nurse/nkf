@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.113 2006/10/12 16:41:25 naruse Exp $ */
+/* $Id: nkf.c,v 1.114 2006/10/31 18:31:49 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2006-10-13"
 #include "config.h"
@@ -1216,13 +1216,11 @@ void options(unsigned char *cp)
 			x0213_f = TRUE;
 		    }else if(strcmp(codeset, "SHIFT_JIS") == 0){
 			input_f = SJIS_INPUT;
-			if (x0201_f==NO_X0201) x0201_f=TRUE;
 		    }else if(strcmp(codeset, "WINDOWS-31J") == 0 ||
 			     strcmp(codeset, "CSWINDOWS31J") == 0 ||
 			     strcmp(codeset, "CP932") == 0 ||
 			     strcmp(codeset, "MS932") == 0){
 			input_f = SJIS_INPUT;
-			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = TRUE;
 #endif
@@ -1234,7 +1232,6 @@ void options(unsigned char *cp)
 			input_f = EUC_INPUT;
 		    }else if(strcmp(codeset, "CP51932") == 0){
 			input_f = EUC_INPUT;
-			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = TRUE;
 #endif
@@ -1245,7 +1242,6 @@ void options(unsigned char *cp)
 			     strcmp(codeset, "EUCJP-MS") == 0 ||
 			     strcmp(codeset, "EUCJPMS") == 0){
 			input_f = EUC_INPUT;
-			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = FALSE;
 #endif
@@ -1255,7 +1251,6 @@ void options(unsigned char *cp)
 		    }else if(strcmp(codeset, "EUC-JP-ASCII") == 0 ||
 			     strcmp(codeset, "EUCJP-ASCII") == 0){
 			input_f = EUC_INPUT;
-			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = FALSE;
 #endif
@@ -1270,11 +1265,9 @@ void options(unsigned char *cp)
 			cp51932_f = FALSE;
 			cp932inv_f = FALSE;
 #endif
-			if (x0201_f==NO_X0201) x0201_f=TRUE;
 		    }else if(strcmp(codeset, "EUC-JISX0213") == 0 ||
 			     strcmp(codeset, "EUC-JIS-2004") == 0){
 			input_f = EUC_INPUT;
-			x0201_f = FALSE;
 			x0213_f = TRUE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = FALSE;
@@ -1323,9 +1316,9 @@ void options(unsigned char *cp)
 			output_conv = j_oconv;
 		    }else if(strcmp(codeset, "X-ISO2022JP-CP932") == 0){
 			output_conv = j_oconv;
+			x0201_f = FALSE;
 			no_cp932ext_f = TRUE;
-		    }else if(strcmp(codeset, "CP50221") == 0 ||
-			     strcmp(codeset, "ISO-2022-JP-MS") == 0){
+		    }else if(strcmp(codeset, "CP50221") == 0){
 			output_conv = j_oconv;
 			x0201_f = FALSE;
 		    }else if(strcmp(codeset, "ISO-2022-JP-1") == 0){
@@ -3798,6 +3791,7 @@ void w_oconv16(nkf_char c2, nkf_char c1)
         nkf_char val = e2w_conv(c2, c1);
         c2 = (val >> 8) & 0xff;
         c1 = val & 0xff;
+	if (!val) return;
     }
     if (output_endian == ENDIAN_LITTLE){
         (*o_putc)(c1);
@@ -3838,6 +3832,7 @@ void w_oconv32(nkf_char c2, nkf_char c1)
 #endif
     } else if (c2) {
         c1 = e2w_conv(c2, c1);
+	if (!c1) return;
     }
     if (output_endian == ENDIAN_LITTLE){
         (*o_putc)( c1 & NKF_INT32_C(0x000000FF));
