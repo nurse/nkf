@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.116 2006/11/03 20:14:43 naruse Exp $ */
+/* $Id: nkf.c,v 1.117 2006/11/04 14:35:25 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2006-11-04"
 #include "config.h"
@@ -4102,6 +4102,9 @@ void s_oconv(nkf_char c2, nkf_char c1)
 		c2 = c1 / 188 + 0xF0;
 		c1 = c1 % 188;
 		c1 += 0x40 + (c1 > 0x3e);
+		(*o_putc)(c2);
+		(*o_putc)(c1);
+		return;
 	    } else {
 		if(encode_fallback)(*encode_fallback)(c1);
 		return;
