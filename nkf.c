@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.115 2006/11/03 20:06:15 naruse Exp $ */
+/* $Id: nkf.c,v 1.116 2006/11/03 20:14:43 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2006-11-04"
 #include "config.h"
@@ -2871,6 +2871,44 @@ nkf_char kanji_convert(FILE *f)
                     (*oconv)(0, ESC);
                     SEND;
                 }
+	    } else if (c1 == ESC && iconv == s_iconv) {
+		/* ESC in Shift_JIS */
+		if ((c1 = (*i_getc)(f)) == EOF) {
+		    /*  (*oconv)(0, ESC); don't send bogus code */
+		    LAST;
+		} else if (c1 == '$') {
+		    /* J-PHONE emoji */
+		    if ((c1 = (*i_getc)(f)) == EOF) {
+			/*
+			   (*oconv)(0, ESC); don't send bogus code 
+			   (*oconv)(0, '$'); */
+			LAST;
+		    } else {
+			if (('E' <= c1 && c1 <= 'G') ||
+			    ('O' <= c1 && c1 <= 'Q')) {
+			    /*
+			       NUM : 0 1 2 3 4 5
+			       BYTE: G E F O P Q
+			       C%7 : 1 6 0 2 3 4
+			       C%7 : 0 1 2 3 4 5 6
+			       NUM : 2 0 3 4 5 X 1
+			     */
+			    static const int jphone_emoji_first_table[7] = {2, 0, 3, 4, 5, 0, 1};
+			    c0 = (jphone_emoji_first_table[c1 % 7] << 8) - SPACE + 0xE000 + CLASS_UNICODE;
+			    while ((c1 = (*i_getc)(f)) != EOF) {
+				if (SPACE <= c1 && c1 <= 'z') {
+				    (*oconv)(0, c1 + c0);
+				} else break; /* c1 == SO */
+			    }
+			}
+		    }
+		    if (c1 == EOF) LAST;
+		    NEXT;
+		} else {
+		    /* lonely ESC  */
+		    (*oconv)(0, ESC);
+		    SEND;
+		}
             } else if ((c1 == NL || c1 == CR) && broken_f&4) {
                 input_mode = ASCII; set_iconv(FALSE, 0);
                 SEND;
