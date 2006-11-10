@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.117 2006/11/04 14:35:25 naruse Exp $ */
+/* $Id: nkf.c,v 1.118 2006/11/10 09:45:39 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2006-11-04"
 #include "config.h"
@@ -1313,6 +1313,7 @@ void options(unsigned char *cp)
                     continue;
 		}
                 if (strcmp(long_option[i].name, "oc=") == 0){
+		    x0201_f = FALSE;
 		    for (i=0; i < 16 && SPACE < p[i] && p[i] < DEL; i++){
 			codeset[i] = nkf_toupper(p[i]);
 		    }
@@ -1321,7 +1322,6 @@ void options(unsigned char *cp)
 			output_conv = j_oconv;
 		    }else if(strcmp(codeset, "X-ISO2022JP-CP932") == 0){
 			output_conv = j_oconv;
-			x0201_f = FALSE;
 			no_cp932ext_f = TRUE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = TRUE;
@@ -1331,6 +1331,7 @@ void options(unsigned char *cp)
 #endif
 		    }else if(strcmp(codeset, "CP50220") == 0){
 			output_conv = j_oconv;
+			x0201_f = TRUE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = TRUE;
 #endif
@@ -1339,7 +1340,6 @@ void options(unsigned char *cp)
 #endif
 		    }else if(strcmp(codeset, "CP50221") == 0){
 			output_conv = j_oconv;
-			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = TRUE;
 #endif
@@ -1363,15 +1363,6 @@ void options(unsigned char *cp)
 #ifdef SHIFTJIS_CP932
 			cp51932_f = FALSE;
 #endif
-		    }else if(strcmp(codeset, "ISO-2022-JP-MS") == 0){
-			output_conv = j_oconv;
-			x0201_f = FALSE;
-#ifdef X0212_ENABLE
-			x0212_f = TRUE;
-#endif
-#ifdef SHIFTJIS_CP932
-			cp51932_f = FALSE;
-#endif
 		    }else if(strcmp(codeset, "SHIFT_JIS") == 0){
 			output_conv = s_oconv;
 		    }else if(strcmp(codeset, "WINDOWS-31J") == 0 ||
@@ -1379,7 +1370,6 @@ void options(unsigned char *cp)
 			     strcmp(codeset, "CP932") == 0 ||
 			     strcmp(codeset, "MS932") == 0){
 			output_conv = s_oconv;
-			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = TRUE;
 			cp932inv_f = TRUE;
@@ -1392,7 +1382,6 @@ void options(unsigned char *cp)
 			output_conv = e_oconv;
 		    }else if(strcmp(codeset, "CP51932") == 0){
 			output_conv = e_oconv;
-			x0201_f = FALSE;
 #ifdef SHIFTJIS_CP932
 			cp51932_f = TRUE;
 #endif
@@ -1403,7 +1392,6 @@ void options(unsigned char *cp)
 			     strcmp(codeset, "EUCJP-MS") == 0 ||
 			     strcmp(codeset, "EUCJPMS") == 0){
 			output_conv = e_oconv;
-			x0201_f = FALSE;
 #ifdef X0212_ENABLE
 			x0212_f = TRUE;
 #endif
@@ -1416,7 +1404,6 @@ void options(unsigned char *cp)
 		    }else if(strcmp(codeset, "EUC-JP-ASCII") == 0 ||
 			     strcmp(codeset, "EUCJP-ASCII") == 0){
 			output_conv = e_oconv;
-			x0201_f = FALSE;
 #ifdef X0212_ENABLE
 			x0212_f = TRUE;
 #endif
