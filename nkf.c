@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.119 2006/11/11 20:33:56 naruse Exp $ */
+/* $Id: nkf.c,v 1.120 2007/01/28 06:30:05 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2006-11-12"
+#define NKF_RELEASE_DATE "2007-01-28"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -2733,13 +2733,13 @@ nkf_char kanji_convert(FILE *f)
                     /* normal ASCII code */ 
                     SEND;
                 }
-            } else if (!is_8bit && c1 == SI) {
+            } else if (c1 == SI && (!is_8bit || mime_decode_mode)) {
                 shift_mode = FALSE; 
                 NEXT;
-            } else if (!is_8bit && c1 == SO) {
+            } else if (c1 == SO && (!is_8bit || mime_decode_mode)) {
                 shift_mode = TRUE; 
                 NEXT;
-            } else if (!is_8bit && c1 == ESC ) {
+            } else if (c1 == ESC && (!is_8bit || mime_decode_mode)) {
                 if ((c1 = (*i_getc)(f)) == EOF) {
                     /*  (*oconv)(0, ESC); don't send bogus code */
                     LAST;
