@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.120 2007/01/28 06:30:05 naruse Exp $ */
+/* $Id: nkf.c,v 1.121 2007/03/13 18:52:16 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-01-28"
+#define NKF_RELEASE_DATE "2007-03-14"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -5437,7 +5437,7 @@ void open_mime(nkf_char mode)
     int i;
     int j;
     p  = mime_pattern[0];
-    for(i=0;mime_encode[i];i++) {
+    for(i=0;mime_pattern[i];i++) {
 	if (mode == mime_encode[i]) {
 	    p = mime_pattern[i];
 	    break;
@@ -5643,7 +5643,12 @@ void mime_putc(nkf_char c)
 
     if (mimeout_mode=='Q') {
         if (c <= DEL && (output_mode==ASCII ||output_mode == ISO8859_1 ) ) {
-            if (c <= SPACE) {
+	    if (c == CR || c == NL) {
+		close_mime();
+		(*o_mputc)(c);
+		base64_count = 0;
+		return;
+            } else if (c <= SPACE) {
                 close_mime();
                 (*o_mputc)(SPACE);
                 base64_count++;
@@ -5678,7 +5683,8 @@ void mime_putc(nkf_char c)
                 mimeout_buf_count = 1;
             }else{
                 if (base64_count > 1
-                    && base64_count + mimeout_buf_count > 76){
+                    && base64_count + mimeout_buf_count > 76
+		    && mimeout_buf[0] != CR && mimeout_buf[0] != NL){
                     (*o_mputc)(NL);
                     base64_count = 0;
                     if (!nkf_isspace(mimeout_buf[0])){
