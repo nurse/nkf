@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.122 2007/03/15 05:38:59 naruse Exp $ */
+/* $Id: nkf.c,v 1.123 2007/05/27 20:31:01 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-03-14"
+#define NKF_RELEASE_DATE "2007-05-28"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -2885,35 +2885,41 @@ nkf_char kanji_convert(FILE *f)
 		    (*oconv)(0, ESC);
 		    SEND;
 		}
-            } else if ((c1 == NL || c1 == CR) && broken_f&4) {
-                input_mode = ASCII; set_iconv(FALSE, 0);
-                SEND;
-	    } else if (c1 == NL && mime_decode_f && !mime_decode_mode ) {
-		if ((c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
-		    i_ungetc(SPACE,f);
-		    continue;
-		} else {
-		    i_ungetc(c1,f);
-		}
-		c1 = NL;
-		SEND;
-	    } else if (c1 == CR && mime_decode_f && !mime_decode_mode ) {
-		if ((c1=(*i_getc)(f))!=EOF) {
-		    if (c1==SPACE) {
-			i_ungetc(SPACE,f);
-			continue;
-		    } else if (c1 == NL && (c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
-			i_ungetc(SPACE,f);
-			continue;
-		    } else {
-			i_ungetc(c1,f);
+	    } else if (c1 == NL || c1 == CR) {
+		if (broken_f&4) {
+		    input_mode = ASCII; set_iconv(FALSE, 0);
+		    SEND;
+		} else if (mime_decode_f && !mime_decode_mode){
+		    if (c1 == NL) {
+			if ((c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
+			    i_ungetc(SPACE,f);
+			    continue;
+			} else {
+			    i_ungetc(c1,f);
+			}
+			c1 = NL;
+			SEND;
+		    } else  { /* if (c1 == CR)*/
+			if ((c1=(*i_getc)(f))!=EOF) {
+			    if (c1==SPACE) {
+				i_ungetc(SPACE,f);
+				continue;
+			    } else if (c1 == NL && (c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
+				i_ungetc(SPACE,f);
+				continue;
+			    } else {
+				i_ungetc(c1,f);
+			    }
+			    i_ungetc(NL,f);
+			} else {
+			    i_ungetc(c1,f);
+			}
+			c1 = CR;
+			SEND;
 		    }
-		    i_ungetc(NL,f);
-		} else {
-		    i_ungetc(c1,f);
 		}
-		c1 = CR;
-		SEND;
+		if (crmode_f == CR && c1 == NL) crmode_f = CRLF;
+		else crmode_f = c1;
 	    } else if (c1 == DEL && input_mode == X0208 ) {
 		/* CP5022x */
 		c2 = c1;
@@ -4942,15 +4948,20 @@ void set_input_codename(char *codename)
 void print_guessed_code(char *filename)
 {
     char *codename = "BINARY";
+    char *str_crmode = NULL;
     if (!is_inputcode_mixed) {
         if (strcmp(input_codename, "") == 0) {
             codename = "ASCII";
         } else {
             codename = input_codename;
         }
+        if (crmode_f == CR) str_crmode = "CR";
+        else if (crmode_f == NL) str_crmode = "LF";
+        else if (crmode_f == CRLF) str_crmode = "CRLF";
     }
     if (filename != NULL) printf("%s:", filename);
-    printf("%s\n", codename);
+    if (str_crmode != NULL) printf("%s (%s)\n", codename, str_crmode);
+    else printf("%s\n", codename);
 }
 #endif /*WIN32DLL*/
 
