@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.124 2007/05/28 15:12:13 naruse Exp $ */
+/* $Id: nkf.c,v 1.125 2007/06/04 23:58:17 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-05-29"
 #include "config.h"
@@ -3052,12 +3052,12 @@ h_conv(FILE *f, nkf_char c2, nkf_char c1)
             code_status(c1);
         }
         while (p->name){
-            if (p->score < result->score){
+            if (p->status_func && p->score < result->score){
                 result = p;
             }
             ++p;
         }
-        set_iconv(FALSE, result->iconv_func);
+        set_iconv(TRUE, result->iconv_func);
     }
 
 
