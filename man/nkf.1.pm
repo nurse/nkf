@@ -439,7 +439,7 @@ Ignore rest of -option.
 =head1 AUTHOR
 
 Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW
-Copyright (C) 2002-2006 Kono, Furukawa, Naruse, mastodon
+Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon
 
 
 =cut
