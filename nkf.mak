@@ -9,7 +9,7 @@ RC = rc
 all: nkf.exe nkf32.dll
 
 nkf.exe : nkf.obj config.h utf8tbl.obj version.res
-	$(CC) $(CFLAGS) /MT nkf.obj utf8tbl.obj version.res /link setargv.obj
+	$(CC) $(CFLAGS) nkf.obj utf8tbl.obj version.res /link setargv.obj
 	copy nkf.exe WIN\nkf.exe
 
 # Windows NT
@@ -25,7 +25,7 @@ nkf32.lib: nkf32.obj utf8tbl.obj dll.res
 	copy nkf32.lib NT\nkf32.lib
 
 nkf.obj : nkf.c config.h
-	$(CC) $(CFLAGS) /MT -c nkf.c
+	$(CC) $(CFLAGS) -c nkf.c
 
 # Windows NT
 nkf32.obj: nkf32.c nkf.c nkf32dll.c config.h nkf.h
