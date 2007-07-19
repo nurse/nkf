@@ -4,11 +4,11 @@
 
 /*WIN32DLL*/
 /* こちらのバージョンも更新してください。 */
-#define NKF_VERSIONW L"2.0.7"
+#define NKF_VERSIONW L"2.0.8"
 /* NKF_VERSION のワイド文字 */
-#define DLL_VERSION   "2.0.7.0 1"
+#define DLL_VERSION   "2.0.8.0 1"
 /* DLLが返す */
-#define DLL_VERSIONW L"2.0.7.0 1"
+#define DLL_VERSIONW L"2.0.8.0 1"
 /* DLLが返す DLL_VERSION のワイド文字 */
 
 /* nkf32.dll main */
@@ -443,7 +443,7 @@ int CALLBACK NkfGetKanjiCode(VOID)
     //if(iconv == s_iconv)iCode=0; /* 0:シフトJIS */
     if(iconv == w_iconv)iCode=3; /* UTF-8 */
     else if(iconv == w_iconv16){
-        if(utf16_mode == UTF16BE_INPUT)iCode=5; /* 5:UTF-16BE */
+        if(input_endian == ENDIAN_BIG)iCode=5; /* 5:UTF-16BE */
         else iCode=4; /* 4:UTF-16LE */
     }else if(iconv == e_iconv){
         if(estab_f == FALSE)iCode=2; /* 2:ISO-2022-JP */
