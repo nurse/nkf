@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.126 2007/07/09 09:11:57 naruse Exp $ */
+/* $Id: nkf.c,v 1.127 2007/07/19 20:08:29 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-07-09"
+#define NKF_RELEASE_DATE "2007-07-20"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -769,6 +769,7 @@ static char *get_backup_filename(const char *suffix, const char *filename);
 #endif
 
 static int             crmode_f = 0;   /* CR, NL, CRLF */
+static nkf_char prev_cr = 0;
 #ifdef EASYWIN /*Easy Win */
 static int             end_check;
 #endif /*Easy Win */
@@ -2939,8 +2940,10 @@ nkf_char kanji_convert(FILE *f)
 			SEND;
 		    }
 		}
-		if (crmode_f == CR && c1 == NL) crmode_f = CRLF;
-		else crmode_f = c1;
+		if (!crmode_f) {
+		    if (prev_cr && c1 == NL) crmode_f = CRLF;
+		    else crmode_f = c1;
+		}
 	    } else if (c1 == DEL && input_mode == X0208 ) {
 		/* CP5022x */
 		c2 = c1;
@@ -4353,8 +4356,6 @@ nkf_char broken_ungetc(nkf_char c, FILE *f)
 	broken_buf[broken_counter++]=c;
     return c;
 }
-
-static nkf_char prev_cr = 0;
 
 void cr_conv(nkf_char c2, nkf_char c1)
 {
