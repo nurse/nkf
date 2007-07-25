@@ -331,7 +331,7 @@ BOOL WINAPI GetNkfVersionSafeW(LPWSTR verStr,DWORD nBufferLength /*in TCHARs*/,L
 #endif /*UNICODESUPPORT*/
 }
 
-int CALLBACK SetNkfOption(LPCSTR optStr)
+int CALLBACK SetNkfOption(LPSTR optStr)
 {
     LPSTR p;
 
