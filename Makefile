@@ -14,7 +14,7 @@ utf8tbl.o : utf8tbl.c config.h
 	$(CC) $(CFLAGS) -c utf8tbl.c
 
 clean:
-	-$(RM) nkf.o nkf nkf.exe nkf.in nkf.out nkf$(VERSION) *~ *.bad utf8tbl.o
+	-$(RM) nkf.o nkf nkf.exe nkf.in nkf.out nkf-$(VERSION) *~ *.bad utf8tbl.o
 	cd NKF.mod; if [ -f Makefile ]; then make clean; fi
 
 test:	nkf
@@ -27,25 +27,25 @@ perl:
 	make test )
 
 shar:
-	-mkdir nkf$(VERSION)
-	-mkdir nkf$(VERSION)/NKF.mod
+	-mkdir nkf-$(VERSION)
+	-mkdir nkf-$(VERSION)/NKF.mod
 	for file in  `cat MANIFEST`;  \
 	do  \
-	    nkf -j -m0 $$file > nkf$(VERSION)/$$file ; \
+	    nkf -j -m0 $$file > nkf-$(VERSION)/$$file ; \
 	done 
-	echo "#!/bin/sh" >nkf$(VERSION).shar
-	echo "mkdir nkf$(VERSION)" >>nkf$(VERSION).shar
-	echo "mkdir nkf$(VERSION)/NKF.mod" >>nkf$(VERSION).shar
-	echo "cd nkf$(VERSION)" >>nkf$(VERSION).shar
-	( cd nkf$(VERSION) ; $(SHAR)  `cat ../MANIFEST` ) >> nkf$(VERSION).shar
-	-$(RM) nkf$(VERSION)
+	echo "#!/bin/sh" >nkf-$(VERSION).shar
+	echo "mkdir nkf-$(VERSION)" >>nkf-$(VERSION).shar
+	echo "mkdir nkf-$(VERSION)/NKF.mod" >>nkf-$(VERSION).shar
+	echo "cd nkf-$(VERSION)" >>nkf-$(VERSION).shar
+	( cd nkf-$(VERSION) ; $(SHAR)  `cat ../MANIFEST` ) >> nkf-$(VERSION).shar
+	-$(RM) nkf-$(VERSION)
 
 tar:
-	-mkdir nkf$(VERSION)
-	-mkdir nkf$(VERSION)/NKF.mod
+	-mkdir nkf-$(VERSION)
+	-mkdir nkf-$(VERSION)/NKF.mod
 	for file in  `cat MANIFEST`;  \
 	do  \
-	    nkf -j -m0 $$file > nkf$(VERSION)/$$file ; \
+	    nkf -j -m0 $$file > nkf-$(VERSION)/$$file ; \
 	done 
-	tar cf nkf$(VERSION).tar nkf$(VERSION)
-	-$(RM) nkf$(VERSION)
+	tar cf nkf-$(VERSION).tar nkf-$(VERSION)
+	-$(RM) nkf-$(VERSION)
