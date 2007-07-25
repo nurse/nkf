@@ -1,6 +1,6 @@
 /* nkf32.dll nfk32dll.c */
-// e-mail:tkaneto@nifty.com
-// URL: http://www1.ttcn.ne.jp/~kaneto
+/* e-mail:tkaneto@nifty.com */
+/* URL: http://www1.ttcn.ne.jp/~kaneto */
 
 /*WIN32DLL*/
 /* こちらのバージョンも更新してください。 */
@@ -440,7 +440,7 @@ void CALLBACK ToMime(LPSTR outStr ,LPCSTR inStr)
 int CALLBACK NkfGetKanjiCode(VOID)
 {
     int iCode=0;
-    //if(iconv == s_iconv)iCode=0; /* 0:シフトJIS */
+    /* if(iconv == s_iconv)iCode=0; */ /* 0:シフトJIS */
     if(iconv == w_iconv)iCode=3; /* UTF-8 */
     else if(iconv == w_iconv16){
         if(input_endian == ENDIAN_BIG)iCode=5; /* 5:UTF-16BE */
