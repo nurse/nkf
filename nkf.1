@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2006-08-22" "nkf 2.0.8" " "
+.TH nkf 1 "2007-08-08" "nkf 2.0.8" " "
 .SH "NAME"
 nkf \- Network Kanji Filter
 .SH "SYNOPSIS"
@@ -166,17 +166,16 @@ Input assumption is \s-1JIS\s0 7 bit, Shift_JIS, \s-1EUC\-JP\s0,
 .RS 4
 .IP "\fB\-J\fR" 4
 .IX Item "-J"
-Assume  \s-1JIS\s0 input. It also accepts \s-1EUC\-JP\s0.
-This is the default. This flag does not exclude Shift_JIS.
+Assume  \s-1JIS\s0 input.
+This is the default.
 .IP "\fB\-S\fR" 4
 .IX Item "-S"
-Assume Shift_JIS and X0201 kana input. It also accepts \s-1JIS\s0.
+Assume Shift_JIS and X0201 kana input.
 EUC-JP is recognized as X0201 kana. Without \fB\-x\fR flag,
 X0201 kana (halfwidth kana) is converted into X0208.
 .IP "\fB\-E\fR" 4
 .IX Item "-E"
-Assume EUC-JP input. It also accepts \s-1JIS\s0.
-Same as \-J.
+Assume EUC-JP input.
 .RE
 .RS 4
 .RE
@@ -231,13 +230,13 @@ Convert X0208 alphabet (Fullwidth Alphabets) to \s-1ASCII\s0.
 Convert X0208 alphabet to \s-1ASCII\s0.
 .IP "\fB\-Z1\fR" 4
 .IX Item "-Z1"
-Converts X0208 kankaku to single \s-1ASCII\s0 space.
+Convert X0208 kankaku to single \s-1ASCII\s0 space.
 .IP "\fB\-Z2\fR" 4
 .IX Item "-Z2"
-Converts X0208 kankaku to double \s-1ASCII\s0 spaces.
+Convert X0208 kankaku to double \s-1ASCII\s0 spaces.
 .IP "\fB\-Z3\fR" 4
 .IX Item "-Z3"
-Replacing Fullwidth >, <, ", & into '&gt;', '&lt;', '&quot;', '&amp;' as in \s-1HTML\s0.
+Replacing fullwidth >, <, ", & into '&gt;', '&lt;', '&quot;', '&amp;' as in \s-1HTML\s0.
 .RE
 .RS 4
 .RE
@@ -254,10 +253,10 @@ Useful when your site is using old B\-News Nihongo patch.
 .RS 4
 .IP "\fB\-B1\fR" 4
 .IX Item "-B1"
-allows any char after \s-1ESC\-\s0( or \s-1ESC\-$\s0.
+allows any chars after \s-1ESC\-\s0( or \s-1ESC\-$\s0.
 .IP "\fB\-B2\fR" 4
 .IX Item "-B2"
-forces \s-1ASCII\s0 after \s-1NL\s0.
+force \s-1ASCII\s0 after \s-1NL\s0.
 .RE
 .RS 4
 .RE
@@ -297,7 +296,7 @@ No \s-1MIME\s0 decode.
 Kanji conversion is performed before encoding, so this cannot be used as a picture encoder.
 .IP "\fB\-MQ\fR" 4
 .IX Item "-MQ"
-Perfome quoted encoding.
+Perform quoted encoding.
 .RE
 .RS 4
 .RE
@@ -325,17 +324,17 @@ Without this option, nkf doesn't convert line breaks.
 .RE
 .IP "\fB\-\-fj \-\-unix \-\-mac \-\-msdos \-\-windows\fR" 4
 .IX Item "--fj --unix --mac --msdos --windows"
-convert for these system
+Convert for these systems.
 .IP "\fB\-\-jis \-\-euc \-\-sjis \-\-mime \-\-base64\fR" 4
 .IX Item "--jis --euc --sjis --mime --base64"
-convert for named code
+Convert to named code.
 .IP "\fB\-\-jis\-input \-\-euc\-input \-\-sjis\-input \-\-mime\-input \-\-base64\-input\fR" 4
 .IX Item "--jis-input --euc-input --sjis-input --mime-input --base64-input"
-assume input system
+Assume input system
 .IP "\fB\-\-ic=\f(BIinput codeset\fB \-\-oc=\f(BIoutput codeset\fB\fR" 4
 .IX Item "--ic=input codeset --oc=output codeset"
 Set the input or output codeset.
-\&\s-1NKF\s0 supports following codesets and those codeset name are case insensitive.
+\&\s-1NKF\s0 supports following codesets and those codeset names are case insensitive.
 .RS 4
 .IP "\s-1ISO\-2022\-JP\s0" 4
 .IX Item "ISO-2022-JP"
@@ -408,7 +407,7 @@ When Unicode to Unicode conversion,
 with this and \-x option, nkf can be used as \s-1UTF\s0 converter.
 (In other words, without this and \-x option, nkf doesn't save some characters)
 .Sp
-When nkf convert string which related to path, you should use this opion.
+When nkf converts strings that related to path, you should use this opion.
 .IP "\fB\-\-cap\-input\fR" 4
 .IX Item "--cap-input"
 Decode hex encoded characters.
@@ -422,7 +421,7 @@ Decode character reference, such as \*(L"&#....;\*(R".
 .IX Item "--in-place[=SUFFIX]  --overwrite[=SUFFIX]"
 Overwrite \fBoriginal\fR listed files by filtered result.
 .Sp
-\&\fBNote\fR \-\-overwrite preserves timestamp of original files.
+\&\fBNote\fR \-\-overwrite preserves timestamps of original files.
 .IP "\fB\-\-guess\fR" 4
 .IX Item "--guess"
 Print guessed encoding.
@@ -438,4 +437,4 @@ Ignore rest of \-option.
 .SH "AUTHOR"
 .IX Header "AUTHOR"
 Copyright (C) 1987, \s-1FUJITSU\s0 \s-1LTD\s0. (I.Ichikawa),2000 S. Kono, \s-1COW\s0
-Copyright (C) 2002\-2006 Kono, Furukawa, Naruse, mastodon
+Copyright (C) 2002\-2007 Kono, Furukawa, Naruse, mastodon

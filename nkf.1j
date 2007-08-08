@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2006-08-22" "nkf 2.0.8" " "
+.TH nkf 1 "2007-07-09" "nkf 2.0.8" " "
 .SH "NAME"
 nkf \- ネットワーク用漢字コード変換フィルタ
 .SH "SYNOPSIS"
@@ -670,4 +670,4 @@ kono@ie.u\-ryukyu.ac.jp
 http://sourceforge.jp/projects/nkf/
 .PP
 Copyright (C) 1987, \s-1FUJITSU\s0 \s-1LTD\s0. (I.Ichikawa),2000 S. Kono, \s-1COW\s0
-Copyright (C) 2002\-2006 Kono, Furukawa, Naruse, mastodon
+Copyright (C) 2002\-2007 Kono, Furukawa, Naruse, mastodon

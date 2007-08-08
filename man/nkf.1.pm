@@ -101,19 +101,18 @@ UTF-8, UTF-16LE.
 
 =item B<-J>
 
-Assume  JIS input. It also accepts EUC-JP.
-This is the default. This flag does not exclude Shift_JIS.
+Assume  JIS input.
+This is the default.
 
 =item B<-S>
 
-Assume Shift_JIS and X0201 kana input. It also accepts JIS.
+Assume Shift_JIS and X0201 kana input.
 EUC-JP is recognized as X0201 kana. Without B<-x> flag,
 X0201 kana (halfwidth kana) is converted into X0208.
 
 =item B<-E>
 
-Assume EUC-JP input. It also accepts JIS.
-Same as -J.
+Assume EUC-JP input.
 
 =back
 
@@ -180,15 +179,15 @@ Convert X0208 alphabet to ASCII.
 
 =item B<-Z1>
 
-Converts X0208 kankaku to single ASCII space.
+Convert X0208 kankaku to single ASCII space.
 
 =item B<-Z2>
 
-Converts X0208 kankaku to double ASCII spaces.
+Convert X0208 kankaku to double ASCII spaces.
 
 =item B<-Z3>
 
-Replacing Fullwidth >, <, ", & into '&gt;', '&lt;', '&quot;', '&amp;' as in HTML.
+Replacing fullwidth >, <, ", & into '&gt;', '&lt;', '&quot;', '&amp;' as in HTML.
 
 =back
 
@@ -208,11 +207,11 @@ Useful when your site is using old B-News Nihongo patch.
 
 =item B<-B1>
 
-allows any char after ESC-( or ESC-$.
+allows any chars after ESC-( or ESC-$.
 
 =item B<-B2>
 
-forces ASCII after NL.
+force ASCII after NL.
 
 =back
 
@@ -261,7 +260,7 @@ Kanji conversion is performed before encoding, so this cannot be used as a pictu
 
 =item B<-MQ>
 
-Perfome quoted encoding.
+Perform quoted encoding.
 
 =back
 
@@ -294,20 +293,20 @@ Without this option, nkf doesn't convert line breaks.
 
 =item B<--fj --unix --mac --msdos --windows>
 
-convert for these system
+Convert for these systems.
 
 =item B<--jis --euc --sjis --mime --base64>
 
-convert for named code
+Convert to named code.
 
 =item B<--jis-input --euc-input --sjis-input --mime-input --base64-input>
 
-assume input system
+Assume input system
 
 =item B<--ic=I<input codeset> --oc=I<output codeset>>
 
 Set the input or output codeset.
-NKF supports following codesets and those codeset name are case insensitive.
+NKF supports following codesets and those codeset names are case insensitive.
 
 =over
 
@@ -396,7 +395,7 @@ When Unicode to Unicode conversion,
 with this and -x option, nkf can be used as UTF converter.
 (In other words, without this and -x option, nkf doesn't save some characters)
 
-When nkf convert string which related to path, you should use this opion.
+When nkf converts strings that related to path, you should use this opion.
 
 =item B<--cap-input>
 
@@ -415,7 +414,7 @@ Decode character reference, such as "&#....;".
 
 Overwrite B<original> listed files by filtered result.
 
-B<Note> --overwrite preserves timestamp of original files.
+B<Note> --overwrite preserves timestamps of original files.
 
 =item B<--guess>
 
