@@ -160,15 +160,15 @@ UTF-8 を仮定する。
 
 =item B<-W16>
 
-UTF-16 (Little Endien)を仮定する。
+UTF-16 (Little Endian)を仮定する。
 
 =item B<-W16B>
 
-UTF-16 (Big Endien)を仮定する。
+UTF-16 (Big Endian)を仮定する。
 
 =item B<-W16L>
 
-UTF-16 (Little Endien)を仮定する。
+UTF-16 (Little Endian)を仮定する。
 
 =back
 

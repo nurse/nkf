@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2007-07-09" "nkf 2.0.8" " "
+.TH nkf 1 "2007-08-10" "nkf 2.0.8" " "
 .SH "NAME"
 nkf \- ネットワーク用漢字コード変換フィルタ
 .SH "SYNOPSIS"
@@ -255,13 +255,13 @@ Shift_JIS を仮定する。
 \&\s-1UTF\-8\s0 を仮定する。
 .IP "\fB\-W16\fR" 4
 .IX Item "-W16"
-\&\s-1UTF\-16\s0 (Little Endien)を仮定する。
+\&\s-1UTF\-16\s0 (Little Endian)を仮定する。
 .IP "\fB\-W16B\fR" 4
 .IX Item "-W16B"
-\&\s-1UTF\-16\s0 (Big Endien)を仮定する。
+\&\s-1UTF\-16\s0 (Big Endian)を仮定する。
 .IP "\fB\-W16L\fR" 4
 .IX Item "-W16L"
-\&\s-1UTF\-16\s0 (Little Endien)を仮定する。
+\&\s-1UTF\-16\s0 (Little Endian)を仮定する。
 .RE
 .RS 4
 .RE

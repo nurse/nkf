@@ -95,13 +95,13 @@ OPTIONS
         -W8 UTF-8 を仮定する。
 
         -W16
-            UTF-16 (Little Endien)を仮定する。
+            UTF-16 (Little Endian)を仮定する。
 
         -W16B
-            UTF-16 (Big Endien)を仮定する。
+            UTF-16 (Big Endian)を仮定する。
 
         -W16L
-            UTF-16 (Little Endien)を仮定する。
+            UTF-16 (Little Endian)を仮定する。
 
     -x  通常おこなわれる、いわゆる半角カナ (JIS X 0201 片仮名)
         からいわゆる全角カナ (JIS X 0208 片仮名)
