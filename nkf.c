@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.127 2007/07/19 20:08:29 naruse Exp $ */
+/* $Id: nkf.c,v 1.128 2007/08/22 21:37:35 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-07-20"
 #include "config.h"
@@ -5611,7 +5611,7 @@ nkf_char mime_lastchar2, mime_lastchar1;
 void mime_prechar(nkf_char c2, nkf_char c1)
 {
     if (mimeout_mode){
-        if (c2){
+        if (c2 > 0){
             if (base64_count + mimeout_buf_count/3*4> 66){
                 (*o_base64conv)(EOF,0);
                 (*o_base64conv)(0,NL);
