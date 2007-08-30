@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.17 2006/05/01 19:51:31 naruse Exp $
+# $Id: nkf_test.pl,v 1.18 2007/08/30 06:02:28 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -997,6 +997,37 @@ eofeof
 
 printf "%-40s", "test_data/bug2273";
     &test("$nkf -e",$example{'test_data/bug2273'},$example{'test_data/bug2273.ans'});
+# test_data/forum15899
 
+$example{'test_data/forum15899'} = unpack('u',<<'eofeof');
+I6#H@XX&"XX&$XX&&XX&(XX&*XX&+XX&-XX&/XX&1XX&3XX&5(..!EPH`
+eofeof
+
+$example{'test_data/forum15899.ans'} = unpack('u',<<'eofeof');
+M6#H@/3])4T\M,C`R,BU*4#]"/T=Y4D-*0TEK2D-1;4I#9VM+:5%R2D,P:TQY
+=47A*1$UK3E)S;U%I06)*14EK3GAS;U%G/3T_/0H`
+eofeof
+
+printf "%-40s", "test_data/forum15899";
+    &test("$nkf -Mj",$example{'test_data/forum15899'},$example{'test_data/forum15899.ans'});
+# test_data/bugs10904
+
+$example{'test_data/bugs10904'} = unpack('u',<<'eofeof');
+M4W5B:F5C=#H@Z*FFZ:B3YY2HXX.AXX.\XX.KZ*&HZ:&,(.BIINFHD^>4J..#
+MH>.#O..#J^BAJ.FAC"#HJ:;IJ)/GE*CC@Z'C@[SC@ZOHH:CIH8P@Z*FFZ:B3
+3YY2HXX.AXX.\XX.KZ*&HZ:&,"@``
+eofeof
+
+$example{'test_data/bugs10904.ans'} = unpack('u',<<'eofeof');
+M4W5B:F5C=#H@/3])4T\M,C`R,BU*4#]"/T=Y4D-/,C0T33`Q4DI716A00U9R
+?4U0Q0V%H<V]1:4%B2D5)-V)J9WI45D5B2T5)/3\]"@``
+M(#T_25-/+3(P,C(M2E`_0C]'>5)#2E=%:%!#5G)35#%#86AS;U%I06)*14DW
+?8FIG>E1616Q94T4X2E=T2E!52G%'>6A#24$]/3\]"@``
+M(#T_25-/+3(P,C(M2E`_0C]'>5)#3S(T-$TP,5)*5T5H4$-6<E-4,4-A:'-O
+'46<]/3\]"@``
+eofeof
+
+printf "%-40s", "test_data/bugs10904";
+    &test("$nkf -Mj",$example{'test_data/bugs10904'},$example{'test_data/bugs10904.ans'});
 # end
 

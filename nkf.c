@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.128 2007/08/22 21:37:35 naruse Exp $ */
+/* $Id: nkf.c,v 1.129 2007/08/30 06:02:28 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-07-20"
+#define NKF_RELEASE_DATE "2007-08-30"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -5606,12 +5606,18 @@ void mimeout_addchar(nkf_char c)
     }
 }
 
-nkf_char mime_lastchar2, mime_lastchar1;
+/*nkf_char mime_lastchar2, mime_lastchar1;*/
 
 void mime_prechar(nkf_char c2, nkf_char c1)
 {
     if (mimeout_mode){
-        if (c2 > 0){
+        if (c2 == EOF){
+            if (base64_count + mimeout_buf_count/3*4> 73){
+                (*o_base64conv)(EOF,0);
+                (*o_base64conv)(0,NL);
+                (*o_base64conv)(0,SPACE);
+            }
+        } else if (c2){
             if (base64_count + mimeout_buf_count/3*4> 66){
                 (*o_base64conv)(EOF,0);
                 (*o_base64conv)(0,NL);
@@ -5628,8 +5634,8 @@ void mime_prechar(nkf_char c2, nkf_char c1)
             (*o_base64conv)(0,SPACE);
         }
     }*/
-    mime_lastchar2 = c2;
-    mime_lastchar1 = c1;
+    /*mime_lastchar2 = c2;
+    mime_lastchar1 = c1;*/
 }
 
 void mime_putc(nkf_char c)
@@ -5669,15 +5675,22 @@ void mime_putc(nkf_char c)
 	mimeout_buf_count = 0;
 	i = 0;
 	if (mimeout_mode) {
-	    for (;i<j;i++) {
-		if (nkf_isspace(mimeout_buf[i]) && base64_count < 71){
-		    break;
+	    if (!nkf_isblank(mimeout_buf[j-1])) {
+		for (;i<j;i++) {
+		    if (nkf_isspace(mimeout_buf[i]) && base64_count < 71){
+			break;
+		    }
+		    mimeout_addchar(mimeout_buf[i]);
 		}
-		mimeout_addchar(mimeout_buf[i]);
-	    }
-	    eof_mime();
-	    for (;i<j;i++) {
-		mimeout_addchar(mimeout_buf[i]);
+		eof_mime();
+		for (;i<j;i++) {
+		    mimeout_addchar(mimeout_buf[i]);
+		}
+	    } else {
+		for (;i<j;i++) {
+		    mimeout_addchar(mimeout_buf[i]);
+		}
+		eof_mime();
 	    }
 	} else {
 	    for (;i<j;i++) {
