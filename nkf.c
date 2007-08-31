@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.129 2007/08/30 06:02:28 naruse Exp $ */
+/* $Id: nkf.c,v 1.130 2007/08/31 14:06:08 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-08-30"
+#define NKF_RELEASE_DATE "2007-08-31"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -1804,10 +1804,12 @@ void options(unsigned char *cp)
             if (x0201_f==NO_X0201) x0201_f=TRUE;
             continue;
         case 'Z':   /* Convert X0208 alphabet to asii */
-            /*  bit:0   Convert X0208
-                bit:1   Convert Kankaku to one space
-                bit:2   Convert Kankaku to two spaces
-                bit:3   Convert HTML Entity
+            /* alpha_f
+	       bit:0   Convert JIS X 0208 Alphabet to ASCII
+	       bit:1   Convert Kankaku to one space
+	       bit:2   Convert Kankaku to two spaces
+	       bit:3   Convert HTML Entity
+	       bit:4   Convert JIS X 0208 Katakana to JIS X 0201 Katakana
             */
             if ('9'>= *cp && *cp>='0') 
                 alpha_f |= 1<<(*cp++ -'0');
@@ -4583,6 +4585,7 @@ void z_conv(nkf_char c2, nkf_char c1)
 	(*o_zconv)(c2,c1);
 	return;
     }
+
     if (x0201_f && z_prev2==X0201) {  /* X0201 */
         if (c1==(0xde&0x7f)) { /* 濁点 */
             z_prev2=0;
@@ -4614,11 +4617,11 @@ void z_conv(nkf_char c2, nkf_char c1)
         }
     }
 
-    /* JISX0208 Alphabet */
     if (alpha_f && c2 == 0x23 ) {
+	/* JISX0208 Alphabet */
         c2 = 0;
     } else if (alpha_f && c2 == 0x21 ) { 
-    /* JISX0208 Kigou */
+	/* JISX0208 Kigou */
        if (0x21==c1) {
            if (alpha_f&0x2) {
                c1 = ' ';
@@ -4645,6 +4648,31 @@ void z_conv(nkf_char c2, nkf_char c1)
                }
            }
        } 
+    } else if (alpha_f & 0x10 && c2 == 0x25) { 
+	/* JISX0208 Katakana */
+	static const int fullwidth_to_halfwidth[] =
+	{
+	    0x0000, 0x2700, 0x3100, 0x2800, 0x3200, 0x2900, 0x3300, 0x2A00,
+	    0x3400, 0x2B00, 0x3500, 0x3600, 0x365E, 0x3700, 0x375E, 0x3800,
+	    0x385E, 0x3900, 0x395E, 0x3A00, 0x3A5E, 0x3B00, 0x3B5E, 0x3C00,
+	    0x3C5E, 0x3D00, 0x3D5E, 0x3E00, 0x3E5E, 0x3F00, 0x3F5E, 0x4000,
+	    0x405E, 0x4100, 0x415E, 0x2F00, 0x4200, 0x425E, 0x4300, 0x435E,
+	    0x4400, 0x445E, 0x4500, 0x4600, 0x4700, 0x4800, 0x4900, 0x4A00,
+	    0x4A5E, 0x4A5F, 0x4B00, 0x4B5E, 0x4B5F, 0x4C00, 0x4C5E, 0x4C5F,
+	    0x4D00, 0x4D5E, 0x4D5F, 0x4E00, 0x4E5E, 0x4E5F, 0x4F00, 0x5000,
+	    0x5100, 0x5200, 0x5300, 0x2C00, 0x5400, 0x2D00, 0x5500, 0x2E00,
+	    0x5600, 0x5700, 0x5800, 0x5900, 0x5A00, 0x5B00, 0x0000, 0x5C00,
+	    0x0000, 0x0000, 0x2600, 0x5D00, 0x0000, 0x0000, 0x0000, 0x0000,
+	    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
+	};
+	if (fullwidth_to_halfwidth[c1-0x20]){
+	    c2 = fullwidth_to_halfwidth[c1-0x20];
+	    (*o_zconv)(X0201, c2>>8);
+	    if (c2 & 0xFF) {
+		(*o_zconv)(X0201, c2&0xFF);
+	    }
+	    return;
+	}
     }
     (*o_zconv)(c2,c1);
 }
@@ -6031,8 +6059,9 @@ void usage(void)
     fprintf(stderr,"M[BQ]    MIME encode [B:base64 Q:quoted]\n");
     fprintf(stderr,"l        ISO8859-1 (Latin-1) support\n");
     fprintf(stderr,"f/F      Folding: -f60 or -f or -f60-10 (fold margin 10) F preserve nl\n");
-    fprintf(stderr,"Z[0-3]   Convert X0208 alphabet to ASCII\n");
-    fprintf(stderr,"         1: Kankaku to 1 space  2: to 2 spaces  3: Convert to HTML Entity\n");
+    fprintf(stderr,"Z[0-4]   Default/0: Convert JISX0208 Alphabet to ASCII\n");
+    fprintf(stderr,"         1: Kankaku to one space  2: to two spaces  3: HTML Entity\n");
+    fprintf(stderr,"         4: JISX0208 Katakana to JISX0201 Katakana\n");
     fprintf(stderr,"X,x      Assume X0201 kana in MS-Kanji, -x preserves X0201\n");
     fprintf(stderr,"B[0-2]   Broken input  0: missing ESC,1: any X on ESC-[($]-X,2: ASCII on NL\n");
 #ifdef MSDOS
