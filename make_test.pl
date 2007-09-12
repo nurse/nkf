@@ -20,7 +20,7 @@ eofeof
 $outpack
 eofeof
 
-print "$test    ";
+printf "%-40s",  "$test    ";
     \&test("\$nkf $opt",\$example{'$test'},\$example{'$test.ans'});
 EOFEOF
 

@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.130 2007/08/31 14:06:08 naruse Exp $ */
+/* $Id: nkf.c,v 1.131 2007/09/12 04:56:53 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-08-31"
+#define NKF_RELEASE_DATE "2007-09-12"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -1811,10 +1811,10 @@ void options(unsigned char *cp)
 	       bit:3   Convert HTML Entity
 	       bit:4   Convert JIS X 0208 Katakana to JIS X 0201 Katakana
             */
-            if ('9'>= *cp && *cp>='0') 
-                alpha_f |= 1<<(*cp++ -'0');
-            else 
-                alpha_f |= TRUE;
+	    while ('0'<= *cp && *cp <='9') {
+		alpha_f |= 1 << (*cp++ - '0');
+	    }
+            if (!alpha_f) alpha_f = 1;
             continue;
         case 'x':   /* Convert X0201 kana to X0208 or X0201 Conversion */
             x0201_f = FALSE;    /* No X0201->X0208 conversion */
@@ -4617,61 +4617,108 @@ void z_conv(nkf_char c2, nkf_char c1)
         }
     }
 
-    if (alpha_f && c2 == 0x23 ) {
+    if (alpha_f&1 && c2 == 0x23 ) {
 	/* JISX0208 Alphabet */
         c2 = 0;
-    } else if (alpha_f && c2 == 0x21 ) { 
+    } else if (c2 == 0x21) { 
 	/* JISX0208 Kigou */
        if (0x21==c1) {
-           if (alpha_f&0x2) {
-               c1 = ' ';
+           if (alpha_f&2) {
                c2 = 0;
-           } else if (alpha_f&0x4) {
-                (*o_zconv)(0,' ');
-                (*o_zconv)(0,' ');
+               c1 = ' ';
+           } else if (alpha_f&4) {
+                (*o_zconv)(0, ' ');
+                (*o_zconv)(0, ' ');
                 return;
            } 
-       } else if (0x20<c1 && c1<0x7f && fv[c1-0x20]) {
-           c1 = fv[c1-0x20];
+       } else if (alpha_f&1 && 0x20<c1 && c1<0x7f && fv[c1-0x20]) {
            c2 =  0;
-           if (alpha_f&0x8) {
-               char *entity = 0;
-               switch (c1){
-                 case '>': entity = "&gt;"; break;
-                 case '<': entity = "&lt;"; break;
-                 case '\"': entity = "&quot;"; break;
-                 case '&': entity = "&amp;"; break;
-               }
-               if (entity){
-                   while (*entity) (*o_zconv)(0, *entity++);
-                   return;
-               }
-           }
+           c1 = fv[c1-0x20];
        } 
-    } else if (alpha_f & 0x10 && c2 == 0x25) { 
-	/* JISX0208 Katakana */
-	static const int fullwidth_to_halfwidth[] =
-	{
-	    0x0000, 0x2700, 0x3100, 0x2800, 0x3200, 0x2900, 0x3300, 0x2A00,
-	    0x3400, 0x2B00, 0x3500, 0x3600, 0x365E, 0x3700, 0x375E, 0x3800,
-	    0x385E, 0x3900, 0x395E, 0x3A00, 0x3A5E, 0x3B00, 0x3B5E, 0x3C00,
-	    0x3C5E, 0x3D00, 0x3D5E, 0x3E00, 0x3E5E, 0x3F00, 0x3F5E, 0x4000,
-	    0x405E, 0x4100, 0x415E, 0x2F00, 0x4200, 0x425E, 0x4300, 0x435E,
-	    0x4400, 0x445E, 0x4500, 0x4600, 0x4700, 0x4800, 0x4900, 0x4A00,
-	    0x4A5E, 0x4A5F, 0x4B00, 0x4B5E, 0x4B5F, 0x4C00, 0x4C5E, 0x4C5F,
-	    0x4D00, 0x4D5E, 0x4D5F, 0x4E00, 0x4E5E, 0x4E5F, 0x4F00, 0x5000,
-	    0x5100, 0x5200, 0x5300, 0x2C00, 0x5400, 0x2D00, 0x5500, 0x2E00,
-	    0x5600, 0x5700, 0x5800, 0x5900, 0x5A00, 0x5B00, 0x0000, 0x5C00,
-	    0x0000, 0x0000, 0x2600, 0x5D00, 0x0000, 0x0000, 0x0000, 0x0000,
-	    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
-	};
-	if (fullwidth_to_halfwidth[c1-0x20]){
-	    c2 = fullwidth_to_halfwidth[c1-0x20];
-	    (*o_zconv)(X0201, c2>>8);
-	    if (c2 & 0xFF) {
-		(*o_zconv)(X0201, c2&0xFF);
-	    }
+    }
+
+    if (alpha_f&8 && c2 == 0) {
+	/* HTML Entity */
+	char *entity = 0;
+	switch (c1){
+	case '>': entity = "&gt;"; break;
+	case '<': entity = "&lt;"; break;
+	case '\"': entity = "&quot;"; break;
+	case '&': entity = "&amp;"; break;
+	}
+	if (entity){
+	    while (*entity) (*o_zconv)(0, *entity++);
 	    return;
+	}
+    }
+
+    if (alpha_f & 16) {
+	/* JIS X 0208 Katakana to JIS X 0201 Katakana */
+	if (c2 == 0x21) {
+	    char c = 0;
+	    switch (c1) {
+	    case 0x23:
+		/* U+3002 (0x8142) Ideographic Full Stop -> U+FF61 (0xA1) Halfwidth Ideographic Full Stop */
+		c = 0xA1;
+		break;
+	    case 0x56:
+		/* U+300C (0x8175) Left Corner Bracket -> U+FF62 (0xA2) Halfwidth Left Corner Bracket */
+		c = 0xA2;
+		break;
+	    case 0x57:
+		/* U+300D (0x8176) Right Corner Bracket -> U+FF63 (0xA3) Halfwidth Right Corner Bracket */
+		c = 0xA3;
+		break;
+	    case 0x22:
+		/* U+3001 (0x8141) Ideographic Comma -> U+FF64 (0xA4) Halfwidth Ideographic Comma */
+		c = 0xA4;
+		break;
+	    case 0x26:
+		/* U+30FB (0x8145) Katakana Middle Dot -> U+FF65 (0xA5) Halfwidth Katakana Middle Dot */
+		c = 0xA5;
+		break;
+	    case 0x3C:
+		/* U+30FC (0x815B) Katakana-Hiragana Prolonged Sound Mark -> U+FF70 (0xB0) Halfwidth Katakana-Hiragana Prolonged Sound Mark */
+		c = 0xB0;
+		break;
+	    case 0x2B:
+		/* U+309B (0x814A) Katakana-Hiragana Voiced Sound Mark -> U+FF9E (0xDE) Halfwidth Katakana Voiced Sound Mark */
+		c = 0xDE;
+		break;
+	    case 0x2C:
+		/* U+309C (0x814B) Katakana-Hiragana Semi-Voiced Sound Mark -> U+FF9F (0xDF) Halfwidth Katakana Semi-Voiced Sound Mark */
+		c = 0xDF;
+		break;
+	    }
+	    if (c) {
+		(*o_zconv)(X0201, c);
+		return;
+	    }
+	} else if (c2 == 0x25) {
+	    /* JISX0208 Katakana */
+	    static const int fullwidth_to_halfwidth[] =
+	    {
+		0x0000, 0x2700, 0x3100, 0x2800, 0x3200, 0x2900, 0x3300, 0x2A00,
+		0x3400, 0x2B00, 0x3500, 0x3600, 0x365E, 0x3700, 0x375E, 0x3800,
+		0x385E, 0x3900, 0x395E, 0x3A00, 0x3A5E, 0x3B00, 0x3B5E, 0x3C00,
+		0x3C5E, 0x3D00, 0x3D5E, 0x3E00, 0x3E5E, 0x3F00, 0x3F5E, 0x4000,
+		0x405E, 0x4100, 0x415E, 0x2F00, 0x4200, 0x425E, 0x4300, 0x435E,
+		0x4400, 0x445E, 0x4500, 0x4600, 0x4700, 0x4800, 0x4900, 0x4A00,
+		0x4A5E, 0x4A5F, 0x4B00, 0x4B5E, 0x4B5F, 0x4C00, 0x4C5E, 0x4C5F,
+		0x4D00, 0x4D5E, 0x4D5F, 0x4E00, 0x4E5E, 0x4E5F, 0x4F00, 0x5000,
+		0x5100, 0x5200, 0x5300, 0x2C00, 0x5400, 0x2D00, 0x5500, 0x2E00,
+		0x5600, 0x5700, 0x5800, 0x5900, 0x5A00, 0x5B00, 0x0000, 0x5C00,
+		0x0000, 0x0000, 0x2600, 0x5D00, 0x335E, 0x0000, 0x0000, 0x0000,
+		0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
+	    };
+	    if (fullwidth_to_halfwidth[c1-0x20]){
+		c2 = fullwidth_to_halfwidth[c1-0x20];
+		(*o_zconv)(X0201, c2>>8);
+		if (c2 & 0xFF) {
+		    (*o_zconv)(X0201, c2&0xFF);
+		}
+		return;
+	    }
 	}
     }
     (*o_zconv)(c2,c1);

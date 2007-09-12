@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.18 2007/08/30 06:02:28 naruse Exp $
+# $Id: nkf_test.pl,v 1.19 2007/09/12 04:56:53 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -851,6 +851,26 @@ eofeof
 
 printf "%-40s", "test_data/multi-line";
     &test("$nkf -e",$example{'test_data/multi-line'},$example{'test_data/multi-line.ans'});
+# test_data/-Z4
+
+$example{'test_data/-Z4'} = unpack('u',<<'eofeof');
+MH:.AUJ'7H:*AIJ&\H:NAK*6AI:*EHZ6DI:6EIJ6GI:BEJ:6JI:NEK*6MI:ZE
+MKZ6PI;&ELJ6SI;2EM:6VI;>EN*6YI;JENZ6\I;VEOJ6_I<"EP:7"I<.EQ*7%
+MI<:EQZ7(I<FERJ7+I<RES:7.I<^ET*71I=*ETZ74I=6EUJ77I=BEV:7:I=NE
+KW*7=I=ZEWZ7@I>&EXJ7CI>2EY:7FI>>EZ*7II>JEZZ7LI>VE[Z7RI?.E]```
+eofeof
+
+$example{'test_data/-Z4.ans'} = unpack('u',<<'eofeof');
+MCJ&.HHZCCJ2.I8[>CM^.IXZQCJB.LHZICK..JHZTCJN.M8ZVCK:.WHZWCK>.
+MWHZXCKB.WHZYCKF.WHZZCKJ.WHZ[CKN.WHZ\CKR.WHZ]CKV.WHZ^CKZ.WHZ_
+MCK^.WH[`CL".WH[!CL&.WHZOCL*.PH[>CL..PX[>CL2.Q([>CL6.QH['CLB.
+MR8[*CLJ.WH[*CM^.RX[+CMZ.RX[?CLR.S([>CLR.WX[-CLV.WH[-CM^.SH[.
+MCMZ.SH[?CL^.T([1CM*.TXZLCM2.K8[5CJZ.UH[7CMB.V8[:CMN.W(ZFCMV.
+#LX[>
+eofeof
+
+printf "%-40s", "test_data/-Z4    ";
+    &test("$nkf -W4",$example{'test_data/-W4'},$example{'test_data/-W4.ans'});
 # test_data/nkf-19-bug-1
 
 $example{'test_data/nkf-19-bug-1'} = unpack('u',<<'eofeof');
