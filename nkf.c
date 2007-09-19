@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.131 2007/09/12 04:56:53 naruse Exp $ */
+/* $Id: nkf.c,v 1.132 2007/09/19 11:51:55 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-09-12"
 #include "config.h"
@@ -278,6 +278,7 @@ void  djgpp_setbinmode(FILE *fp)
 #define hex2bin(c) (('0'<=c&&c<='9') ? (c-'0') : \
                     ('A'<=c&&c<='F') ? (c-'A'+10) : \
                     ('a'<=c&&c<='f') ? (c-'a'+10) : 0 )
+#define bin2hex(c) ("0123456789ABCDEF"[c&15])
 #define is_eucg3(c2) (((unsigned short)c2 >> 8) == SS3)
 
 #define CP932_TABLE_BEGIN 0xFA
@@ -671,8 +672,7 @@ static int mime_decode_mode =   FALSE;    /* MIME mode B base64, Q hex */
 
 /* X0201 kana conversion table */
 /* 90-9F A0-DF */
-static const
-unsigned char cv[]= {
+static const unsigned char cv[]= {
     0x21,0x21,0x21,0x23,0x21,0x56,0x21,0x57,
     0x21,0x22,0x21,0x26,0x25,0x72,0x25,0x21,
     0x25,0x23,0x25,0x25,0x25,0x27,0x25,0x29,
@@ -694,8 +694,7 @@ unsigned char cv[]= {
 
 /* X0201 kana conversion table for daguten */
 /* 90-9F A0-DF */
-static const
-unsigned char dv[]= { 
+static const unsigned char dv[]= {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
@@ -716,8 +715,7 @@ unsigned char dv[]= {
 
 /* X0201 kana conversion table for han-daguten */
 /* 90-9F A0-DF */
-static const
-unsigned char ev[]= { 
+static const unsigned char ev[]= {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
@@ -739,8 +737,7 @@ unsigned char ev[]= {
 
 /* X0208 kigou conversion table */
 /* 0x8140 - 0x819e */
-static const
-unsigned char fv[] = {
+static const unsigned char fv[] = {
 
     0x00,0x00,0x00,0x00,0x2c,0x2e,0x00,0x3a,
     0x3b,0x3f,0x21,0x00,0x00,0x27,0x60,0x00,
@@ -1074,8 +1071,7 @@ char *get_backup_filename(const char *suffix, const char *filename)
 }
 #endif
 
-static const
-struct {
+static const struct {
     const char *name;
     const char *alias;
 } long_option[] = {
@@ -1985,14 +1981,14 @@ void set_iconv(nkf_char f, nkf_char (*iconv_func)(nkf_char c2,nkf_char c1,nkf_ch
 
 #define SCORE_INIT (SCORE_iMIME)
 
-const nkf_char score_table_A0[] = {
+static const char score_table_A0[] = {
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND,
     SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND, SCORE_NO_EXIST,
 };
 
-const nkf_char score_table_F0[] = {
+static const char score_table_F0[] = {
     SCORE_L2, SCORE_L2, SCORE_L2, SCORE_L2,
     SCORE_L2, SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST,
     SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND,
@@ -2893,7 +2889,7 @@ nkf_char kanji_convert(FILE *f)
 			       C%7 : 0 1 2 3 4 5 6
 			       NUM : 2 0 3 4 5 X 1
 			     */
-			    static const int jphone_emoji_first_table[7] = {2, 0, 3, 4, 5, 0, 1};
+			    static const char jphone_emoji_first_table[7] = {2, 0, 3, 4, 5, 0, 1};
 			    c0 = (jphone_emoji_first_table[c1 % 7] << 8) - SPACE + 0xE000 + CLASS_UNICODE;
 			    while ((c1 = (*i_getc)(f)) != EOF) {
 				if (SPACE <= c1 && c1 <= 'z') {
@@ -3154,7 +3150,7 @@ nkf_char s2e_conv(nkf_char c2, nkf_char c1, nkf_char *p2, nkf_char *p1)
 #if defined(SHIFTJIS_CP932) || defined(X0212_ENABLE)
     nkf_char val;
 #endif
-    static const nkf_char shift_jisx0213_s1a3_table[5][2] ={ { 1, 8}, { 3, 4}, { 5,12}, {13,14}, {15, 0} };
+    static const char shift_jisx0213_s1a3_table[5][2] ={ { 1, 8}, { 3, 4}, { 5,12}, {13,14}, {15, 0} };
 #ifdef SHIFTJIS_CP932
     if (!cp932inv_f && is_ibmext_in_sjis(c2)){
         val = shiftjis_cp932[c2 - CP932_TABLE_BEGIN][c1 - 0x40];
@@ -3320,7 +3316,7 @@ nkf_char w2e_conv(nkf_char c2, nkf_char c1, nkf_char c0, nkf_char *p2, nkf_char 
 nkf_char w_iconv(nkf_char c2, nkf_char c1, nkf_char c0)
 {
     nkf_char ret = 0;
-    static const int w_iconv_utf8_1st_byte[] =
+    static const char w_iconv_utf8_1st_byte[] =
     { /* 0xC0 - 0xFF */
 	20, 20, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
 	21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
@@ -3506,22 +3502,22 @@ nkf_char unicode_to_jis_common(nkf_char c2, nkf_char c1, nkf_char c0, nkf_char *
 {
     const unsigned short *const *pp;
     const unsigned short *const *const *ppp;
-    static const int no_best_fit_chars_table_C2[] =
+    static const char no_best_fit_chars_table_C2[] =
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 2, 1, 1, 2,
 	0, 0, 1, 1, 0, 1, 0, 1, 2, 1, 1, 1, 1, 1, 1, 1};
-    static const int no_best_fit_chars_table_C2_ms[] =
+    static const char no_best_fit_chars_table_C2_ms[] =
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0,
 	0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0};
-    static const int no_best_fit_chars_table_932_C2[] =
+    static const char no_best_fit_chars_table_932_C2[] =
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1,
 	0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0};
-    static const int no_best_fit_chars_table_932_C3[] =
+    static const char no_best_fit_chars_table_932_C3[] =
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -3693,13 +3689,12 @@ nkf_char w_iconv_common(nkf_char c1, nkf_char c0, const unsigned short *const *p
 
 void nkf_each_char_to_hex(void (*f)(nkf_char c2,nkf_char c1), nkf_char c)
 {
-    const char *hex = "0123456789ABCDEF";
     int shift = 20;
     c &= VALUE_MASK;
     while(shift >= 0){
 	if(c >= 1<<shift){
 	    while(shift >= 0){
-		(*f)(0, hex[(c>>shift)&0xF]);
+		(*f)(0, bin2hex(c>>shift));
 		shift -= 4;
 	    }
 	}else{
@@ -3744,22 +3739,21 @@ void encode_fallback_xml(nkf_char c)
 
 void encode_fallback_java(nkf_char c)
 {
-    const char *hex = "0123456789ABCDEF";
     (*oconv)(0, '\\');
     c &= VALUE_MASK;
     if(!is_unicode_bmp(c)){
 	(*oconv)(0, 'U');
 	(*oconv)(0, '0');
 	(*oconv)(0, '0');
-	(*oconv)(0, hex[(c>>20)&0xF]);
-	(*oconv)(0, hex[(c>>16)&0xF]);
+	(*oconv)(0, bin2hex(c>>20));
+	(*oconv)(0, bin2hex(c>>16));
     }else{
 	(*oconv)(0, 'u');
     }
-    (*oconv)(0, hex[(c>>12)&0xF]);
-    (*oconv)(0, hex[(c>> 8)&0xF]);
-    (*oconv)(0, hex[(c>> 4)&0xF]);
-    (*oconv)(0, hex[ c     &0xF]);
+    (*oconv)(0, bin2hex(c>>12));
+    (*oconv)(0, bin2hex(c>> 8));
+    (*oconv)(0, bin2hex(c>> 4));
+    (*oconv)(0, bin2hex(c    ));
     return;
 }
 
@@ -4836,7 +4830,7 @@ void iso2022jp_check_conv(nkf_char c2, nkf_char c1)
 
 /* This converts  =?ISO-2022-JP?B?HOGE HOGE?= */
 
-const unsigned char *mime_pattern[] = {
+static const unsigned char *mime_pattern[] = {
     (const unsigned char *)"\075?EUC-JP?B?",
     (const unsigned char *)"\075?SHIFT_JIS?B?",
     (const unsigned char *)"\075?ISO-8859-1?Q?",
@@ -4861,7 +4855,7 @@ nkf_char (*mime_priority_func[])(nkf_char c2, nkf_char c1, nkf_char c0) = {
     0,
 };
 
-const nkf_char mime_encode[] = {
+static const nkf_char mime_encode[] = {
     JAPANESE_EUC, SHIFT_JIS,ISO8859_1, ISO8859_1, X0208, X0201,
 #if defined(UTF8_INPUT_ENABLE)
     UTF8, UTF8,
@@ -4870,7 +4864,7 @@ const nkf_char mime_encode[] = {
     0
 };
 
-const nkf_char mime_encode_method[] = {
+static const nkf_char mime_encode_method[] = {
     'B', 'B','Q', 'B', 'B', 'Q',
 #if defined(UTF8_INPUT_ENABLE)
     'B', 'Q',
