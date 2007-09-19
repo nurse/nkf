@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.132 2007/09/19 11:51:55 naruse Exp $ */
+/* $Id: nkf.c,v 1.133 2007/09/19 13:03:15 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-09-12"
+#define NKF_RELEASE_DATE "2007-09-19"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -4580,35 +4580,38 @@ void z_conv(nkf_char c2, nkf_char c1)
 	return;
     }
 
-    if (x0201_f && z_prev2==X0201) {  /* X0201 */
-        if (c1==(0xde&0x7f)) { /* 濁点 */
-            z_prev2=0;
-            (*o_zconv)(dv[(z_prev1-SPACE)*2],dv[(z_prev1-SPACE)*2+1]);
-            return;
-        } else if (c1==(0xdf&0x7f)&&ev[(z_prev1-SPACE)*2]) {  /* 半濁点 */
-            z_prev2=0;
-            (*o_zconv)(ev[(z_prev1-SPACE)*2],ev[(z_prev1-SPACE)*2+1]);
-            return;
-        } else {
-            z_prev2=0;
-            (*o_zconv)(cv[(z_prev1-SPACE)*2],cv[(z_prev1-SPACE)*2+1]);
-        }
+    if (x0201_f) {
+	if (z_prev2 == X0201) {
+	    if (c2 == X0201) {
+		if (c1 == (0xde&0x7f)) { /* 濁点 */
+		    z_prev2 = 0;
+		    (*o_zconv)(dv[(z_prev1-SPACE)*2], dv[(z_prev1-SPACE)*2+1]);
+		    return;
+		} else if (c1 == (0xdf&0x7f) && ev[(z_prev1-SPACE)*2]) {  /* 半濁点 */
+		    z_prev2 = 0;
+		    (*o_zconv)(ev[(z_prev1-SPACE)*2], ev[(z_prev1-SPACE)*2+1]);
+		    return;
+		}
+	    }
+	    z_prev2 = 0;
+	    (*o_zconv)(cv[(z_prev1-SPACE)*2], cv[(z_prev1-SPACE)*2+1]);
+	}
+	if (c2 == X0201) {
+	    if (dv[(c1-SPACE)*2] || ev[(c1-SPACE)*2]) {
+		/* wait for 濁点 or 半濁点 */
+		z_prev1 = c1;
+		z_prev2 = c2;
+		return;
+	    } else {
+		(*o_zconv)(cv[(c1-SPACE)*2], cv[(c1-SPACE)*2+1]);
+		return;
+	    }
+	}
     }
 
-    if (c2==EOF) {
-        (*o_zconv)(c2,c1);
+    if (c2 == EOF) {
+        (*o_zconv)(c2, c1);
         return;
-    }
-
-    if (x0201_f && c2==X0201) {
-        if (dv[(c1-SPACE)*2]||ev[(c1-SPACE)*2]) {
-            /* wait for 濁点 or 半濁点 */
-            z_prev1 = c1; z_prev2 = c2;
-            return;
-        } else {
-            (*o_zconv)(cv[(c1-SPACE)*2],cv[(c1-SPACE)*2+1]);
-            return;
-        }
     }
 
     if (alpha_f&1 && c2 == 0x23 ) {
