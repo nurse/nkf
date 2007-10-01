@@ -39,7 +39,7 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.135 2007/10/01 12:37:58 naruse Exp $ */
+/* $Id: nkf.c,v 1.136 2007/10/01 14:18:43 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-10-01"
 #include "config.h"
@@ -332,7 +332,7 @@ struct input_code{
     int _file_stat;
 };
 
-static char *input_codename = "";
+static char *input_codename = NULL; /* NULL: unestablished, "": BINARY */
 
 #ifndef PERL_XS
 static const char *CopyRight = COPY_RIGHT;
@@ -544,7 +544,6 @@ static  void    print_guessed_code(char *filename);
 #endif
 static  void    set_input_codename(char *codename);
 static int is_inputcode_mixed = FALSE;
-static int is_inputcode_set   = FALSE;
 
 #ifdef EXEC_IO
 static int exec_f = 0;
@@ -857,8 +856,7 @@ int main(int argc, char **argv)
 	int is_argument_error = FALSE;
       while (argc--) {
 	    is_inputcode_mixed = FALSE;
-	    is_inputcode_set   = FALSE;
-	    input_codename = "";
+	    input_codename = NULL;
 #ifdef CHECK_OPTION
 	    iconv_for_check = 0;
 #endif
@@ -1960,7 +1958,7 @@ void set_iconv(nkf_char f, nkf_char (*iconv_func)(nkf_char c2,nkf_char c1,nkf_ch
         struct input_code *p = find_inputcode_byfunc(iconv);
         if (p){
             set_input_codename(p->name);
-            debug(input_codename);
+            debug(p->name);
         }
         iconv_for_check = iconv;
     }
@@ -2775,7 +2773,7 @@ nkf_char kanji_convert(FILE *f)
                         shift_mode = FALSE;
                         set_input_codename("ISO-2022-JP");
 #ifdef CHECK_OPTION
-                        debug(input_codename);
+                        debug("ISO-2022-JP");
 #endif
                         NEXT;
                     } else if (c1 == '(') {
@@ -3005,7 +3003,7 @@ nkf_char kanji_convert(FILE *f)
 
     /* epilogue */
     (*iconv)(EOF, 0, 0);
-    if (!is_inputcode_set)
+    if (!input_codename)
     {
 	if (is_8bit) {
 	    struct input_code *p = input_code_list;
@@ -3015,6 +3013,9 @@ nkf_char kanji_convert(FILE *f)
 		++p;
 	    }
 	    set_input_codename(result->name);
+#ifdef CHECK_OPTION
+	    debug(result->name);
+#endif
 	}
     }
     return 1;
@@ -5036,22 +5037,19 @@ void no_putc(nkf_char c)
 void debug(const char *str)
 {
     if (debug_f){
-        fprintf(stderr, "%s\n", str);
+        fprintf(stderr, "%s\n", str ? str : "NULL");
     }
 }
 #endif
 
 void set_input_codename(char *codename)
 {
-    if (guess_f && 
-        is_inputcode_set &&
-        strcmp(codename, "") != 0 && 
-        strcmp(codename, input_codename) != 0)
-    {
+    if (!input_codename) {
+	input_codename = codename;
+    } else if (strcmp(codename, input_codename) != 0) {
         is_inputcode_mixed = TRUE;
+	input_codename = "";
     }
-    input_codename = codename;
-    is_inputcode_set = TRUE;
 }
 
 #if !defined(PERL_XS) && !defined(WIN32DLL)
@@ -5059,8 +5057,8 @@ void print_guessed_code(char *filename)
 {
     char *codename = "BINARY";
     char *str_nlmode = NULL;
-    if (!is_inputcode_mixed) {
-        if (strcmp(input_codename, "") == 0) {
+    if (!input_codename || *input_codename) {
+        if (!input_codename) {
             codename = "ASCII";
         } else {
             codename = input_codename;
@@ -5068,8 +5066,9 @@ void print_guessed_code(char *filename)
         if (nlmode_f == CR) str_nlmode = "CR";
         else if (nlmode_f == LF) str_nlmode = "LF";
         else if (nlmode_f == CRLF) str_nlmode = "CRLF";
+        else if (nlmode_f == EOF) str_nlmode = "MIXED NL";
     }
-    if (filename != NULL) printf("%s:", filename);
+    if (filename != NULL) printf("%s: ", filename);
     if (str_nlmode != NULL) printf("%s (%s)\n", codename, str_nlmode);
     else printf("%s\n", codename);
 }
@@ -5984,7 +5983,6 @@ void reinit(void)
 #endif
     guess_f = FALSE;
     is_inputcode_mixed = FALSE;
-    is_inputcode_set   = FALSE;
 #ifdef EXEC_IO
     exec_f = 0;
 #endif
@@ -6046,7 +6044,7 @@ void reinit(void)
 #ifdef CHECK_OPTION
     iconv_for_check = 0;
 #endif
-    input_codename = "";
+    input_codename = NULL;
 #ifdef WIN32DLL
     reinitdll();
 #endif /*WIN32DLL*/
