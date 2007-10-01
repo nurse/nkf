@@ -39,9 +39,9 @@
 **        E-Mail: furukawa@tcp-ip.or.jp
 **    まで御連絡をお願いします。
 ***********************************************************************/
-/* $Id: nkf.c,v 1.134 2007/09/19 13:06:23 naruse Exp $ */
+/* $Id: nkf.c,v 1.135 2007/10/01 12:37:58 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-09-19"
+#define NKF_RELEASE_DATE "2007-10-01"
 #include "config.h"
 #include "utf8tbl.h"
 
@@ -249,10 +249,10 @@ void  djgpp_setbinmode(FILE *fp)
 
 #define         BS      0x08
 #define         TAB     0x09
-#define         NL      0x0a
+#define         LF      0x0a
 #define         CR      0x0d
 #define         ESC     0x1b
-#define         SPACE   0x20
+#define         SP      0x20
 #define         AT      0x40
 #define         SSP     0xa0
 #define         DEL     0x7f
@@ -260,6 +260,7 @@ void  djgpp_setbinmode(FILE *fp)
 #define         SO      0x0e
 #define         SSO     0x8e
 #define         SS3     0x8f
+#define         CRLF    0x0D0A
 
 #define		is_alnum(c)  \
             (('a'<=c && c<='z')||('A'<= c && c<='Z')||('0'<=c && c<='9'))
@@ -269,11 +270,11 @@ void  djgpp_setbinmode(FILE *fp)
 #define nkf_isoctal(c)  ('0'<=c && c<='7')
 #define nkf_isdigit(c)  ('0'<=c && c<='9')
 #define nkf_isxdigit(c)  (nkf_isdigit(c) || ('a'<=c && c<='f') || ('A'<=c && c <= 'F'))
-#define nkf_isblank(c) (c == SPACE || c == TAB)
-#define nkf_isspace(c) (nkf_isblank(c) || c == CR || c == NL)
+#define nkf_isblank(c) (c == SP || c == TAB)
+#define nkf_isspace(c) (nkf_isblank(c) || c == CR || c == LF)
 #define nkf_isalpha(c) (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z'))
 #define nkf_isalnum(c) (nkf_isdigit(c) || nkf_isalpha(c))
-#define nkf_isprint(c) (' '<=c && c<='~')
+#define nkf_isprint(c) (SP<=c && c<='~')
 #define nkf_isgraph(c) ('!'<=c && c<='~')
 #define hex2bin(c) (('0'<=c&&c<='9') ? (c-'0') : \
                     ('A'<=c&&c<='F') ? (c-'A'+10) : \
@@ -398,7 +399,7 @@ static  nkf_char     e2s_conv(nkf_char c2, nkf_char c1, nkf_char *p2, nkf_char *
 static  void    s_oconv(nkf_char c2,nkf_char c1);
 static  void    j_oconv(nkf_char c2,nkf_char c1);
 static  void    fold_conv(nkf_char c2,nkf_char c1);
-static  void    cr_conv(nkf_char c2,nkf_char c1);
+static  void    nl_conv(nkf_char c2,nkf_char c1);
 static  void    z_conv(nkf_char c2,nkf_char c1);
 static  void    rot_conv(nkf_char c2,nkf_char c1);
 static  void    hira_conv(nkf_char c2,nkf_char c1);
@@ -637,7 +638,7 @@ static nkf_char (*iconv)(nkf_char c2,nkf_char c1,nkf_char c0) = no_connection2;
 
 static void (*o_zconv)(nkf_char c2,nkf_char c1) = no_connection;
 static void (*o_fconv)(nkf_char c2,nkf_char c1) = no_connection;
-static void (*o_crconv)(nkf_char c2,nkf_char c1) = no_connection;
+static void (*o_nlconv)(nkf_char c2,nkf_char c1) = no_connection;
 static void (*o_rot_conv)(nkf_char c2,nkf_char c1) = no_connection;
 static void (*o_hira_conv)(nkf_char c2,nkf_char c1) = no_connection;
 static void (*o_base64conv)(nkf_char c2,nkf_char c1) = no_connection;
@@ -754,7 +755,6 @@ static const unsigned char fv[] = {
 } ;
 
 
-#define    CRLF      1
 
 static int             file_out_f = FALSE;
 #ifdef OVERWRITE
@@ -765,7 +765,7 @@ static char            *backup_suffix = "";
 static char *get_backup_filename(const char *suffix, const char *filename);
 #endif
 
-static int             crmode_f = 0;   /* CR, NL, CRLF */
+static int             nlmode_f = 0;   /* CR, LF, CRLF */
 static nkf_char prev_cr = 0;
 #ifdef EASYWIN /*Easy Win */
 static int             end_check;
@@ -1171,27 +1171,27 @@ void options(unsigned char *cp)
 	p = 0;
         switch (*cp++) {
         case '-':  /* literal options */
-	    if (!*cp || *cp == SPACE) {        /* ignore the rest of arguments */
+	    if (!*cp || *cp == SP) {        /* ignore the rest of arguments */
 		option_mode = 1;
 		return;
 	    }
             for (i=0;i<sizeof(long_option)/sizeof(long_option[0]);i++) {
                 p = (unsigned char *)long_option[i].name;
                 for (j=0;*p && *p != '=' && *p == cp[j];p++, j++);
-		if (*p == cp[j] || cp[j] == ' '){
+		if (*p == cp[j] || cp[j] == SP){
 		    p = &cp[j] + 1;
 		    break;
 		}
 		p = 0;
             }
 	    if (p == 0) return;
-	    while(*cp && *cp != SPACE && cp++);
+	    while(*cp && *cp != SP && cp++);
             if (long_option[i].alias[0]){
 		cp_back = cp;
 		cp = (unsigned char *)long_option[i].alias;
 	    }else{
                 if (strcmp(long_option[i].name, "ic=") == 0){
-		    for (i=0; i < 16 && SPACE < p[i] && p[i] < DEL; i++){
+		    for (i=0; i < 16 && SP < p[i] && p[i] < DEL; i++){
 			codeset[i] = nkf_toupper(p[i]);
 		    }
 		    codeset[i] = 0;
@@ -1319,7 +1319,7 @@ void options(unsigned char *cp)
 		}
                 if (strcmp(long_option[i].name, "oc=") == 0){
 		    x0201_f = FALSE;
-		    for (i=0; i < 16 && SPACE < p[i] && p[i] < DEL; i++){
+		    for (i=0; i < 16 && SP < p[i] && p[i] < DEL; i++){
 			codeset[i] = nkf_toupper(p[i]);
 		    }
 		    codeset[i] = 0;
@@ -1890,23 +1890,23 @@ void options(unsigned char *cp)
             continue;
 #endif
         case 'c':/* add cr code */
-            crmode_f = CRLF;
+            nlmode_f = CRLF;
             continue;
         case 'd':/* delete cr code */
-            crmode_f = NL;
+            nlmode_f = LF;
             continue;
         case 'I':   /* ISO-2022-JP output */
             iso2022jp_f = TRUE;
             continue;
         case 'L':  /* line mode */
             if (*cp=='u') {         /* unix */
-                crmode_f = NL; cp++;
+                nlmode_f = LF; cp++;
             } else if (*cp=='m') { /* mac */
-                crmode_f = CR; cp++;
+                nlmode_f = CR; cp++;
             } else if (*cp=='w') { /* windows */
-                crmode_f = CRLF; cp++;
+                nlmode_f = CRLF; cp++;
             } else if (*cp=='0') { /* no conversion  */
-                crmode_f = 0; cp++;
+                nlmode_f = 0; cp++;
             }
             continue;
         case 'g':
@@ -1914,7 +1914,7 @@ void options(unsigned char *cp)
             guess_f = TRUE;
 #endif
             continue;
-        case ' ':    
+        case SP:    
         /* module muliple options in a string are allowed for Perl moudle  */
 	    while(*cp && *cp++!='-');
             continue;
@@ -2341,8 +2341,8 @@ void module_connection(void)
 	/* base64_count = 0; */
     }
 
-    if (crmode_f) {
-	o_crconv = oconv; oconv = cr_conv;
+    if (nlmode_f) {
+	o_nlconv = oconv; oconv = nl_conv;
     }
     if (rot_f) {
 	o_rot_conv = oconv; oconv = rot_conv;
@@ -2587,7 +2587,7 @@ nkf_char kanji_convert(FILE *f)
             } else
                 /* second byte, 7 bit code */
                 /* it might be kanji shitfted */
-                if ((c1 == DEL) || (c1 <= SPACE)) {
+                if ((c1 == DEL) || (c1 <= SP)) {
                     /* ignore bogus first code */
                     c2 = 0;
                     NEXT;
@@ -2702,14 +2702,14 @@ nkf_char kanji_convert(FILE *f)
                        NEXT;
                     }
                 }
-            } else if ((c1 > SPACE) && (c1 != DEL)) {
+            } else if ((c1 > SP) && (c1 != DEL)) {
                 /* in case of Roman characters */
                 if (shift_mode) { 
                     /* output 1 shifted byte */
                     if (iso8859_f) {
                         c2 = ISO8859_1;
                         SEND;
-                    } else if (SPACE<=c1 && c1<(0xe0&0x7f) ){
+                    } else if (SP<=c1 && c1<(0xe0&0x7f) ){
                       /* output 1 shifted byte */
 			if(iso2022jp_f && x0201_f==NO_X0201) {
 			    (*oconv)(GETA1, GETA2);
@@ -2852,7 +2852,7 @@ nkf_char kanji_convert(FILE *f)
                } else if ( c1 == 'N' || c1 == 'n' ){
                    /* SS2 */
                    c3 = (*i_getc)(f);  /* skip SS2 */
-                   if ( (SPACE<=c3 && c3 < 0x60) || (0xa0<=c3 && c3 < 0xe0)){
+                   if ( (SP<=c3 && c3 < 0x60) || (0xa0<=c3 && c3 < 0xe0)){
                        c1 = c3;
                        c2 = X0201;
                        SEND;
@@ -2890,9 +2890,9 @@ nkf_char kanji_convert(FILE *f)
 			       NUM : 2 0 3 4 5 X 1
 			     */
 			    static const char jphone_emoji_first_table[7] = {2, 0, 3, 4, 5, 0, 1};
-			    c0 = (jphone_emoji_first_table[c1 % 7] << 8) - SPACE + 0xE000 + CLASS_UNICODE;
+			    c0 = (jphone_emoji_first_table[c1 % 7] << 8) - SP + 0xE000 + CLASS_UNICODE;
 			    while ((c1 = (*i_getc)(f)) != EOF) {
-				if (SPACE <= c1 && c1 <= 'z') {
+				if (SP <= c1 && c1 <= 'z') {
 				    (*oconv)(0, c1 + c0);
 				} else break; /* c1 == SO */
 			    }
@@ -2905,32 +2905,32 @@ nkf_char kanji_convert(FILE *f)
 		    (*oconv)(0, ESC);
 		    SEND;
 		}
-	    } else if (c1 == NL || c1 == CR) {
+	    } else if (c1 == LF || c1 == CR) {
 		if (broken_f&4) {
 		    input_mode = ASCII; set_iconv(FALSE, 0);
 		    SEND;
 		} else if (mime_decode_f && !mime_decode_mode){
-		    if (c1 == NL) {
-			if ((c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
-			    i_ungetc(SPACE,f);
+		    if (c1 == LF) {
+			if ((c1=(*i_getc)(f))!=EOF && c1 == SP) {
+			    i_ungetc(SP,f);
 			    continue;
 			} else {
 			    i_ungetc(c1,f);
 			}
-			c1 = NL;
+			c1 = LF;
 			SEND;
 		    } else  { /* if (c1 == CR)*/
 			if ((c1=(*i_getc)(f))!=EOF) {
-			    if (c1==SPACE) {
-				i_ungetc(SPACE,f);
+			    if (c1==SP) {
+				i_ungetc(SP,f);
 				continue;
-			    } else if (c1 == NL && (c1=(*i_getc)(f))!=EOF && c1 == SPACE) {
-				i_ungetc(SPACE,f);
+			    } else if (c1 == LF && (c1=(*i_getc)(f))!=EOF && c1 == SP) {
+				i_ungetc(SP,f);
 				continue;
 			    } else {
 				i_ungetc(c1,f);
 			    }
-			    i_ungetc(NL,f);
+			    i_ungetc(LF,f);
 			} else {
 			    i_ungetc(c1,f);
 			}
@@ -2938,9 +2938,9 @@ nkf_char kanji_convert(FILE *f)
 			SEND;
 		    }
 		}
-		if (!crmode_f) {
-		    if (prev_cr && c1 == NL) crmode_f = CRLF;
-		    else crmode_f = c1;
+		if (!nlmode_f) {
+		    if (prev_cr && c1 == LF) nlmode_f = CRLF;
+		    else nlmode_f = c1;
 		}
 	    } else if (c1 == DEL && input_mode == X0208 ) {
 		/* CP5022x */
@@ -3198,7 +3198,7 @@ nkf_char s2e_conv(nkf_char c2, nkf_char c1, nkf_char *p2, nkf_char *p1)
 	    if (0x9E < c1) c2++;
 	}
 	if (c1 < 0x9F)
-	    c1 = c1 - ((c1 > DEL) ? SPACE : 0x1F);
+	    c1 = c1 - ((c1 > DEL) ? SP : 0x1F);
 	else {
 	    c1 = c1 - 0x7E;
 	}
@@ -3216,7 +3216,7 @@ nkf_char s_iconv(nkf_char c2, nkf_char c1, nkf_char c0)
 {
     if (c2 == X0201) {
 	c1 &= 0x7f;
-    } else if ((c2 == EOF) || (c2 == 0) || c2 < SPACE) {
+    } else if ((c2 == EOF) || (c2 == 0) || c2 < SP) {
         /* NOP */
     } else if (!x0213_f && 0xF0 <= c2 && c2 <= 0xF9 && 0x40 <= c1 && c1 <= 0xFC) {
 	/* CP932 UDC */
@@ -3264,7 +3264,7 @@ nkf_char e_iconv(nkf_char c2, nkf_char c1, nkf_char c0)
     } else if (c2 == SSO){
         c2 = X0201;
         c1 &= 0x7f;
-    } else if ((c2 == EOF) || (c2 == 0) || c2 < SPACE) {
+    } else if ((c2 == EOF) || (c2 == 0) || c2 < SP) {
         /* NOP */
     } else {
 	if (!cp51932_f && ms_ucs_map_f && 0xF5 <= c2 && c2 <= 0xFE && 0xA1 <= c1 && c1 <= 0xFE) {
@@ -4353,46 +4353,46 @@ nkf_char broken_ungetc(nkf_char c, FILE *f)
     return c;
 }
 
-void cr_conv(nkf_char c2, nkf_char c1)
+void nl_conv(nkf_char c2, nkf_char c1)
 {
     if (prev_cr) {
 	prev_cr = 0;
-	if (! (c2==0&&c1==NL) ) {
-	    cr_conv(0,'\n');
+	if (! (c2==0&&c1==LF) ) {
+	    nl_conv(0,LF);
 	}
     }
     if (c2) {
-        (*o_crconv)(c2,c1);
-    } else if (c1=='\r') {
+        (*o_nlconv)(c2,c1);
+    } else if (c1==CR) {
 	prev_cr = c1;
-    } else if (c1=='\n') {
-        if (crmode_f==CRLF) {
-            (*o_crconv)(0,'\r');
-	} else if (crmode_f==CR) {
-            (*o_crconv)(0,'\r');
+    } else if (c1==LF) {
+        if (nlmode_f==CRLF) {
+            (*o_nlconv)(0,CR);
+	} else if (nlmode_f==CR) {
+            (*o_nlconv)(0,CR);
 	    return;
 	} 
-	(*o_crconv)(0,NL);
-    } else if (c1!='\032' || crmode_f!=NL){
-        (*o_crconv)(c2,c1);
+	(*o_nlconv)(0,LF);
+    } else if (c1!='\032' || nlmode_f!=LF){
+        (*o_nlconv)(c2,c1);
     }
 }
 
 /* 
   Return value of fold_conv()
 
-       \n  add newline  and output char
-       \r  add newline  and output nothing
-       ' ' space
-       0   skip  
-       1   (or else) normal output 
+       LF  add newline  and output char
+       CR  add newline  and output nothing
+       SP  space
+       0   skip
+       1   (or else) normal output
 
   fold state in prev (previous character)
 
       >0x80 Japanese (X0208/X0201)
       <0x80 ASCII
-      \n    new line 
-      ' '   space
+      LF    new line
+      SP    space
 
   This fold algorthm does not preserve heading space in a line.
   This is the main difference from fmt.
@@ -4405,30 +4405,30 @@ void fold_conv(nkf_char c2, nkf_char c1)
     nkf_char prev0;
     nkf_char fold_state;
 
-    if (c1== '\r' && !fold_preserve_f) {
+    if (c1== CR && !fold_preserve_f) {
     	fold_state=0;  /* ignore cr */
-    }else if (c1== '\n'&&f_prev=='\r' && fold_preserve_f) {
-        f_prev = '\n';
+    }else if (c1== LF&&f_prev==CR && fold_preserve_f) {
+        f_prev = LF;
      	fold_state=0;  /* ignore cr */
     } else if (c1== BS) {
         if (f_line>0) f_line--;
         fold_state =  1;
     } else if (c2==EOF && f_line != 0) {    /* close open last line */
-            fold_state = '\n';
-    } else if ((c1=='\n' && !fold_preserve_f)
-               || ((c1=='\r'||(c1=='\n'&&f_prev!='\r'))
+            fold_state = LF;
+    } else if ((c1==LF && !fold_preserve_f)
+               || ((c1==CR||(c1==LF&&f_prev!=CR))
                    && fold_preserve_f)) {
         /* new line */
         if (fold_preserve_f) { 
             f_prev = c1;
             f_line = 0;
-            fold_state =  '\r';
+            fold_state =  CR;
 	} else if ((f_prev == c1 && !fold_preserve_f)
-                   || (f_prev == '\n' && fold_preserve_f)
+                   || (f_prev == LF && fold_preserve_f)
                    ) {        /* duplicate newline */
             if (f_line) {
                 f_line = 0;
-                fold_state =  '\n';    /* output two newline */
+                fold_state =  LF;    /* output two newline */
             } else {
                 f_line = 0;
                 fold_state =  1;
@@ -4437,35 +4437,35 @@ void fold_conv(nkf_char c2, nkf_char c1)
             if (f_prev&0x80) {     /* Japanese? */
                 f_prev = c1;
                 fold_state =  0;       /* ignore given single newline */
-            } else if (f_prev==' ') {
+            } else if (f_prev==SP) {
                 fold_state =  0;
             } else {
                 f_prev = c1;
                 if (++f_line<=fold_len) 
-                    fold_state =  ' ';
+                    fold_state =  SP;
                 else {
                     f_line = 0;
-                    fold_state =  '\r';        /* fold and output nothing */
+                    fold_state =  CR;        /* fold and output nothing */
                 }
             }
         }
     } else if (c1=='\f') {
-        f_prev = '\n';
+        f_prev = LF;
         f_line = 0;
-        fold_state =  '\n';            /* output newline and clear */
-    } else if ( (c2==0  && c1==' ')||
-               (c2==0  && c1=='\t')||
+        fold_state =  LF;            /* output newline and clear */
+    } else if ( (c2==0  && c1==SP)||
+               (c2==0  && c1==TAB)||
                (c2=='!'&& c1=='!')) {
         /* X0208 kankaku or ascii space */
-            if (f_prev == ' ') {
+            if (f_prev == SP) {
                 fold_state = 0;         /* remove duplicate spaces */
             } else {
-                f_prev = ' ';    
+                f_prev = SP;    
                 if (++f_line<=fold_len) 
-                    fold_state = ' ';         /* output ASCII space only */
+                    fold_state = SP;         /* output ASCII space only */
                 else {
-                    f_prev = ' '; f_line = 0;
-                    fold_state = '\r';        /* fold and output nothing */
+                    f_prev = SP; f_line = 0;
+                    fold_state = CR;        /* fold and output nothing */
                 }
             }
     } else {
@@ -4479,7 +4479,7 @@ void fold_conv(nkf_char c2, nkf_char c1)
         } else {
             if (f_line>fold_len+fold_margin) { /* too many kinsoku suspension */
                 f_line = char_size(c2,c1);
-                fold_state =  '\n';       /* We can't wait, do fold now */
+                fold_state =  LF;       /* We can't wait, do fold now */
             } else if (c2==X0201) {
             /* simple kinsoku rules  return 1 means no folding  */
                 if (c1==(0xde&0x7f)) fold_state = 1; /* ゛*/
@@ -4488,12 +4488,12 @@ void fold_conv(nkf_char c2, nkf_char c1)
                 else if (c1==(0xa3&0x7f)) fold_state = 1; /* ，*/
                 else if (c1==(0xa1&0x7f)) fold_state = 1; /* 」*/
                 else if (c1==(0xb0&0x7f)) fold_state = 1; /* - */
-                else if (SPACE<=c1 && c1<=(0xdf&0x7f)) {      /* X0201 */
+                else if (SP<=c1 && c1<=(0xdf&0x7f)) {      /* X0201 */
 		    f_line = 1;
-		    fold_state = '\n';/* add one new f_line before this character */
+		    fold_state = LF;/* add one new f_line before this character */
 		} else {
 		    f_line = 1;
-		    fold_state = '\n';/* add one new f_line before this character */
+		    fold_state = LF;/* add one new f_line before this character */
 		}
             } else if (c2==0) {
                 /* kinsoku point in ASCII */ 
@@ -4511,12 +4511,12 @@ void fold_conv(nkf_char c2, nkf_char c1)
 		/* just after special */
 		} else if (!is_alnum(prev0)) {
 		    f_line = char_size(c2,c1);
-		    fold_state = '\n';
-		} else if ((prev0==' ') ||   /* ignored new f_line */
-                      (prev0=='\n')||        /* ignored new f_line */
+		    fold_state = LF;
+		} else if ((prev0==SP) ||   /* ignored new f_line */
+                      (prev0==LF)||        /* ignored new f_line */
                       (prev0&0x80)) {        /* X0208 - ASCII */
 		    f_line = char_size(c2,c1);
-                    fold_state = '\n';/* add one new f_line before this character */
+                    fold_state = LF;/* add one new f_line before this character */
                 } else {
                     fold_state = 1;  /* default no fold in ASCII */
                 }
@@ -4536,13 +4536,13 @@ void fold_conv(nkf_char c2, nkf_char c1)
                     else if (c1==',')  fold_state = 1; /* ゜ */
                          /* default no fold in kinsoku */
 		    else { 
-			fold_state = '\n';
+			fold_state = LF;
 			f_line = char_size(c2,c1);
 			/* add one new f_line before this character */
 		    }
                 } else {
 		    f_line = char_size(c2,c1);
-                    fold_state = '\n'; 
+                    fold_state = LF; 
                     /* add one new f_line before this character */
                 }
             }
@@ -4550,18 +4550,18 @@ void fold_conv(nkf_char c2, nkf_char c1)
     }
     /* terminator process */
     switch(fold_state) {
-        case '\n': 
-            (*o_fconv)(0,'\n');
+        case LF: 
+            (*o_fconv)(0,LF);
             (*o_fconv)(c2,c1);
             break;
         case 0:    
             return;
-        case '\r': 
-            (*o_fconv)(0,'\n');
+        case CR: 
+            (*o_fconv)(0,LF);
             break;
-        case '\t': 
-        case ' ': 
-            (*o_fconv)(0,' ');
+        case TAB: 
+        case SP: 
+            (*o_fconv)(0,SP);
             break;
         default:
             (*o_fconv)(c2,c1);
@@ -4585,25 +4585,25 @@ void z_conv(nkf_char c2, nkf_char c1)
 	    if (c2 == X0201) {
 		if (c1 == (0xde&0x7f)) { /* 濁点 */
 		    z_prev2 = 0;
-		    (*o_zconv)(dv[(z_prev1-SPACE)*2], dv[(z_prev1-SPACE)*2+1]);
+		    (*o_zconv)(dv[(z_prev1-SP)*2], dv[(z_prev1-SP)*2+1]);
 		    return;
-		} else if (c1 == (0xdf&0x7f) && ev[(z_prev1-SPACE)*2]) {  /* 半濁点 */
+		} else if (c1 == (0xdf&0x7f) && ev[(z_prev1-SP)*2]) {  /* 半濁点 */
 		    z_prev2 = 0;
-		    (*o_zconv)(ev[(z_prev1-SPACE)*2], ev[(z_prev1-SPACE)*2+1]);
+		    (*o_zconv)(ev[(z_prev1-SP)*2], ev[(z_prev1-SP)*2+1]);
 		    return;
 		}
 	    }
 	    z_prev2 = 0;
-	    (*o_zconv)(cv[(z_prev1-SPACE)*2], cv[(z_prev1-SPACE)*2+1]);
+	    (*o_zconv)(cv[(z_prev1-SP)*2], cv[(z_prev1-SP)*2+1]);
 	}
 	if (c2 == X0201) {
-	    if (dv[(c1-SPACE)*2] || ev[(c1-SPACE)*2]) {
+	    if (dv[(c1-SP)*2] || ev[(c1-SP)*2]) {
 		/* wait for 濁点 or 半濁点 */
 		z_prev1 = c1;
 		z_prev2 = c2;
 		return;
 	    } else {
-		(*o_zconv)(cv[(c1-SPACE)*2], cv[(c1-SPACE)*2+1]);
+		(*o_zconv)(cv[(c1-SP)*2], cv[(c1-SP)*2+1]);
 		return;
 	    }
 	}
@@ -4622,10 +4622,10 @@ void z_conv(nkf_char c2, nkf_char c1)
        if (0x21==c1) {
            if (alpha_f&2) {
                c2 = 0;
-               c1 = ' ';
+               c1 = SP;
            } else if (alpha_f&4) {
-                (*o_zconv)(0, ' ');
-                (*o_zconv)(0, ' ');
+                (*o_zconv)(0, SP);
+                (*o_zconv)(0, SP);
                 return;
            } 
        } else if (alpha_f&1 && 0x20<c1 && c1<0x7f && fv[c1-0x20]) {
@@ -4916,7 +4916,7 @@ nkf_char mime_begin_strict(FILE *f)
     p = mime_pattern[j];
     r[0]='='; r[1]='?';
 
-    for(i=2;p[i]>' ';i++) {                   /* start at =? */
+    for(i=2;p[i]>SP;i++) {                   /* start at =? */
         if ( ((r[i] = c1 = (*i_getc)(f))==EOF) || nkf_toupper(c1) != p[i] ) {
             /* pattern fails, try next one */
             q = p;
@@ -4985,7 +4985,7 @@ nkf_char mime_begin(FILE *f)
     for(i=2;i<MAXRECOVER;i++) {                   /* start at =? */
         /* We accept any character type even if it is breaked by new lines */
         c1 = (*i_getc)(f); Fifo(mime_last++) = (unsigned char)c1;
-        if (c1=='\n'||c1==' '||c1=='\r'||
+        if (c1==LF||c1==SP||c1==CR||
                 c1=='-'||c1=='_'||is_alnum(c1) ) continue;
         if (c1=='=') {
             /* Failed. But this could be another MIME preemble */
@@ -5058,19 +5058,19 @@ void set_input_codename(char *codename)
 void print_guessed_code(char *filename)
 {
     char *codename = "BINARY";
-    char *str_crmode = NULL;
+    char *str_nlmode = NULL;
     if (!is_inputcode_mixed) {
         if (strcmp(input_codename, "") == 0) {
             codename = "ASCII";
         } else {
             codename = input_codename;
         }
-        if (crmode_f == CR) str_crmode = "CR";
-        else if (crmode_f == NL) str_crmode = "LF";
-        else if (crmode_f == CRLF) str_crmode = "CRLF";
+        if (nlmode_f == CR) str_nlmode = "CR";
+        else if (nlmode_f == LF) str_nlmode = "LF";
+        else if (nlmode_f == CRLF) str_nlmode = "CRLF";
     }
     if (filename != NULL) printf("%s:", filename);
-    if (str_crmode != NULL) printf("%s (%s)\n", codename, str_crmode);
+    if (str_nlmode != NULL) printf("%s (%s)\n", codename, str_nlmode);
     else printf("%s\n", codename);
 }
 #endif /*WIN32DLL*/
@@ -5251,8 +5251,8 @@ mime_getc(FILE *f)
     if (mime_decode_mode == 'Q') {
         if ((c1 = (*i_mgetc)(f)) == EOF) return (EOF);
 restart_mime_q:
-        if (c1=='_' && mimebuf_f != FIXED_MIME) return ' ';
-	if (c1<=' ' || DEL<=c1) {
+        if (c1=='_' && mimebuf_f != FIXED_MIME) return SP;
+	if (c1<=SP || DEL<=c1) {
 	    mime_decode_mode = exit_mode; /* prepare for quit */
 	    return c1;
 	}
@@ -5273,32 +5273,32 @@ restart_mime_q:
 	    }
 	    while ((c1=(*i_getc)(f))!=EOF) {
 		switch (c1) {
-		case NL:
+		case LF:
 		case CR:
-		    if (c1==NL) {
-			if ((c1=(*i_getc)(f))!=EOF && (c1==SPACE||c1==TAB)) {
-			    i_ungetc(SPACE,f);
+		    if (c1==LF) {
+			if ((c1=(*i_getc)(f))!=EOF && (c1==SP||c1==TAB)) {
+			    i_ungetc(SP,f);
 			    continue;
 			} else {
 			    i_ungetc(c1,f);
 			}
-			c1 = NL;
+			c1 = LF;
 		    } else {
-			if ((c1=(*i_getc)(f))!=EOF && c1 == NL) {
-			    if ((c1=(*i_getc)(f))!=EOF && (c1==SPACE||c1==TAB)) {
-				i_ungetc(SPACE,f);
+			if ((c1=(*i_getc)(f))!=EOF && c1 == LF) {
+			    if ((c1=(*i_getc)(f))!=EOF && (c1==SP||c1==TAB)) {
+				i_ungetc(SP,f);
 				continue;
 			    } else {
 				i_ungetc(c1,f);
 			    }
-			    i_ungetc(NL,f);
+			    i_ungetc(LF,f);
 			} else {
 			    i_ungetc(c1,f);
 			}
 			c1 = CR;
 		    }
 		    break;
-		case SPACE:
+		case SP:
 		case TAB:
 		    lwsp_buf[lwsp_count] = (unsigned char)c1;
 		    if (lwsp_count++>lwsp_size){
@@ -5315,7 +5315,7 @@ restart_mime_q:
 		}
 		break;
 	    }
-	    if (lwsp_count > 0 && (c1 != '=' || (lwsp_buf[lwsp_count-1] != SPACE && lwsp_buf[lwsp_count-1] != TAB))) {
+	    if (lwsp_count > 0 && (c1 != '=' || (lwsp_buf[lwsp_count-1] != SP && lwsp_buf[lwsp_count-1] != TAB))) {
 		i_ungetc(c1,f);
 		for(lwsp_count--;lwsp_count>0;lwsp_count--)
 		    i_ungetc(lwsp_buf[lwsp_count],f);
@@ -5324,8 +5324,8 @@ restart_mime_q:
 	    free(lwsp_buf);
             return c1;
         }
-        if (c1=='='&&c2<' ') { /* this is soft wrap */
-            while((c1 =  (*i_mgetc)(f)) <=' ') {
+        if (c1=='='&&c2<SP) { /* this is soft wrap */
+            while((c1 =  (*i_mgetc)(f)) <=SP) {
 		if ((c1 = (*i_mgetc)(f)) == EOF) return (EOF);
 	    }
             mime_decode_mode = 'Q'; /* still in MIME */
@@ -5337,7 +5337,7 @@ restart_mime_q:
             return c1;
         }
         if ((c3 = (*i_mgetc)(f)) == EOF) return (EOF);
-        if (c2<=' ') return c2;
+        if (c2<=SP) return c2;
         mime_decode_mode = 'Q'; /* still in MIME */
         return ((hex2bin(c2)<<4) + hex2bin(c3));
     }
@@ -5359,12 +5359,12 @@ restart_mime_q:
     mode = mime_decode_mode;
     mime_decode_mode = exit_mode;  /* prepare for quit */
 
-    while ((c1 = (*i_mgetc)(f))<=' ') {
+    while ((c1 = (*i_mgetc)(f))<=SP) {
         if (c1==EOF)
             return (EOF);
     }
 mime_c2_retry:
-    if ((c2 = (*i_mgetc)(f))<=' ') {
+    if ((c2 = (*i_mgetc)(f))<=SP) {
         if (c2==EOF)
             return (EOF);
 	if (mime_f != STRICT_MIME) goto mime_c2_retry;
@@ -5381,35 +5381,35 @@ mime_c2_retry:
 	}
 	while ((c1=(*i_getc)(f))!=EOF) {
 	    switch (c1) {
-	    case NL:
+	    case LF:
 	    case CR:
-		if (c1==NL) {
-		    if ((c1=(*i_getc)(f))!=EOF && (c1==SPACE||c1==TAB)) {
-			i_ungetc(SPACE,f);
+		if (c1==LF) {
+		    if ((c1=(*i_getc)(f))!=EOF && (c1==SP||c1==TAB)) {
+			i_ungetc(SP,f);
 			continue;
 		    } else {
 			i_ungetc(c1,f);
 		    }
-		    c1 = NL;
+		    c1 = LF;
 		} else {
 		    if ((c1=(*i_getc)(f))!=EOF) {
-			if (c1==SPACE) {
-			    i_ungetc(SPACE,f);
+			if (c1==SP) {
+			    i_ungetc(SP,f);
 			    continue;
-			} else if ((c1=(*i_getc)(f))!=EOF && (c1==SPACE||c1==TAB)) {
-			    i_ungetc(SPACE,f);
+			} else if ((c1=(*i_getc)(f))!=EOF && (c1==SP||c1==TAB)) {
+			    i_ungetc(SP,f);
 			    continue;
 			} else {
 			    i_ungetc(c1,f);
 			}
-			i_ungetc(NL,f);
+			i_ungetc(LF,f);
 		    } else {
 			i_ungetc(c1,f);
 		    }
 		    c1 = CR;
 		}
 		break;
-	    case SPACE:
+	    case SP:
 	    case TAB:
 		lwsp_buf[lwsp_count] = (unsigned char)c1;
 		if (lwsp_count++>lwsp_size){
@@ -5426,7 +5426,7 @@ mime_c2_retry:
 	    }
 	    break;
 	}
-	if (lwsp_count > 0 && (c1 != '=' || (lwsp_buf[lwsp_count-1] != SPACE && lwsp_buf[lwsp_count-1] != TAB))) {
+	if (lwsp_count > 0 && (c1 != '=' || (lwsp_buf[lwsp_count-1] != SP && lwsp_buf[lwsp_count-1] != TAB))) {
 	    i_ungetc(c1,f);
 	    for(lwsp_count--;lwsp_count>0;lwsp_count--)
 		i_ungetc(lwsp_buf[lwsp_count],f);
@@ -5436,7 +5436,7 @@ mime_c2_retry:
         return c1;
     }
 mime_c3_retry:
-    if ((c3 = (*i_mgetc)(f))<=' ') {
+    if ((c3 = (*i_mgetc)(f))<=SP) {
         if (c3==EOF)
             return (EOF);
 	if (mime_f != STRICT_MIME) goto mime_c3_retry;
@@ -5444,7 +5444,7 @@ mime_c3_retry:
         return c3;
     }
 mime_c4_retry:
-    if ((c4 = (*i_mgetc)(f))<=' ') {
+    if ((c4 = (*i_mgetc)(f))<=SP) {
         if (c4==EOF)
             return (EOF);
 	if (mime_f != STRICT_MIME) goto mime_c4_retry;
@@ -5569,19 +5569,19 @@ void open_mime(nkf_char mode)
             (*o_mputc)(mimeout_buf[i]);
 	    i++;
 	}
-	(*o_mputc)(NL);
-	(*o_mputc)(SPACE);
+	(*o_mputc)(LF);
+	(*o_mputc)(SP);
 	base64_count = 1;
 	if (!mimeout_preserve_space && mimeout_buf_count>0
-	    && (mimeout_buf[i]==SPACE || mimeout_buf[i]==TAB
-	    	|| mimeout_buf[i]==CR || mimeout_buf[i]==NL )) {
+	    && (mimeout_buf[i]==SP || mimeout_buf[i]==TAB
+	    	|| mimeout_buf[i]==CR || mimeout_buf[i]==LF )) {
 	    i++;
 	}
     }
     if (!mimeout_preserve_space) {
 	for (;i<mimeout_buf_count;i++) {
-	    if (mimeout_buf[i]==SPACE || mimeout_buf[i]==TAB
-		|| mimeout_buf[i]==CR || mimeout_buf[i]==NL ) {
+	    if (mimeout_buf[i]==SP || mimeout_buf[i]==TAB
+		|| mimeout_buf[i]==CR || mimeout_buf[i]==LF ) {
 		(*o_mputc)(mimeout_buf[i]);
 		base64_count ++;
 	    } else {
@@ -5640,7 +5640,7 @@ void mimeout_addchar(nkf_char c)
 {
     switch(mimeout_mode) {
     case 'Q':
-	if (c==CR||c==NL) {
+	if (c==CR||c==LF) {
 	    (*o_mputc)(c);
 	    base64_count = 0;
 	} else if(!nkf_isalnum(c)) {
@@ -5686,24 +5686,24 @@ void mime_prechar(nkf_char c2, nkf_char c1)
         if (c2 == EOF){
             if (base64_count + mimeout_buf_count/3*4> 73){
                 (*o_base64conv)(EOF,0);
-                (*o_base64conv)(0,NL);
-                (*o_base64conv)(0,SPACE);
+                (*o_base64conv)(0,LF);
+                (*o_base64conv)(0,SP);
             }
         } else if (c2){
             if (base64_count + mimeout_buf_count/3*4> 66){
                 (*o_base64conv)(EOF,0);
-                (*o_base64conv)(0,NL);
-                (*o_base64conv)(0,SPACE);
+                (*o_base64conv)(0,LF);
+                (*o_base64conv)(0,SP);
             }
         }/*else if (mime_lastchar2){
             if (c1 <=DEL && !nkf_isspace(c1)){
-                (*o_base64conv)(0,SPACE);
+                (*o_base64conv)(0,SP);
             }
         }*/
     }/*else{
         if (c2 && mime_lastchar2 == 0
             && mime_lastchar1 && !nkf_isspace(mime_lastchar1)){
-            (*o_base64conv)(0,SPACE);
+            (*o_base64conv)(0,SP);
         }
     }*/
     /*mime_lastchar2 = c2;
@@ -5718,16 +5718,16 @@ void mime_putc(nkf_char c)
     if (mimeout_f == FIXED_MIME){
         if (mimeout_mode == 'Q'){
             if (base64_count > 71){
-                if (c!=CR && c!=NL) {
+                if (c!=CR && c!=LF) {
                     (*o_mputc)('=');
-                    (*o_mputc)(NL);
+                    (*o_mputc)(LF);
                 }
                 base64_count = 0;
             }
         }else{
             if (base64_count > 71){
                 eof_mime();
-                (*o_mputc)(NL);
+                (*o_mputc)(LF);
                 base64_count = 0;
             }
             if (c == EOF) { /* c==EOF */
@@ -5774,19 +5774,19 @@ void mime_putc(nkf_char c)
 
     if (mimeout_mode=='Q') {
         if (c <= DEL && (output_mode==ASCII ||output_mode == ISO8859_1 ) ) {
-	    if (c == CR || c == NL) {
+	    if (c == CR || c == LF) {
 		close_mime();
 		(*o_mputc)(c);
 		base64_count = 0;
 		return;
-            } else if (c <= SPACE) {
+            } else if (c <= SP) {
                 close_mime();
 		if (base64_count > 70) {
-		    (*o_mputc)(NL);
+		    (*o_mputc)(LF);
 		    base64_count = 0;
 		}
 		if (!nkf_isblank(c)) {
-		    (*o_mputc)(SPACE);
+		    (*o_mputc)(SP);
 		    base64_count++;
 		}
             }
@@ -5805,12 +5805,12 @@ void mime_putc(nkf_char c)
     if (!mimeout_mode) {
         if (c <= DEL && (output_mode==ASCII ||output_mode == ISO8859_1)) {
             if (nkf_isspace(c)) {
-                if (c==CR || c==NL) {
+                if (c==CR || c==LF) {
                     base64_count=0;
                 }
                 for (i=0;i<mimeout_buf_count;i++) {
                     (*o_mputc)(mimeout_buf[i]);
-                    if (mimeout_buf[i] == CR || mimeout_buf[i] == NL){
+                    if (mimeout_buf[i] == CR || mimeout_buf[i] == LF){
                         base64_count = 0;
                     }else{
                         base64_count++;
@@ -5821,11 +5821,11 @@ void mime_putc(nkf_char c)
             }else{
                 if (base64_count > 1
                     && base64_count + mimeout_buf_count > 76
-		    && mimeout_buf[0] != CR && mimeout_buf[0] != NL){
-                    (*o_mputc)(NL);
+		    && mimeout_buf[0] != CR && mimeout_buf[0] != LF){
+                    (*o_mputc)(LF);
                     base64_count = 0;
                     if (!nkf_isspace(mimeout_buf[0])){
-                        (*o_mputc)(SPACE);
+                        (*o_mputc)(SP);
                         base64_count++;
                     }
                 }
@@ -5836,19 +5836,19 @@ void mime_putc(nkf_char c)
             }
             return;
         }else{
-            if (lastchar==CR || lastchar == NL){
+            if (lastchar==CR || lastchar == LF){
                 for (i=0;i<mimeout_buf_count;i++) {
                     (*o_mputc)(mimeout_buf[i]);
                 }
                 base64_count = 0;
                 mimeout_buf_count = 0;
             }
-            if (lastchar==SPACE) {
+            if (lastchar==SP) {
                 for (i=0;i<mimeout_buf_count-1;i++) {
                     (*o_mputc)(mimeout_buf[i]);
                     base64_count++;
                 }
-                mimeout_buf[0] = SPACE;
+                mimeout_buf[0] = SP;
                 mimeout_buf_count = 1;
             }
             open_mime(output_mode);
@@ -5856,13 +5856,13 @@ void mime_putc(nkf_char c)
     }else{
         /* mimeout_mode == 'B', 1, 2 */
         if ( c<=DEL && (output_mode==ASCII ||output_mode == ISO8859_1 ) ) {
-            if (lastchar == CR || lastchar == NL){
+            if (lastchar == CR || lastchar == LF){
                 if (nkf_isblank(c)) {
                     for (i=0;i<mimeout_buf_count;i++) {
                         mimeout_addchar(mimeout_buf[i]);
                     }
                     mimeout_buf_count = 0;
-                } else if (SPACE<c && c<DEL) {
+                } else if (SP<c && c<DEL) {
                     eof_mime();
                     for (i=0;i<mimeout_buf_count;i++) {
                         (*o_mputc)(mimeout_buf[i]);
@@ -5871,9 +5871,9 @@ void mime_putc(nkf_char c)
                     mimeout_buf_count = 0;
                 }
             }
-            if (c==SPACE || c==TAB || c==CR || c==NL) {
+            if (c==SP || c==TAB || c==CR || c==LF) {
                 for (i=0;i<mimeout_buf_count;i++) {
-                    if (SPACE<mimeout_buf[i] && mimeout_buf[i]<DEL) {
+                    if (SP<mimeout_buf[i] && mimeout_buf[i]<DEL) {
                         eof_mime();
                         for (i=0;i<mimeout_buf_count;i++) {
                             (*o_mputc)(mimeout_buf[i]);
@@ -5893,7 +5893,7 @@ void mime_putc(nkf_char c)
                 }
                 return;
             }
-            if (mimeout_buf_count>0 && SPACE<c && c!='=') {
+            if (mimeout_buf_count>0 && SP<c && c!='=') {
                 mimeout_buf[mimeout_buf_count++] = (char)c;
                 if (mimeout_buf_count>MIMEOUT_BUF_LENGTH) {
                     j = mimeout_buf_count;
@@ -5910,7 +5910,7 @@ void mime_putc(nkf_char c)
 	j = mimeout_buf_count;
 	mimeout_buf_count = 0;
 	for (i=0;i<j;i++) {
-	    if (mimeout_buf[i]==CR || mimeout_buf[i]==NL)
+	    if (mimeout_buf[i]==CR || mimeout_buf[i]==LF)
 		break;
 	    mimeout_addchar(mimeout_buf[i]);
 	}
@@ -6018,7 +6018,7 @@ void reinit(void)
     oconv = DEFAULT_CONV;
     o_zconv = no_connection;
     o_fconv = no_connection;
-    o_crconv = no_connection;
+    o_nlconv = no_connection;
     o_rot_conv = no_connection;
     o_hira_conv = no_connection;
     o_base64conv = no_connection;
@@ -6038,7 +6038,7 @@ void reinit(void)
     shift_mode =  FALSE;
     mime_decode_mode = FALSE;
     file_out_f = FALSE;
-    crmode_f = 0;
+    nlmode_f = 0;
     option_mode = 0;
     broken_counter = 0;
     broken_last = 0;
