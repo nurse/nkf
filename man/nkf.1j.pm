@@ -511,7 +511,17 @@ morb@fujitsu, kiss@ayumi.stars.flab.fujitsu, cen122@flab.fujitsu,
 yuki@flab.fujitsu 他、fujitsu & flab.fujitsu の皆さんの協力に感謝。
 shinoda@cs.titech, kato@cs.titech, uematsu@cs.titech  TNX
 kono@ie.u-ryukyu.ac.jp
+void@merope.pleiades.or.jp (Kusakabe Youichi)
+NIDE Naoyuki <nide@ics.nara-wu.ac.jp>
+ohta@src.ricoh.co.jp (Junn Ohta)
+inouet@strl.nhk.or.jp (Tomoyuki Inoue)
+kiri@pulser.win.or.jp (Tetsuaki Kiriyama)
+Kimihiko Sato <sato@sail.t.u-tokyo.ac.jp>
+a_kuroe@kuroe.aoba.yokohama.jp (Akihiko Kuroe)
+kono@ie.u-ryukyu.ac.jp (Shinji Kono)
+GHG00637@nifty-serve.or.jp (COW)
 
+/* end */
 =head2 nkf 1.9-
 
 =over

@@ -1,7 +1,7 @@
 /** Network Kanji Filter. (PDS Version)
 ************************************************************************
 ** Copyright (C) 1987, Fujitsu LTD. (Itaru ICHIKAWA)
-** 連絡先： （株）富士通研究所　ソフト３研　市川　至 
+** 連絡先： （株）富士通研究所　ソフト３研　市川　至
 ** （E-Mail Address: ichikawa@flab.fujitsu.co.jp）
 ** Copyright (C) 1996,1998
 ** Copyright (C) 2002
@@ -17,86 +17,28 @@
 **    バイナリの配布の際にはversion messageを保存することを条件とします。
 **    このプログラムについては特に何の保証もしない、悪しからず。
 **
-**    Everyone is permitted to do anything on this program 
+**    Everyone is permitted to do anything on this program
 **    including copying, modifying, improving,
 **    as long as you don't try to pretend that you wrote it.
-**    i.e., the above copyright notice has to appear in all copies.  
+**    i.e., the above copyright notice has to appear in all copies.
 **    Binary distribution requires original version messages.
 **    You don't have to ask before copying, redistribution or publishing.
 **    THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
 ***********************************************************************/
 
 /***********************************************************************
-** UTF-8 サポートについて
-**    従来の nkf と入れかえてそのまま使えるようになっています
-**    nkf -e などとして起動すると、自動判別で UTF-8 と判定されれば、
-**    そのまま euc-jp に変換されます
-**
-**    まだバグがある可能性が高いです。
-**    (特に自動判別、コード混在、エラー処理系)
-**
-**    何か問題を見つけたら、
-**        E-Mail: furukawa@tcp-ip.or.jp
-**    まで御連絡をお願いします。
+ * 現在、nkf は SorceForge にてメンテナンスが続けられています。
+ * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.136 2007/10/01 14:18:43 naruse Exp $ */
+/* $Id: nkf.c,v 1.137 2007/10/01 14:29:21 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-10-01"
-#include "config.h"
-#include "utf8tbl.h"
-
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
 
-
-/*
-**
-**
-**
-** USAGE:       nkf [flags] [file] 
-**
-** Flags:
-** b    Output is buffered             (DEFAULT)
-** u    Output is unbuffered
-**
-** t    no operation
-**
-** j    Output code is JIS 7 bit        (DEFAULT SELECT) 
-** s    Output code is MS Kanji         (DEFAULT SELECT) 
-** e    Output code is AT&T JIS         (DEFAULT SELECT) 
-** w    Output code is AT&T JIS         (DEFAULT SELECT) 
-** l    Output code is JIS 7bit and ISO8859-1 Latin-1
-**
-** m    MIME conversion for ISO-2022-JP
-** I    Convert non ISO-2022-JP charactor to GETA by Pekoe <pekoe@lair.net>
-** i_ Output sequence to designate JIS-kanji (DEFAULT_J)
-** o_ Output sequence to designate single-byte roman characters (DEFAULT_R)
-** M    MIME output conversion 
-**
-** r  {de/en}crypt ROT13/47
-**
-** v  display Version
-**
-** T  Text mode output        (for MS-DOS)
-**
-** x    Do not convert X0201 kana into X0208
-** Z    Convert X0208 alphabet to ASCII
-**
-** f60  fold option
-**
-** m    MIME decode
-** B    try to fix broken JIS, missing Escape
-** B[1-9]  broken level
-**
-** O   Output to 'nkf.out' file or last file name
-** d   Delete \r in line feed 
-** c   Add \r in line feed 
-** -- other long option
-** -- ignore following option (don't use with -O )
-**
-**/
-
+#include "config.h"
+#include "utf8tbl.h"
 #if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C) || defined(__MINGW32__) || defined(__EMX__) || defined(__MSDOS__) || defined(__WINDOWS__) || defined(__DOS__) || defined(__OS2__)) && !defined(MSDOS)
 #define MSDOS
 #if (defined(__Win32__) || defined(_WIN32)) && !defined(__WIN32__)
@@ -196,7 +138,7 @@ void  djgpp_setbinmode(FILE *fp)
 #define         FALSE   0
 #define         TRUE    1
 
-/* state of output_mode and input_mode  
+/* state of output_mode and input_mode
 
    c2           0 means ASCII
                 X0201
@@ -278,7 +220,7 @@ void  djgpp_setbinmode(FILE *fp)
 #define nkf_isgraph(c) ('!'<=c && c<='~')
 #define hex2bin(c) (('0'<=c&&c<='9') ? (c-'0') : \
                     ('A'<=c&&c<='F') ? (c-'A'+10) : \
-                    ('a'<=c&&c<='f') ? (c-'a'+10) : 0 )
+                    ('a'<=c&&c<='f') ? (c-'a'+10) : 0)
 #define bin2hex(c) ("0123456789ABCDEF"[c&15])
 #define is_eucg3(c2) (((unsigned short)c2 >> 8) == SS3)
 
@@ -457,7 +399,7 @@ static int             hold_count = 0;
 /* MIME preprocessor fifo */
 
 #define MIME_BUF_SIZE   (1024)    /* 2^n ring buffer */
-#define MIME_BUF_MASK   (MIME_BUF_SIZE-1)   
+#define MIME_BUF_MASK   (MIME_BUF_SIZE-1)
 #define Fifo(n)         mime_buf[(n)&MIME_BUF_MASK]
 static unsigned char           mime_buf[MIME_BUF_SIZE];
 static unsigned int            mime_top = 0;
@@ -480,7 +422,7 @@ static int             mimebuf_f = FALSE;      /* MIME buffered input */
 static int             broken_f = FALSE;       /* convert ESC-less broken JIS */
 static int             iso8859_f = FALSE;      /* ISO8859 through */
 static int             mimeout_f = FALSE;       /* base64 mode */
-#if defined(MSDOS) || defined(__OS2__) 
+#if defined(MSDOS) || defined(__OS2__)
 static int             x0201_f = TRUE;         /* Assume JISX0201 kana */
 #else
 static int             x0201_f = NO_X0201;     /* Assume NO JISX0201 */
@@ -826,7 +768,7 @@ int main(int argc, char **argv)
 
     if (binmode_f == TRUE)
 #if defined(__OS2__) && (defined(__IBMC__) || defined(__IBMCPP__))
-    if (freopen("","wb",stdout) == NULL) 
+    if (freopen("","wb",stdout) == NULL)
         return (-1);
 #else
     setbinmode(stdout);
@@ -911,7 +853,7 @@ int main(int argc, char **argv)
                       }
                   }else
 #endif
-		  if(argc == 1 ) {
+		  if(argc == 1) {
 		      outfname = *argv++;
 		      argc--;
 		  } else {
@@ -924,7 +866,7 @@ int main(int argc, char **argv)
 		  }
                   if (binmode_f == TRUE) {
 #if defined(__OS2__) && (defined(__IBMC__) || defined(__IBMCPP__))
-                      if (freopen("","wb",stdout) == NULL) 
+                      if (freopen("","wb",stdout) == NULL)
                            return (-1);
 #else
                       setbinmode(stdout);
@@ -933,11 +875,11 @@ int main(int argc, char **argv)
               }
               if (binmode_f == TRUE)
 #if defined(__OS2__) && (defined(__IBMC__) || defined(__IBMCPP__))
-                 if (freopen("","rb",fin) == NULL) 
+                 if (freopen("","rb",fin) == NULL)
                     return (-1);
 #else
                  setbinmode(fin);
-#endif 
+#endif
               setvbuffer(fin, (char *) stdibuf, IOBUF_SIZE);
               if (nop_f)
                   noconvert(fin);
@@ -1016,12 +958,12 @@ int main(int argc, char **argv)
 	    return(-1);
     }
 #ifdef EASYWIN /*Easy Win */
-    if (file_out_f == FALSE) 
+    if (file_out_f == FALSE)
         scanf("%d",&end_check);
-    else 
+    else
         fclose(stdout);
 #else /* for Other OS */
-    if (file_out_f == TRUE) 
+    if (file_out_f == TRUE)
         fclose(stdout);
 #endif /*Easy Win */
     return (0);
@@ -1585,7 +1527,7 @@ void options(unsigned char *cp)
 		    encode_fallback = encode_fallback_html;
                     continue;
                 }
-                if (strcmp(long_option[i].name, "fb-xml" ) == 0){
+                if (strcmp(long_option[i].name, "fb-xml") == 0){
 		    encode_fallback = encode_fallback_xml;
                     continue;
                 }
@@ -1690,27 +1632,27 @@ void options(unsigned char *cp)
             input_f = LATIN1_INPUT;
             continue;
         case 'i':           /* Kanji IN ESC-$-@/B */
-            if (*cp=='@'||*cp=='B') 
+            if (*cp=='@'||*cp=='B')
                 kanji_intro = *cp++;
             continue;
         case 'o':           /* ASCII IN ESC-(-J/B */
-            if (*cp=='J'||*cp=='B'||*cp=='H') 
+            if (*cp=='J'||*cp=='B'||*cp=='H')
                 ascii_intro = *cp++;
             continue;
         case 'h':
-            /*  
+            /*
                 bit:1   katakana->hiragana
                 bit:2   hiragana->katakana
             */
-            if ('9'>= *cp && *cp>='0') 
+            if ('9'>= *cp && *cp>='0')
                 hira_f |= (*cp++ -'0');
-            else 
+            else
                 hira_f |= 1;
             continue;
         case 'r':
             rot_f = TRUE;
             continue;
-#if defined(MSDOS) || defined(__OS2__) 
+#if defined(MSDOS) || defined(__OS2__)
         case 'T':
             binmode_f = FALSE;
             continue;
@@ -1816,11 +1758,11 @@ void options(unsigned char *cp)
                     ESC-(-I     in JIS, EUC, MS Kanji
                     SI/SO       in JIS, EUC, MS Kanji
                     SSO         in EUC, JIS, not in MS Kanji
-                    MS Kanji (0xa0-0xdf) 
+                    MS Kanji (0xa0-0xdf)
                output  X0201
                     ESC-(-I     in JIS (0x20-0x5f)
                     SSO         in EUC (0xa0-0xdf)
-                    0xa0-0xd    in MS Kanji (0xa0-0xdf) 
+                    0xa0-0xd    in MS Kanji (0xa0-0xdf)
             */
             continue;
         case 'X':   /* Assume X0201 kana */
@@ -1836,7 +1778,7 @@ void options(unsigned char *cp)
 		fold_len *= 10;
 		fold_len += *cp++ - '0';
 	    }
-            if (!(0<fold_len && fold_len<BUFSIZ)) 
+            if (!(0<fold_len && fold_len<BUFSIZ))
                 fold_len = DEFAULT_FOLD;
 	    if (*cp=='-') {
 		fold_margin = 0;
@@ -1877,9 +1819,9 @@ void options(unsigned char *cp)
                 bit:1   allow any x on ESC-(-x or ESC-$-x
                 bit:2   reset to ascii on NL
             */
-            if ('9'>= *cp && *cp>='0') 
+            if ('9'>= *cp && *cp>='0')
                 broken_f |= 1<<(*cp++ -'0');
-            else 
+            else
                 broken_f |= TRUE;
             continue;
 #ifndef PERL_XS
@@ -1912,7 +1854,7 @@ void options(unsigned char *cp)
             guess_f = TRUE;
 #endif
             continue;
-        case SP:    
+        case SP:
         /* module muliple options in a string are allowed for Perl moudle  */
 	    while(*cp && *cp++!='-');
             continue;
@@ -2319,7 +2261,7 @@ nkf_char noconvert(FILE *f)
 
 void module_connection(void)
 {
-    oconv = output_conv; 
+    oconv = output_conv;
     o_putc = std_putc;
 
     /* replace continucation module, from output side */
@@ -2528,7 +2470,7 @@ void check_bom(FILE *f)
 }
 
 /*
-   Conversion main loop. Code detection only. 
+   Conversion main loop. Code detection only.
  */
 
 nkf_char kanji_convert(FILE *f)
@@ -2567,9 +2509,9 @@ nkf_char kanji_convert(FILE *f)
                 if (!estab_f&&!mime_decode_mode) {
                     /* in case of not established yet */
                     /* It is still ambiguious */
-                    if (h_conv(f, c2, c1)==EOF) 
+                    if (h_conv(f, c2, c1)==EOF)
                         LAST;
-                    else 
+                    else
                         c2 = 0;
                     NEXT;
                 } else {
@@ -2702,12 +2644,12 @@ nkf_char kanji_convert(FILE *f)
                 }
             } else if ((c1 > SP) && (c1 != DEL)) {
                 /* in case of Roman characters */
-                if (shift_mode) { 
+                if (shift_mode) {
                     /* output 1 shifted byte */
                     if (iso8859_f) {
                         c2 = ISO8859_1;
                         SEND;
-                    } else if (SP<=c1 && c1<(0xe0&0x7f) ){
+                    } else if (SP <= c1 && c1 < (0xe0&0x7f)){
                       /* output 1 shifted byte */
 			if(iso2022jp_f && x0201_f==NO_X0201) {
 			    (*oconv)(GETA1, GETA2);
@@ -2725,7 +2667,7 @@ nkf_char kanji_convert(FILE *f)
                     /* in case of Kanji shifted */
                     c2 = c1;
                     NEXT;
-                } else if (c1 == '=' && mime_f && !mime_decode_mode ) {
+                } else if (c1 == '=' && mime_f && !mime_decode_mode) {
                     /* Check MIME code */
                     if ((c1 = (*i_getc)(f)) == EOF) {
                         (*oconv)(0, '=');
@@ -2734,11 +2676,11 @@ nkf_char kanji_convert(FILE *f)
                         /* =? is mime conversion start sequence */
 			if(mime_f == STRICT_MIME) {
 			    /* check in real detail */
-			    if (mime_begin_strict(f) == EOF) 
+			    if (mime_begin_strict(f) == EOF)
 				LAST;
 			    else
 				NEXT;
-			} else if (mime_begin(f) == EOF) 
+			} else if (mime_begin(f) == EOF)
                             LAST;
                         else
                             NEXT;
@@ -2748,14 +2690,14 @@ nkf_char kanji_convert(FILE *f)
                         NEXT;
                     }
                 } else {
-                    /* normal ASCII code */ 
+                    /* normal ASCII code */
                     SEND;
                 }
             } else if (c1 == SI && (!is_8bit || mime_decode_mode)) {
-                shift_mode = FALSE; 
+                shift_mode = FALSE;
                 NEXT;
             } else if (c1 == SO && (!is_8bit || mime_decode_mode)) {
-                shift_mode = TRUE; 
+                shift_mode = TRUE;
                 NEXT;
             } else if (c1 == ESC && (!is_8bit || mime_decode_mode)) {
                 if ((c1 = (*i_getc)(f)) == EOF) {
@@ -2764,7 +2706,7 @@ nkf_char kanji_convert(FILE *f)
                 } else if (c1 == '$') {
                     if ((c1 = (*i_getc)(f)) == EOF) {
                         /*
-                        (*oconv)(0, ESC); don't send bogus code 
+                        (*oconv)(0, ESC); don't send bogus code
                         (*oconv)(0, '$'); */
                         LAST;
                     } else if (c1 == '@'|| c1 == 'B') {
@@ -2778,7 +2720,7 @@ nkf_char kanji_convert(FILE *f)
                         NEXT;
                     } else if (c1 == '(') {
                         if ((c1 = (*i_getc)(f)) == EOF) {
-                            /* don't send bogus code 
+                            /* don't send bogus code
                             (*oconv)(0, ESC);
                             (*oconv)(0, '$');
                             (*oconv)(0, '(');
@@ -2824,7 +2766,7 @@ nkf_char kanji_convert(FILE *f)
                     }
                 } else if (c1 == '(') {
                     if ((c1 = (*i_getc)(f)) == EOF) {
-                        /* don't send bogus code 
+                        /* don't send bogus code
                         (*oconv)(0, ESC);
                         (*oconv)(0, '('); */
                         LAST;
@@ -2847,7 +2789,7 @@ nkf_char kanji_convert(FILE *f)
                             SEND;
                         }
                     }
-               } else if ( c1 == 'N' || c1 == 'n' ){
+               } else if ( c1 == 'N' || c1 == 'n'){
                    /* SS2 */
                    c3 = (*i_getc)(f);  /* skip SS2 */
                    if ( (SP<=c3 && c3 < 0x60) || (0xa0<=c3 && c3 < 0xe0)){
@@ -2874,7 +2816,7 @@ nkf_char kanji_convert(FILE *f)
 		    /* J-PHONE emoji */
 		    if ((c1 = (*i_getc)(f)) == EOF) {
 			/*
-			   (*oconv)(0, ESC); don't send bogus code 
+			   (*oconv)(0, ESC); don't send bogus code
 			   (*oconv)(0, '$'); */
 			LAST;
 		    } else {
@@ -2940,11 +2882,11 @@ nkf_char kanji_convert(FILE *f)
 		    if (prev_cr && c1 == LF) nlmode_f = CRLF;
 		    else nlmode_f = c1;
 		}
-	    } else if (c1 == DEL && input_mode == X0208 ) {
+	    } else if (c1 == DEL && input_mode == X0208) {
 		/* CP5022x */
 		c2 = c1;
 		NEXT;
-	    } else 
+	    } else
                 SEND;
         }
         /* send: */
@@ -3323,7 +3265,7 @@ nkf_char w_iconv(nkf_char c2, nkf_char c1, nkf_char c0)
 	21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
 	30, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 32, 33, 33,
 	40, 41, 41, 41, 42, 43, 43, 43, 50, 50, 50, 50, 60, 60, 70, 70};
-    
+
     if (c2 < 0 || 0xff < c2) {
     }else if (c2 == 0) { /* 0 : 1 byte*/
 	c0 = 0;
@@ -3859,7 +3801,7 @@ void w_oconv(nkf_char c2, nkf_char c1)
     }
 #endif
 
-    if (c2 == 0) { 
+    if (c2 == 0) {
 	output_mode = ASCII;
         (*o_putc)(c1);
     } else if (c2 == ISO8859_1) {
@@ -4018,7 +3960,7 @@ void e_oconv(nkf_char c2, nkf_char c1)
     if (c2 == EOF) {
         (*o_putc)(EOF);
         return;
-    } else if (c2 == 0) { 
+    } else if (c2 == 0) {
 	output_mode = ASCII;
         (*o_putc)(c1);
     } else if (c2 == X0201) {
@@ -4264,7 +4206,7 @@ void j_oconv(nkf_char c2, nkf_char c1)
         (*o_putc)(c1);
     } else if (c2==ISO8859_1) {
             /* iso8859 introduction, or 8th bit on */
-            /* Can we convert in 7bit form using ESC-'-'-A ? 
+            /* Can we convert in 7bit form using ESC-'-'-A ?
                Is this popular? */
 	output_mode = ISO8859_1;
         (*o_putc)(c1|0x80);
@@ -4317,19 +4259,19 @@ nkf_char broken_getc(FILE *f)
 	return broken_buf[--broken_counter];
     }
     c= (*i_bgetc)(f);
-    if (c=='$' && broken_last != ESC 
+    if (c=='$' && broken_last != ESC
             && (input_mode==ASCII || input_mode==X0201)) {
 	c1= (*i_bgetc)(f);
 	broken_last = 0;
 	if (c1=='@'|| c1=='B') {
-	    broken_buf[0]=c1; broken_buf[1]=c; 
+	    broken_buf[0]=c1; broken_buf[1]=c;
 	    broken_counter=2;
 	    return ESC;
 	} else {
 	    (*i_bungetc)(c1,f);
 	    return c;
 	}
-    } else if (c=='(' && broken_last != ESC 
+    } else if (c=='(' && broken_last != ESC
             && (input_mode==X0208 || input_mode==X0201)) { /* ) */
 	c1= (*i_bgetc)(f);
 	broken_last = 0;
@@ -4358,7 +4300,7 @@ void nl_conv(nkf_char c2, nkf_char c1)
 {
     if (prev_cr) {
 	prev_cr = 0;
-	if (! (c2==0&&c1==LF) ) {
+	if (! (c2==0&&c1==LF)) {
 	    nl_conv(0,LF);
 	}
     }
@@ -4372,14 +4314,14 @@ void nl_conv(nkf_char c2, nkf_char c1)
 	} else if (nlmode_f==CR) {
             (*o_nlconv)(0,CR);
 	    return;
-	} 
+	}
 	(*o_nlconv)(0,LF);
     } else if (c1!='\032' || nlmode_f!=LF){
         (*o_nlconv)(c2,c1);
     }
 }
 
-/* 
+/*
   Return value of fold_conv()
 
        LF  add newline  and output char
@@ -4402,7 +4344,7 @@ void nl_conv(nkf_char c2, nkf_char c1)
 #define char_size(c2,c1) (c2?2:1)
 
 void fold_conv(nkf_char c2, nkf_char c1)
-{ 
+{
     nkf_char prev0;
     nkf_char fold_state;
 
@@ -4420,7 +4362,7 @@ void fold_conv(nkf_char c2, nkf_char c1)
                || ((c1==CR||(c1==LF&&f_prev!=CR))
                    && fold_preserve_f)) {
         /* new line */
-        if (fold_preserve_f) { 
+        if (fold_preserve_f) {
             f_prev = c1;
             f_line = 0;
             fold_state =  CR;
@@ -4442,7 +4384,7 @@ void fold_conv(nkf_char c2, nkf_char c1)
                 fold_state =  0;
             } else {
                 f_prev = c1;
-                if (++f_line<=fold_len) 
+                if (++f_line<=fold_len)
                     fold_state =  SP;
                 else {
                     f_line = 0;
@@ -4461,8 +4403,8 @@ void fold_conv(nkf_char c2, nkf_char c1)
             if (f_prev == SP) {
                 fold_state = 0;         /* remove duplicate spaces */
             } else {
-                f_prev = SP;    
-                if (++f_line<=fold_len) 
+                f_prev = SP;
+                if (++f_line<=fold_len)
                     fold_state = SP;         /* output ASCII space only */
                 else {
                     f_prev = SP; f_line = 0;
@@ -4472,7 +4414,7 @@ void fold_conv(nkf_char c2, nkf_char c1)
     } else {
         prev0 = f_prev; /* we still need this one... , but almost done */
         f_prev = c1;
-        if (c2 || c2==X0201) 
+        if (c2 || c2==X0201)
             f_prev |= 0x80;  /* this is Japanese */
         f_line += char_size(c2,c1);
         if (f_line<=fold_len) {   /* normal case */
@@ -4497,7 +4439,7 @@ void fold_conv(nkf_char c2, nkf_char c1)
 		    fold_state = LF;/* add one new f_line before this character */
 		}
             } else if (c2==0) {
-                /* kinsoku point in ASCII */ 
+                /* kinsoku point in ASCII */
 		if (  c1==')'||    /* { [ ( */
                      c1==']'||
                      c1=='}'||
@@ -4507,7 +4449,7 @@ void fold_conv(nkf_char c2, nkf_char c1)
                      c1=='?'||
                      c1=='/'||
                      c1==':'||
-                     c1==';' ) {
+                     c1==';') {
 		    fold_state = 1;
 		/* just after special */
 		} else if (!is_alnum(prev0)) {
@@ -4536,14 +4478,14 @@ void fold_conv(nkf_char c2, nkf_char c1)
                     else if (c1=='+')  fold_state = 1; /* ゛ */
                     else if (c1==',')  fold_state = 1; /* ゜ */
                          /* default no fold in kinsoku */
-		    else { 
+		    else {
 			fold_state = LF;
 			f_line = char_size(c2,c1);
 			/* add one new f_line before this character */
 		    }
                 } else {
 		    f_line = char_size(c2,c1);
-                    fold_state = LF; 
+                    fold_state = LF;
                     /* add one new f_line before this character */
                 }
             }
@@ -4551,17 +4493,17 @@ void fold_conv(nkf_char c2, nkf_char c1)
     }
     /* terminator process */
     switch(fold_state) {
-        case LF: 
+        case LF:
             (*o_fconv)(0,LF);
             (*o_fconv)(c2,c1);
             break;
-        case 0:    
+        case 0:
             return;
-        case CR: 
+        case CR:
             (*o_fconv)(0,LF);
             break;
-        case TAB: 
-        case SP: 
+        case TAB:
+        case SP:
             (*o_fconv)(0,SP);
             break;
         default:
@@ -4615,10 +4557,10 @@ void z_conv(nkf_char c2, nkf_char c1)
         return;
     }
 
-    if (alpha_f&1 && c2 == 0x23 ) {
+    if (alpha_f&1 && c2 == 0x23) {
 	/* JISX0208 Alphabet */
         c2 = 0;
-    } else if (c2 == 0x21) { 
+    } else if (c2 == 0x21) {
 	/* JISX0208 Kigou */
        if (0x21==c1) {
            if (alpha_f&2) {
@@ -4628,11 +4570,11 @@ void z_conv(nkf_char c2, nkf_char c1)
                 (*o_zconv)(0, SP);
                 (*o_zconv)(0, SP);
                 return;
-           } 
+           }
        } else if (alpha_f&1 && 0x20<c1 && c1<0x7f && fv[c1-0x20]) {
            c2 =  0;
            c1 = fv[c1-0x20];
-       } 
+       }
     }
 
     if (alpha_f&8 && c2 == 0) {
@@ -4724,7 +4666,7 @@ void z_conv(nkf_char c2, nkf_char c1)
 
 
 #define rot13(c)  ( \
-      ( c < 'A' ) ? c: \
+      ( c < 'A') ? c: \
       (c <= 'M')  ? (c + 13): \
       (c <= 'Z')  ? (c - 13): \
       (c < 'a')   ? (c): \
@@ -4734,9 +4676,9 @@ void z_conv(nkf_char c2, nkf_char c1)
 )
 
 #define  rot47(c) ( \
-      ( c < '!' ) ? c: \
-      ( c <= 'O' ) ? (c + 47) : \
-      ( c <= '~' ) ?  (c - 47) : \
+      ( c < '!') ? c: \
+      ( c <= 'O') ? (c + 47) : \
+      ( c <= '~') ?  (c - 47) : \
       c \
 )
 
@@ -4918,7 +4860,7 @@ nkf_char mime_begin_strict(FILE *f)
     r[0]='='; r[1]='?';
 
     for(i=2;p[i]>SP;i++) {                   /* start at =? */
-        if ( ((r[i] = c1 = (*i_getc)(f))==EOF) || nkf_toupper(c1) != p[i] ) {
+        if (((r[i] = c1 = (*i_getc)(f))==EOF) || nkf_toupper(c1) != p[i]) {
             /* pattern fails, try next one */
             q = p;
             while (mime_pattern[++j]) {
@@ -4948,7 +4890,7 @@ nkf_char mime_begin_strict(FILE *f)
         if (!unbuf_f) {
             /* do MIME integrity check */
             return mime_integrity(f,mime_pattern[j]);
-        } 
+        }
     }
     switch_mime_getc();
     mimebuf_f = TRUE;
@@ -4967,7 +4909,7 @@ nkf_char mime_ungetc_buf(nkf_char c, FILE *f)
 {
     if (mimebuf_f)
 	(*i_mungetc_buf)(c,f);
-    else 
+    else
 	Fifo(--mime_input) = (unsigned char)c;
     return c;
 }
@@ -4987,7 +4929,7 @@ nkf_char mime_begin(FILE *f)
         /* We accept any character type even if it is breaked by new lines */
         c1 = (*i_getc)(f); Fifo(mime_last++) = (unsigned char)c1;
         if (c1==LF||c1==SP||c1==CR||
-                c1=='-'||c1=='_'||is_alnum(c1) ) continue;
+                c1=='-'||c1=='_'||is_alnum(c1)) continue;
         if (c1=='=') {
             /* Failed. But this could be another MIME preemble */
             (*i_ungetc)(c1,f);
@@ -5074,7 +5016,7 @@ void print_guessed_code(char *filename)
 }
 #endif /*WIN32DLL*/
 
-#ifdef INPUT_OPTION 
+#ifdef INPUT_OPTION
 
 nkf_char hex_getc(nkf_char ch, FILE *f, nkf_char (*g)(FILE *f), nkf_char (*u)(nkf_char c, FILE *f))
 {
@@ -5188,7 +5130,7 @@ nkf_char nfc_getc(FILE *f)
     int i=0, j, k=1, lower, upper;
     nkf_char buf[9];
     const nkf_nfchar *array;
-    
+
     buf[i] = (*g)(f);
     while (k > 0 && ((buf[i] & 0xc0) != 0x80)){
 	lower=0, upper=NORMALIZATION_TABLE_LENGTH-1;
@@ -5224,7 +5166,7 @@ nkf_char nfc_ungetc(nkf_char c, FILE *f)
 #endif /* UNICODE_NORMALIZATION */
 
 
-nkf_char 
+nkf_char
 mime_getc(FILE *f)
 {
     nkf_char c1, c2, c3, c4, cc;
@@ -5258,7 +5200,7 @@ restart_mime_q:
         if (c1!='=' && (c1!='?' || mimebuf_f == FIXED_MIME)) {
 	    return c1;
 	}
-                
+
         mime_decode_mode = exit_mode; /* prepare for quit */
         if ((c2 = (*i_mgetc)(f)) == EOF) return (EOF);
         if (c1=='?'&&c2=='=' && mimebuf_f != FIXED_MIME) {
@@ -5348,10 +5290,10 @@ restart_mime_q:
 
 
     /* Base64 encoding */
-    /* 
-        MIME allows line break in the middle of 
+    /*
+        MIME allows line break in the middle of
         Base64, but we are very pessimistic in decoding
-        in unbuf mode because MIME encoded code may broken by 
+        in unbuf mode because MIME encoded code may broken by
         less or editor's control sequence (such as ESC-[-K in unbuffered
         mode. ignore incomplete MIME.
     */
@@ -5367,7 +5309,7 @@ mime_c2_retry:
         if (c2==EOF)
             return (EOF);
 	if (mime_f != STRICT_MIME) goto mime_c2_retry;
-        if (mimebuf_f!=FIXED_MIME) input_mode = ASCII;  
+        if (mimebuf_f!=FIXED_MIME) input_mode = ASCII;
         return c2;
     }
     if ((c1 == '?') && (c2 == '=')) {
@@ -5439,7 +5381,7 @@ mime_c3_retry:
         if (c3==EOF)
             return (EOF);
 	if (mime_f != STRICT_MIME) goto mime_c3_retry;
-        if (mimebuf_f!=FIXED_MIME) input_mode = ASCII;  
+        if (mimebuf_f!=FIXED_MIME) input_mode = ASCII;
         return c3;
     }
 mime_c4_retry:
@@ -5447,7 +5389,7 @@ mime_c4_retry:
         if (c4==EOF)
             return (EOF);
 	if (mime_f != STRICT_MIME) goto mime_c4_retry;
-        if (mimebuf_f!=FIXED_MIME) input_mode = ASCII;  
+        if (mimebuf_f!=FIXED_MIME) input_mode = ASCII;
         return c4;
     }
 
@@ -5466,7 +5408,7 @@ mime_c4_retry:
         if (c3 != '=') {
             Fifo(mime_last++) = (unsigned char)cc;
             cc = ((t3 << 6) & 0x0c0) | (t4 & 0x3f);
-            if (c4 != '=') 
+            if (c4 != '=')
                 Fifo(mime_last++) = (unsigned char)cc;
         }
     } else {
@@ -5489,7 +5431,7 @@ nkf_char mime_integrity(FILE *f, const unsigned char *p)
      */
     mime_input = mime_top;
     mime_last = mime_top;
-    
+
     while(*p) Fifo(mime_input++) = *p++;
     d = 0;
     q = mime_input;
@@ -5501,7 +5443,7 @@ nkf_char mime_integrity(FILE *f, const unsigned char *p)
             /* checked. skip header, start decode */
             Fifo(mime_input++) = (unsigned char)c;
             /* mime_last_input = mime_input; */
-            mime_input = q; 
+            mime_input = q;
 	    switch_mime_getc();
             return 1;
         }
@@ -5561,7 +5503,7 @@ void open_mime(nkf_char mode)
 	}
     }
     mimeout_mode = mime_encode_method[i];
-    
+
     i = 0;
     if (base64_count>45) {
 	if (mimeout_buf_count>0 && nkf_isblank(mimeout_buf[i])){
@@ -5573,14 +5515,14 @@ void open_mime(nkf_char mode)
 	base64_count = 1;
 	if (!mimeout_preserve_space && mimeout_buf_count>0
 	    && (mimeout_buf[i]==SP || mimeout_buf[i]==TAB
-	    	|| mimeout_buf[i]==CR || mimeout_buf[i]==LF )) {
+	    	|| mimeout_buf[i]==CR || mimeout_buf[i]==LF)) {
 	    i++;
 	}
     }
     if (!mimeout_preserve_space) {
 	for (;i<mimeout_buf_count;i++) {
 	    if (mimeout_buf[i]==SP || mimeout_buf[i]==TAB
-		|| mimeout_buf[i]==CR || mimeout_buf[i]==LF ) {
+		|| mimeout_buf[i]==CR || mimeout_buf[i]==LF) {
 		(*o_mputc)(mimeout_buf[i]);
 		base64_count ++;
 	    } else {
@@ -5589,7 +5531,7 @@ void open_mime(nkf_char mode)
 	}
     }
     mimeout_preserve_space = FALSE;
-    
+
     while(*p) {
         (*o_mputc)(*p++);
         base64_count ++;
@@ -5629,7 +5571,7 @@ void eof_mime(void)
     }
     if (mimeout_mode) {
 	if (mimeout_f!=FIXED_MIME) {
-	    close_mime(); 
+	    close_mime();
 	} else if (mimeout_mode != 'Q')
 	    mimeout_mode = 'B';
     }
@@ -5738,7 +5680,7 @@ void mime_putc(nkf_char c)
         }
         return;
     }
-    
+
     /* mimeout_f != FIXED_MIME */
 
     if (c == EOF) { /* c==EOF */
@@ -5772,7 +5714,7 @@ void mime_putc(nkf_char c)
     }
 
     if (mimeout_mode=='Q') {
-        if (c <= DEL && (output_mode==ASCII ||output_mode == ISO8859_1 ) ) {
+        if (c <= DEL && (output_mode==ASCII ||output_mode == ISO8859_1)) {
 	    if (c == CR || c == LF) {
 		close_mime();
 		(*o_mputc)(c);
@@ -5854,7 +5796,7 @@ void mime_putc(nkf_char c)
         }
     }else{
         /* mimeout_mode == 'B', 1, 2 */
-        if ( c<=DEL && (output_mode==ASCII ||output_mode == ISO8859_1 ) ) {
+        if ( c<=DEL && (output_mode==ASCII ||output_mode == ISO8859_1)) {
             if (lastchar == CR || lastchar == LF){
                 if (nkf_isblank(c)) {
                     for (i=0;i<mimeout_buf_count;i++) {
@@ -6164,19 +6106,3 @@ void version(void)
     fprintf(stderr,"\n%s\n",CopyRight);
 }
 #endif /*PERL_XS*/
-
-/**
- ** パッチ制作者
- **  void@merope.pleiades.or.jp (Kusakabe Youichi)
- **  NIDE Naoyuki <nide@ics.nara-wu.ac.jp>
- **  ohta@src.ricoh.co.jp (Junn Ohta)
- **  inouet@strl.nhk.or.jp (Tomoyuki Inoue)
- **  kiri@pulser.win.or.jp (Tetsuaki Kiriyama)
- **  Kimihiko Sato <sato@sail.t.u-tokyo.ac.jp>
- **  a_kuroe@kuroe.aoba.yokohama.jp (Akihiko Kuroe)
- **  kono@ie.u-ryukyu.ac.jp (Shinji Kono)
- **  GHG00637@nifty-serve.or.jp (COW)
- **
- **/
-
-/* end */
