@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.20 2007/10/01 19:55:25 naruse Exp $
+# $Id: nkf_test.pl,v 1.21 2007/10/01 21:39:39 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -1050,25 +1050,99 @@ eofeof
 printf "%-40s", "test_data/bugs10904";
     &test("$nkf -Mj",$example{'test_data/bugs10904'},$example{'test_data/bugs10904.ans'});
 
-printf "%-40s", "Guess NL/NONE";      &test("$nkf --guess","none",      "ASCII\n");
-printf "%-40s", "Guess NL/LF";        &test("$nkf --guess","\n",        "ASCII (LF)\n");
-printf "%-40s", "Guess NL/LFLF";      &test("$nkf --guess","\n\n",      "ASCII (LF)\n");
-printf "%-40s", "Guess NL/LFCR";      &test("$nkf --guess","\n\r",      "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/LFCRLF";    &test("$nkf --guess","\n\r\n",    "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/LF.LF";     &test("$nkf --guess","\n.\n",     "ASCII (LF)\n");
-printf "%-40s", "Guess NL/LF.CR";     &test("$nkf --guess","\n.\r",     "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/LF.CRLF";   &test("$nkf --guess","\n.\r\n",   "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/CR";        &test("$nkf --guess","\r",        "ASCII (CR)\n");
-printf "%-40s", "Guess NL/CRCR";      &test("$nkf --guess","\r\r",      "ASCII (CR)\n");
-printf "%-40s", "Guess NL/CRCRLF";    &test("$nkf --guess","\r\r\n",    "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/CR.LF";     &test("$nkf --guess","\r.\n",     "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/CR.CR";     &test("$nkf --guess","\r.\r",     "ASCII (CR)\n");
-printf "%-40s", "Guess NL/CR.CRLF";   &test("$nkf --guess","\r.\r\n",   "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/CRLF";      &test("$nkf --guess","\r\n",      "ASCII (CRLF)\n");
-printf "%-40s", "Guess NL/CRLFLF";    &test("$nkf --guess","\r\n\n",    "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/CRLFCR";    &test("$nkf --guess","\r\n\r",    "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/CRLFCRLF";  &test("$nkf --guess","\r\n\r\n",  "ASCII (CRLF)\n");
-printf "%-40s", "Guess NL/CRLF.LF";   &test("$nkf --guess","\r\n.\n",   "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/CRLF.CR";   &test("$nkf --guess","\r\n.\r",   "ASCII (MIXED NL)\n");
-printf "%-40s", "Guess NL/CRLF.CRLF"; &test("$nkf --guess","\r\n.\r\n", "ASCII (CRLF)\n");
+printf "%-40s", "Guess NL";
+&command_tests(
+	"$nkf --guess","none",      "ASCII\n",
+	"$nkf --guess","\n",        "ASCII (LF)\n",
+	"$nkf --guess","\n\n",      "ASCII (LF)\n",
+	"$nkf --guess","\n\r",      "ASCII (MIXED NL)\n",
+	"$nkf --guess","\n\r\n",    "ASCII (MIXED NL)\n",
+	"$nkf --guess","\n.\n",     "ASCII (LF)\n",
+	"$nkf --guess","\n.\r",     "ASCII (MIXED NL)\n",
+	"$nkf --guess","\n.\r\n",   "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r",        "ASCII (CR)\n",
+	"$nkf --guess","\r\r",      "ASCII (CR)\n",
+	"$nkf --guess","\r\r\n",    "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r.\n",     "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r.\r",     "ASCII (CR)\n",
+	"$nkf --guess","\r.\r\n",   "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n",      "ASCII (CRLF)\n",
+	"$nkf --guess","\r\n\n",    "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n\r",    "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n\r\n",  "ASCII (CRLF)\n",
+	"$nkf --guess","\r\n.\n",   "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n.\r",   "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n.\r\n", "ASCII (CRLF)\n");
+
+printf "%-40s", "Convert NL to LF";
+&command_tests(
+	"$nkf -Lu","none",      "none",
+	"$nkf -Lu","\n",        "\n",
+	"$nkf -Lu","\n\n",      "\n\n",
+	"$nkf -Lu","\n\r",      "\n\n",
+	"$nkf -Lu","\n\r\n",    "\n\n",
+	"$nkf -Lu","\n.\n",     "\n.\n",
+	"$nkf -Lu","\n.\r",     "\n.\n",
+	"$nkf -Lu","\n.\r\n",   "\n.\n",
+	"$nkf -Lu","\r",        "\n",
+	"$nkf -Lu","\r\r",      "\n\n",
+	"$nkf -Lu","\r\r\n",    "\n\n",
+	"$nkf -Lu","\r.\n",     "\n.\n",
+	"$nkf -Lu","\r.\r",     "\n.\n",
+	"$nkf -Lu","\r.\r\n",   "\n.\n",
+	"$nkf -Lu","\r\n",      "\n",
+	"$nkf -Lu","\r\n\n",    "\n\n",
+	"$nkf -Lu","\r\n\r",    "\n\n",
+	"$nkf -Lu","\r\n\r\n",  "\n\n",
+	"$nkf -Lu","\r\n.\n",   "\n.\n",
+	"$nkf -Lu","\r\n.\r",   "\n.\n",
+	"$nkf -Lu","\r\n.\r\n", "\n.\n");
+
+printf "%-40s", "Convert NL to LF";
+&command_tests(
+	"$nkf -Lm","none",      "none",
+	"$nkf -Lm","\n",        "\r",
+	"$nkf -Lm","\n\n",      "\r\r",
+	"$nkf -Lm","\n\r",      "\r\r",
+	"$nkf -Lm","\n\r\n",    "\r\r",
+	"$nkf -Lm","\n.\n",     "\r.\r",
+	"$nkf -Lm","\n.\r",     "\r.\r",
+	"$nkf -Lm","\n.\r\n",   "\r.\r",
+	"$nkf -Lm","\r",        "\r",
+	"$nkf -Lm","\r\r",      "\r\r",
+	"$nkf -Lm","\r\r\n",    "\r\r",
+	"$nkf -Lm","\r.\n",     "\r.\r",
+	"$nkf -Lm","\r.\r",     "\r.\r",
+	"$nkf -Lm","\r.\r\n",   "\r.\r",
+	"$nkf -Lm","\r\n",      "\r",
+	"$nkf -Lm","\r\n\n",    "\r\r",
+	"$nkf -Lm","\r\n\r",    "\r\r",
+	"$nkf -Lm","\r\n\r\n",  "\r\r",
+	"$nkf -Lm","\r\n.\n",   "\r.\r",
+	"$nkf -Lm","\r\n.\r",   "\r.\r",
+	"$nkf -Lm","\r\n.\r\n", "\r.\r");
+
+printf "%-40s", "Convert NL to CRLF";
+&command_tests(
+	"$nkf -Lw","none",      "none",
+	"$nkf -Lw","\n",        "\r\n",
+	"$nkf -Lw","\n\n",      "\r\n\r\n",
+	"$nkf -Lw","\n\r",      "\r\n\r\n",
+	"$nkf -Lw","\n\r\n",    "\r\n\r\n",
+	"$nkf -Lw","\n.\n",     "\r\n.\r\n",
+	"$nkf -Lw","\n.\r",     "\r\n.\r\n",
+	"$nkf -Lw","\n.\r\n",   "\r\n.\r\n",
+	"$nkf -Lw","\r",        "\r\n",
+	"$nkf -Lw","\r\r",      "\r\n\r\n",
+	"$nkf -Lw","\r\r\n",    "\r\n\r\n",
+	"$nkf -Lw","\r.\n",     "\r\n.\r\n",
+	"$nkf -Lw","\r.\r",     "\r\n.\r\n",
+	"$nkf -Lw","\r.\r\n",   "\r\n.\r\n",
+	"$nkf -Lw","\r\n",      "\r\n",
+	"$nkf -Lw","\r\n\n",    "\r\n\r\n",
+	"$nkf -Lw","\r\n\r",    "\r\n\r\n",
+	"$nkf -Lw","\r\n\r\r\n",  "\r\n\r\n\r\n",
+	"$nkf -Lw","\r\n.\n",   "\r\n.\r\n",
+	"$nkf -Lw","\r\n.\r",   "\r\n.\r\n",
+	"$nkf -Lw","\r\n.\r\n", "\r\n.\r\n");
 # end
