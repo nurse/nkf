@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.140 2007/10/02 08:37:46 naruse Exp $ */
+/* $Id: nkf.c,v 1.141 2007/10/02 08:41:03 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-10-02"
 #define COPY_RIGHT \
@@ -798,7 +798,7 @@ int main(int argc, char **argv)
 	int is_argument_error = FALSE;
       while (argc--) {
 	    input_codename = NULL;
-	    input_nextline = NULL;
+	    input_nextline = 0;
 #ifdef CHECK_OPTION
 	    iconv_for_check = 0;
 #endif
