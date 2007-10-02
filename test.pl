@@ -25,8 +25,7 @@ if ($ARGV[0]) {
 
 # If you want to see the testing process, set next flag.
 
-$detail_all = 0;
-$error_count=1;
+$error_count = 0;
 $diff=1;
 
 # &library_test0();
@@ -50,19 +49,13 @@ sub command_test {
 	$result .= $_;
     }
 
-    if( $nkf =~ /-\S*m/) {
-	$result =~ s/ //g;
-    }
-    $i = 0;
+    $result =~ s/ //g if $nkf =~ /-\w+m[NS]/o;
     foreach $ans (@ans) {
-	if( $nkf =~ /-\S*m/) {
-	    $ans =~ s/ //g;
-	}
+	$ans =~ s/ //g if $nkf =~ /-\w+m[NS]/o;
         if ($result eq $ans) {
 	    print "Ok\n";
 	    return $result;
 	}
-        $i++;
     }
     $ans = $ans[0];
     print "Fail\n";
@@ -81,7 +74,60 @@ sub command_test {
     return $result;
 }
 
-do "nkf_test.pl";
+sub command_tests {
+    my @tests = @_;
+    my ($in, $out, $ans);
 
+    for (my $i = 0; $i <= $#tests; $i += 3){
+	my $nkf = $tests[$i];
+	$in = $tests[$i+1];
+	$ans = $tests[$i+2];
+	$out = '';
+	open(OUT, "> nkf.in");
+	binmode OUT;
+	print OUT $in;
+	close(OUT);
+	system("$nkf <nkf.in >nkf.out");   # easy
+	open(IN,"< nkf.out");
+	binmode IN;
+	while (<IN>) {
+	    $out .= $_;
+	}
+	close(IN);
+	$out =~ s/ //g if $nkf =~ /-\w+m[NS]/o;
+	$ans =~ s/ //g if $nkf =~ /-\w+m[NS]/o;
+        if ($out ne $ans) {
+	    last;
+	}
+    }
+    if ($out eq $ans) {
+	print "Ok\n";
+	return;
+    }
+    print "Fail\n";
+    system "mv nkf.in nkf.in.$error_count.bad";
+    system "mv nkf.out nkf.out.$error_count.bad";
+    open(OUT,"> nkf.expect.$error_count.bad");
+    binmode OUT;
+    print OUT $ans;
+    close(OUT);
+    $error_count++;
+    if ($diff) {
+	open(R,"|od -c >tmp.result.bad"); binmode R; print R $out; close(R);
+	open(R,"|od -c >tmp.expect.bad"); binmode R; print R $ans; close(R);
+	system "diff -c tmp.result.bad tmp.expect.bad";
+    }
+    return;
+}
+
+do "nkf_test.pl";
 unlink "nkf.in";
 unlink "nkf.out";
+
+if ($error_count > 1) {
+    printf("%d errors were found.\n", $error_count);
+} elsif ($error_count == 1) {
+    printf("1 error was found.\n");
+} else {
+    printf("All tests are succeeded.\n");
+}
