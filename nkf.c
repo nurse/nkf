@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.138 2007/10/01 19:55:25 naruse Exp $ */
+/* $Id: nkf.c,v 1.139 2007/10/01 21:52:14 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-10-01"
+#define NKF_RELEASE_DATE "2007-10-02"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -485,7 +485,6 @@ static int guess_f = FALSE;
 static  void    print_guessed_code(char *filename);
 #endif
 static  void    set_input_codename(char *codename);
-static int is_inputcode_mixed = FALSE;
 
 #ifdef EXEC_IO
 static int exec_f = 0;
@@ -798,7 +797,6 @@ int main(int argc, char **argv)
       int nfiles = argc;
 	int is_argument_error = FALSE;
       while (argc--) {
-	    is_inputcode_mixed = FALSE;
 	    input_codename = NULL;
 #ifdef CHECK_OPTION
 	    iconv_for_check = 0;
@@ -4981,7 +4979,6 @@ void set_input_codename(char *codename)
     if (!input_codename) {
 	input_codename = codename;
     } else if (strcmp(codename, input_codename) != 0) {
-        is_inputcode_mixed = TRUE;
 	input_codename = "";
     }
 }
@@ -5914,7 +5911,6 @@ void reinit(void)
     debug_f = FALSE;
 #endif
     guess_f = FALSE;
-    is_inputcode_mixed = FALSE;
 #ifdef EXEC_IO
     exec_f = 0;
 #endif
@@ -5969,6 +5965,8 @@ void reinit(void)
     mime_decode_mode = FALSE;
     file_out_f = FALSE;
     nlmode_f = 0;
+    input_nextline = 0;
+    prev_cr = 0;
     option_mode = 0;
     broken_counter = 0;
     broken_last = 0;
