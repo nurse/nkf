@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.19 2007/09/12 04:56:53 naruse Exp $
+# $Id: nkf_test.pl,v 1.20 2007/10/01 19:55:25 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -1049,5 +1049,26 @@ eofeof
 
 printf "%-40s", "test_data/bugs10904";
     &test("$nkf -Mj",$example{'test_data/bugs10904'},$example{'test_data/bugs10904.ans'});
-# end
 
+printf "%-40s", "Guess NL/NONE";      &test("$nkf --guess","none",      "ASCII\n");
+printf "%-40s", "Guess NL/LF";        &test("$nkf --guess","\n",        "ASCII (LF)\n");
+printf "%-40s", "Guess NL/LFLF";      &test("$nkf --guess","\n\n",      "ASCII (LF)\n");
+printf "%-40s", "Guess NL/LFCR";      &test("$nkf --guess","\n\r",      "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/LFCRLF";    &test("$nkf --guess","\n\r\n",    "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/LF.LF";     &test("$nkf --guess","\n.\n",     "ASCII (LF)\n");
+printf "%-40s", "Guess NL/LF.CR";     &test("$nkf --guess","\n.\r",     "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/LF.CRLF";   &test("$nkf --guess","\n.\r\n",   "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/CR";        &test("$nkf --guess","\r",        "ASCII (CR)\n");
+printf "%-40s", "Guess NL/CRCR";      &test("$nkf --guess","\r\r",      "ASCII (CR)\n");
+printf "%-40s", "Guess NL/CRCRLF";    &test("$nkf --guess","\r\r\n",    "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/CR.LF";     &test("$nkf --guess","\r.\n",     "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/CR.CR";     &test("$nkf --guess","\r.\r",     "ASCII (CR)\n");
+printf "%-40s", "Guess NL/CR.CRLF";   &test("$nkf --guess","\r.\r\n",   "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/CRLF";      &test("$nkf --guess","\r\n",      "ASCII (CRLF)\n");
+printf "%-40s", "Guess NL/CRLFLF";    &test("$nkf --guess","\r\n\n",    "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/CRLFCR";    &test("$nkf --guess","\r\n\r",    "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/CRLFCRLF";  &test("$nkf --guess","\r\n\r\n",  "ASCII (CRLF)\n");
+printf "%-40s", "Guess NL/CRLF.LF";   &test("$nkf --guess","\r\n.\n",   "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/CRLF.CR";   &test("$nkf --guess","\r\n.\r",   "ASCII (MIXED NL)\n");
+printf "%-40s", "Guess NL/CRLF.CRLF"; &test("$nkf --guess","\r\n.\r\n", "ASCII (CRLF)\n");
+# end

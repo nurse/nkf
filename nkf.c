@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.137 2007/10/01 14:29:21 naruse Exp $ */
+/* $Id: nkf.c,v 1.138 2007/10/01 19:55:25 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-10-01"
 #define COPY_RIGHT \
@@ -706,8 +706,9 @@ static char            *backup_suffix = "";
 static char *get_backup_filename(const char *suffix, const char *filename);
 #endif
 
-static int             nlmode_f = 0;   /* CR, LF, CRLF */
-static nkf_char prev_cr = 0;
+static int nlmode_f = 0;   /* CR, LF, CRLF */
+static int input_nextline = 0; /* 0: unestablished, EOF: MIXED */
+static nkf_char prev_cr = 0; /* CR or 0 */
 #ifdef EASYWIN /*Easy Win */
 static int             end_check;
 #endif /*Easy Win */
@@ -2281,7 +2282,7 @@ void module_connection(void)
 	/* base64_count = 0; */
     }
 
-    if (nlmode_f) {
+    if (nlmode_f || guess_f) {
 	o_nlconv = oconv; oconv = nl_conv;
     }
     if (rot_f) {
@@ -2877,10 +2878,6 @@ nkf_char kanji_convert(FILE *f)
 			c1 = CR;
 			SEND;
 		    }
-		}
-		if (!nlmode_f) {
-		    if (prev_cr && c1 == LF) nlmode_f = CRLF;
-		    else nlmode_f = c1;
 		}
 	    } else if (c1 == DEL && input_mode == X0208) {
 		/* CP5022x */
@@ -4298,27 +4295,22 @@ nkf_char broken_ungetc(nkf_char c, FILE *f)
 
 void nl_conv(nkf_char c2, nkf_char c1)
 {
-    if (prev_cr) {
+    if (guess_f && input_nextline != EOF) {
+	if (c2 == 0 && c1 == LF) {
+	    if (!input_nextline) input_nextline = prev_cr ? CRLF : LF;
+	    else if (input_nextline != (prev_cr ? CRLF : LF)) input_nextline = EOF;
+	} else if (c2 == 0 && c1 == CR && input_nextline == LF) input_nextline = EOF;
+	else if (!prev_cr);
+	else if (!input_nextline) input_nextline = CR;
+	else if (input_nextline != CR) input_nextline = EOF;
+    }
+    if (prev_cr || c2 == 0 && c1 == LF) {
 	prev_cr = 0;
-	if (! (c2==0&&c1==LF)) {
-	    nl_conv(0,LF);
-	}
+	if (nlmode_f != LF) (*o_nlconv)(0, CR);
+	if (nlmode_f != CR) (*o_nlconv)(0, LF);
     }
-    if (c2) {
-        (*o_nlconv)(c2,c1);
-    } else if (c1==CR) {
-	prev_cr = c1;
-    } else if (c1==LF) {
-        if (nlmode_f==CRLF) {
-            (*o_nlconv)(0,CR);
-	} else if (nlmode_f==CR) {
-            (*o_nlconv)(0,CR);
-	    return;
-	}
-	(*o_nlconv)(0,LF);
-    } else if (c1!='\032' || nlmode_f!=LF){
-        (*o_nlconv)(c2,c1);
-    }
+    if (c2 == 0 && c1 == CR) prev_cr = CR;
+    else if (c2 != 0 || c1 != LF) (*o_nlconv)(c2, c1);
 }
 
 /*
@@ -4999,20 +4991,18 @@ void print_guessed_code(char *filename)
 {
     char *codename = "BINARY";
     char *str_nlmode = NULL;
-    if (!input_codename || *input_codename) {
-        if (!input_codename) {
-            codename = "ASCII";
-        } else {
-            codename = input_codename;
-        }
-        if (nlmode_f == CR) str_nlmode = "CR";
-        else if (nlmode_f == LF) str_nlmode = "LF";
-        else if (nlmode_f == CRLF) str_nlmode = "CRLF";
-        else if (nlmode_f == EOF) str_nlmode = "MIXED NL";
-    }
     if (filename != NULL) printf("%s: ", filename);
-    if (str_nlmode != NULL) printf("%s (%s)\n", codename, str_nlmode);
-    else printf("%s\n", codename);
+    if (input_codename && !*input_codename) {
+	printf("BINARY\n");
+    } else {
+	printf("%s%s\n",
+	       (input_codename ? input_codename : "ASCII"),
+	       input_nextline == CR   ? " (CR)" :
+	       input_nextline == LF   ? " (LF)" :
+	       input_nextline == CRLF ? " (CRLF)" :
+	       input_nextline == EOF  ? " (MIXED NL)" :
+	       "");
+    }
 }
 #endif /*WIN32DLL*/
 
