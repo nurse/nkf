@@ -1,5 +1,5 @@
-CC = pcc
-CFLAGS = -O --stats 
+CC = cc
+CFLAGS = -O
 # CFLAGS = -O3
 SHAR = shar 
 # SHAR = shar -T
