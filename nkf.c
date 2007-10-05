@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.141 2007/10/02 08:41:03 naruse Exp $ */
+/* $Id: nkf.c,v 1.142 2007/10/05 10:57:50 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-10-02"
+#define NKF_RELEASE_DATE "2007-10-05"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -383,9 +383,7 @@ static  void    usage(void);
 static  void    version(void);
 #endif
 static  void    options(unsigned char *c);
-#if defined(PERL_XS) || defined(WIN32DLL)
 static  void    reinit(void);
-#endif
 
 /* buffers */
 
@@ -475,7 +473,7 @@ static nkf_char numchar_ungetc(nkf_char c,FILE *f);
 #ifdef CHECK_OPTION
 static int noout_f = FALSE;
 static void no_putc(nkf_char c);
-static nkf_char debug_f = FALSE;
+static int debug_f = FALSE;
 static void debug(const char *str);
 static nkf_char (*iconv_for_check)(nkf_char c2,nkf_char c1,nkf_char c0) = 0;
 #endif
@@ -735,6 +733,35 @@ int main(int argc, char **argv)
     for (argc--,argv++; (argc > 0) && **argv == '-'; argc--, argv++) {
         cp = (unsigned char *)*argv;
         options(cp);
+        if (guess_f) {
+#ifdef CHECK_OPTION
+	    int debug_f_back = debug_f;
+#endif
+#ifdef EXEC_IO
+	    int exec_f_back = exec_f;
+#endif
+#ifdef X0212_ENABLE
+	    int x0212_f_back = x0212_f;
+#endif
+#ifdef X0212_ENABLE
+	    int x0213_f_back = x0213_f;
+#endif
+	    reinit();
+	    guess_f = TRUE;
+	    mime_f = FALSE;
+#ifdef CHECK_OPTION
+	    debug_f = debug_f_back;
+#endif
+#ifdef EXEC_IO
+            exec_f = exec_f_back;
+#endif
+#ifdef X0212_ENABLE
+	    x0212_f = x0212_f_back;
+#endif
+#ifdef X0213_ENABLE
+	    x0213_f = x0213_f_back;
+#endif
+    }
 #ifdef EXEC_IO
         if (exec_f){
             int fds[2], pid;
@@ -1124,7 +1151,10 @@ void options(unsigned char *cp)
 		}
 		p = 0;
             }
-	    if (p == 0) return;
+	    if (p == 0) {
+		fprintf(stderr, "unknown long option: --%s\n", cp);
+		return;
+	    }
 	    while(*cp && *cp != SP && cp++);
             if (long_option[i].alias[0]){
 		cp_back = cp;
@@ -1254,6 +1284,8 @@ void options(unsigned char *cp)
 			input_f = UTF32_INPUT;
 			input_endian = ENDIAN_LITTLE;
 #endif
+		    } else {
+			fprintf(stderr, "unknown input encoding: %s\n", codeset);
 		    }
                     continue;
 		}
@@ -1405,6 +1437,8 @@ void options(unsigned char *cp)
 			output_endian = ENDIAN_LITTLE;
 			output_bom_f = TRUE;
 #endif
+		    } else {
+			fprintf(stderr, "unknown output encoding: %s\n", codeset);
 		    }
                     continue;
 		}
@@ -1849,16 +1883,17 @@ void options(unsigned char *cp)
                 nlmode_f = 0; cp++;
             }
             continue;
-        case 'g':
 #ifndef PERL_XS
+        case 'g':
             guess_f = TRUE;
-#endif
             continue;
+#endif
         case SP:
         /* module muliple options in a string are allowed for Perl moudle  */
 	    while(*cp && *cp++!='-');
             continue;
         default:
+	    fprintf(stderr, "unknown option: -%c\n", *(cp-1));
             /* bogus option but ignored */
             continue;
         }
@@ -1910,12 +1945,8 @@ void set_iconv(nkf_char f, nkf_char (*iconv_func)(nkf_char c2,nkf_char c1,nkf_ch
 #define SCORE_L2       (1)                   /* 第2水準漢字 */
 #define SCORE_KANA     (SCORE_L2 << 1)       /* いわゆる半角カナ */
 #define SCORE_DEPEND   (SCORE_KANA << 1)     /* 機種依存文字 */
-#ifdef SHIFTJIS_CP932
-#define SCORE_CP932    (SCORE_DEPEND << 1)   /* CP932 による読み換え */
+#define SCORE_CP932    (SCORE_DEPEND << 1)   /* CP932 による読み換え (IBM extended characters) */
 #define SCORE_NO_EXIST (SCORE_CP932 << 1)    /* 存在しない文字 */
-#else
-#define SCORE_NO_EXIST (SCORE_DEPEND << 1)   /* 存在しない文字 */
-#endif
 #define SCORE_iMIME    (SCORE_NO_EXIST << 1) /* MIME による指定 */
 #define SCORE_ERROR    (SCORE_iMIME << 1) /* エラー */
 
@@ -1931,8 +1962,8 @@ static const char score_table_A0[] = {
 static const char score_table_F0[] = {
     SCORE_L2, SCORE_L2, SCORE_L2, SCORE_L2,
     SCORE_L2, SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST,
-    SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND,
-    SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST, SCORE_ERROR,
+    SCORE_DEPEND, SCORE_DEPEND, SCORE_CP932, SCORE_CP932,
+    SCORE_CP932, SCORE_NO_EXIST, SCORE_NO_EXIST, SCORE_ERROR,
 };
 
 void set_code_score(struct input_code *ptr, nkf_char score)
@@ -2032,13 +2063,12 @@ void s_status(struct input_code *ptr, nkf_char c)
               ptr->stat = 1;
               status_push_ch(ptr, c);
 #ifdef SHIFTJIS_CP932
-          }else if (cp51932_f
-                    && is_ibmext_in_sjis(c)){
+          }else if (is_ibmext_in_sjis(c)){
               ptr->stat = 2;
               status_push_ch(ptr, c);
 #endif /* SHIFTJIS_CP932 */
 #ifdef X0212_ENABLE
-          }else if (x0212_f && 0xf0 <= c && c <= 0xfc){
+          }else if (0xf0 <= c && c <= 0xfc){
               ptr->stat = 1;
               status_push_ch(ptr, c);
 #endif /* X0212_ENABLE */
@@ -2058,18 +2088,16 @@ void s_status(struct input_code *ptr, nkf_char c)
           break;
       case 2:
 #ifdef SHIFTJIS_CP932
-          if ((0x40 <= c && c <= 0x7e) || (0x80 <= c && c <= 0xfc)){
-              status_push_ch(ptr, c);
-              if (s2e_conv(ptr->buf[0], ptr->buf[1], &ptr->buf[0], &ptr->buf[1]) == 0){
-                  set_code_score(ptr, SCORE_CP932);
-                  status_clear(ptr);
-                  break;
-              }
-          }
+	if ((0x40 <= c && c <= 0x7e) || (0x80 <= c && c <= 0xfc)) {
+	    status_push_ch(ptr, c);
+	    if (s2e_conv(ptr->buf[0], ptr->buf[1], &ptr->buf[0], &ptr->buf[1]) == 0) {
+		code_score(ptr);
+		status_clear(ptr);
+		break;
+	    }
+	}
 #endif /* SHIFTJIS_CP932 */
-#ifndef X0212_ENABLE
-          status_disable(ptr);
-#endif
+	status_disable(ptr);
           break;
     }
 }
@@ -4993,8 +5021,10 @@ void print_guessed_code(char *filename)
     if (input_codename && !*input_codename) {
 	printf("BINARY\n");
     } else {
-	printf("%s%s\n",
+	struct input_code *p = find_inputcode_byfunc(iconv);
+	printf("%s%s%s\n",
 	       (input_codename ? input_codename : "ASCII"),
+	       ((p->score & (SCORE_DEPEND|SCORE_CP932|SCORE_NO_EXIST)) ? "+" : ""),
 	       input_nextline == CR   ? " (CR)" :
 	       input_nextline == LF   ? " (LF)" :
 	       input_nextline == CRLF ? " (CRLF)" :
@@ -5856,7 +5886,6 @@ void mime_putc(nkf_char c)
 }
 
 
-#if defined(PERL_XS) || defined(WIN32DLL)
 void reinit(void)
 {
     {
@@ -5980,7 +6009,6 @@ void reinit(void)
     reinitdll();
 #endif /*WIN32DLL*/
 }
-#endif
 
 void no_connection(nkf_char c2, nkf_char c1)
 {
