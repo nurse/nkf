@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.142 2007/10/05 10:57:50 naruse Exp $ */
+/* $Id: nkf.c,v 1.143 2007/10/10 19:35:39 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-10-05"
+#define NKF_RELEASE_DATE "2007-10-11"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -478,7 +478,7 @@ static void debug(const char *str);
 static nkf_char (*iconv_for_check)(nkf_char c2,nkf_char c1,nkf_char c0) = 0;
 #endif
 
-static int guess_f = FALSE;
+static int guess_f = 0; /* 0: OFF, 1: ON, 2: VERBOSE */
 #if !defined PERL_XS
 static  void    print_guessed_code(char *filename);
 #endif
@@ -746,8 +746,9 @@ int main(int argc, char **argv)
 #ifdef X0212_ENABLE
 	    int x0213_f_back = x0213_f;
 #endif
+	    int guess_f_back = guess_f;
 	    reinit();
-	    guess_f = TRUE;
+	    guess_f = guess_f_back;
 	    mime_f = FALSE;
 #ifdef CHECK_OPTION
 	    debug_f = debug_f_back;
@@ -1063,6 +1064,7 @@ static const struct {
     {"hiragana","h1"},
     {"katakana","h2"},
     {"katakana-hiragana","h3"},
+    {"guess=", ""},
     {"guess", "g"},
     {"cp932", ""},
     {"no-cp932", ""},
@@ -1442,6 +1444,14 @@ void options(unsigned char *cp)
 		    }
                     continue;
 		}
+                if (strcmp(long_option[i].name, "guess=") == 0){
+		    if (p[0] == '1') {
+			guess_f = 2;
+		    } else {
+			guess_f = 1;
+		    }
+                    continue;
+                }
 #ifdef OVERWRITE
                 if (strcmp(long_option[i].name, "overwrite") == 0){
                     file_out_f = TRUE;
@@ -1885,7 +1895,15 @@ void options(unsigned char *cp)
             continue;
 #ifndef PERL_XS
         case 'g':
-            guess_f = TRUE;
+            if (*cp == '1') {
+                guess_f = 2;
+                cp++;
+            } else if (*cp == '0') {
+		guess_f = 1;
+                cp++;
+            } else {
+		guess_f = 1;
+            }
             continue;
 #endif
         case SP:
@@ -1946,7 +1964,8 @@ void set_iconv(nkf_char f, nkf_char (*iconv_func)(nkf_char c2,nkf_char c1,nkf_ch
 #define SCORE_KANA     (SCORE_L2 << 1)       /* いわゆる半角カナ */
 #define SCORE_DEPEND   (SCORE_KANA << 1)     /* 機種依存文字 */
 #define SCORE_CP932    (SCORE_DEPEND << 1)   /* CP932 による読み換え (IBM extended characters) */
-#define SCORE_NO_EXIST (SCORE_CP932 << 1)    /* 存在しない文字 */
+#define SCORE_X0212    (SCORE_CP932 << 1)    /* JIS X 0212 */
+#define SCORE_NO_EXIST (SCORE_X0212 << 1)    /* 存在しない文字 */
 #define SCORE_iMIME    (SCORE_NO_EXIST << 1) /* MIME による指定 */
 #define SCORE_ERROR    (SCORE_iMIME << 1) /* エラー */
 
@@ -1990,6 +2009,8 @@ void code_score(struct input_code *ptr)
         set_code_score(ptr, SCORE_ERROR);
     }else if (c2 == SSO){
         set_code_score(ptr, SCORE_KANA);
+    }else if (c2 == 0x8f){
+        set_code_score(ptr, SCORE_X0212);
 #ifdef UTF8_OUTPUT_ENABLE
     }else if (!e2w_conv(c2, c1)){
         set_code_score(ptr, SCORE_NO_EXIST);
@@ -2059,8 +2080,11 @@ void s_status(struct input_code *ptr, nkf_char c)
               status_push_ch(ptr, c);
               code_score(ptr);
               status_clear(ptr);
-          }else if ((0x81 <= c && c < 0xa0) || (0xe0 <= c && c <= 0xef)){
+          }else if ((0x81 <= c && c < 0xa0) || (0xe0 <= c && c <= 0xea)){
               ptr->stat = 1;
+              status_push_ch(ptr, c);
+          }else if (0xed <= c && c <= 0xee){
+              ptr->stat = 3;
               status_push_ch(ptr, c);
 #ifdef SHIFTJIS_CP932
           }else if (is_ibmext_in_sjis(c)){
@@ -2091,13 +2115,23 @@ void s_status(struct input_code *ptr, nkf_char c)
 	if ((0x40 <= c && c <= 0x7e) || (0x80 <= c && c <= 0xfc)) {
 	    status_push_ch(ptr, c);
 	    if (s2e_conv(ptr->buf[0], ptr->buf[1], &ptr->buf[0], &ptr->buf[1]) == 0) {
-		code_score(ptr);
+		set_code_score(ptr, SCORE_CP932);
 		status_clear(ptr);
 		break;
 	    }
 	}
 #endif /* SHIFTJIS_CP932 */
 	status_disable(ptr);
+          break;
+      case 3:
+          if ((0x40 <= c && c <= 0x7e) || (0x80 <= c && c <= 0xfc)){
+              status_push_ch(ptr, c);
+              s2e_conv(ptr->buf[0], ptr->buf[1], &ptr->buf[0], &ptr->buf[1]);
+	    set_code_score(ptr, SCORE_CP932);
+	    status_clear(ptr);
+          }else{
+              status_disable(ptr);
+          }
           break;
     }
 }
@@ -5022,14 +5056,33 @@ void print_guessed_code(char *filename)
 	printf("BINARY\n");
     } else {
 	struct input_code *p = find_inputcode_byfunc(iconv);
-	printf("%s%s%s\n",
-	       (input_codename ? input_codename : "ASCII"),
-	       ((p->score & (SCORE_DEPEND|SCORE_CP932|SCORE_NO_EXIST)) ? "+" : ""),
-	       input_nextline == CR   ? " (CR)" :
-	       input_nextline == LF   ? " (LF)" :
-	       input_nextline == CRLF ? " (CRLF)" :
-	       input_nextline == EOF  ? " (MIXED NL)" :
-	       "");
+	if (guess_f == 1) {
+	    printf("%s\n", input_codename ? input_codename : "ASCII");
+	} else {
+	    if (!input_codename) {
+		input_codename = "ASCII";
+	    } else if (strcmp(input_codename, "Shift_JIS") == 0) {
+		if (p->score & (SCORE_DEPEND|SCORE_CP932))
+		    input_codename = "CP932";
+	    } else if (strcmp(input_codename, "EUC-JP") == 0) {
+		if (p->score & (SCORE_X0212))
+		    input_codename = "EUCJP-MS";
+		else if (p->score & (SCORE_DEPEND|SCORE_CP932))
+		    input_codename = "CP51932";
+	    } else if (strcmp(input_codename, "ISO-2022-JP") == 0) {
+		if (p->score & (SCORE_KANA))
+		    input_codename = "CP50221";
+		else if (p->score & (SCORE_DEPEND|SCORE_CP932))
+		    input_codename = "CP50220";
+	    }
+	    printf("%s%s\n",
+		   input_codename,
+		   input_nextline == CR   ? " (CR)" :
+		   input_nextline == LF   ? " (LF)" :
+		   input_nextline == CRLF ? " (CRLF)" :
+		   input_nextline == EOF  ? " (MIXED NL)" :
+		   "");
+	}
     }
 }
 #endif /*WIN32DLL*/
@@ -5940,7 +5993,7 @@ void reinit(void)
     noout_f = FALSE;
     debug_f = FALSE;
 #endif
-    guess_f = FALSE;
+    guess_f = 0;
 #ifdef EXEC_IO
     exec_f = 0;
 #endif
