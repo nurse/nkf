@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.145 2007/11/02 21:40:15 naruse Exp $ */
+/* $Id: nkf.c,v 1.146 2007/11/02 22:13:21 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-11-03"
 #define COPY_RIGHT \
@@ -5541,13 +5541,15 @@ nkf_char base64decode(nkf_char c)
     if (c > '@') {
         if (c < '[') {
             i = c - 'A';                        /* A..Z 0-25 */
+	} else if (c == '_') {
+	    i = '?'         /* 63 */ ;          /* _  63 */
         } else {
             i = c - 'G'     /* - 'a' + 26 */ ;  /* a..z 26-51 */
 	}
     } else if (c > '/') {
         i = c - '0' + '4'   /* - '0' + 52 */ ;  /* 0..9 52-61 */
-    } else if (c == '+') {
-        i = '>'             /* 62 */ ;          /* +  62 */
+    } else if (c == '+' || c == '-') {
+        i = '>'             /* 62 */ ;          /* + and -  62 */
     } else {
         i = '?'             /* 63 */ ;          /* / 63 */
     }
