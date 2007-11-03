@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.146 2007/11/02 22:13:21 naruse Exp $ */
+/* $Id: nkf.c,v 1.147 2007/11/03 08:02:49 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-11-03"
 #define COPY_RIGHT \
@@ -5704,32 +5704,27 @@ void mime_prechar(nkf_char c2, nkf_char c1)
                 (*o_base64conv)(EOF,0);
                 (*o_base64conv)(0,LF);
                 (*o_base64conv)(0,SP);
-            }
-        } else if (c2){
-            if (base64_count + mimeout_buf_count/3*4> 66){
-                (*o_base64conv)(EOF,0);
-                (*o_base64conv)(0,LF);
-                (*o_base64conv)(0,SP);
+                base64_count = 1;
             }
         } else {
-            if (base64_count + mimeout_buf_count/3*4> 66){
+            if (base64_count + mimeout_buf_count/3*4> 66) {
                 (*o_base64conv)(EOF,0);
                 (*o_base64conv)(0,LF);
                 (*o_base64conv)(0,SP);
+                base64_count = 1;
+		open_mime(output_mode);
             }
-        }/*else if (mime_lastchar2){
-            if (c1 <=DEL && !nkf_isspace(c1)){
-                (*o_base64conv)(0,SP);
-            }
-        }*/
-    }/*else{
-        if (c2 && mime_lastchar2 == 0
-            && mime_lastchar1 && !nkf_isspace(mime_lastchar1)){
-            (*o_base64conv)(0,SP);
         }
-    }*/
-    /*mime_lastchar2 = c2;
-    mime_lastchar1 = c1;*/
+    } else if (c2) {
+	if (base64_count + mimeout_buf_count/3*4> 60) {
+	    mimeout_mode =  (output_mode==ASCII ||output_mode == ISO8859_1) ? 'Q' : 'B';
+	    open_mime(output_mode);
+	    (*o_base64conv)(EOF,0);
+	    (*o_base64conv)(0,LF);
+	    (*o_base64conv)(0,SP);
+	    base64_count = 1;
+	}
+    }
 }
 
 void mime_putc(nkf_char c)
@@ -5815,7 +5810,8 @@ void mime_putc(nkf_char c)
 		if (base64_count > 70) {
 		    close_mime();
 		    (*o_mputc)(LF);
-		    base64_count = 0;
+		    (*o_mputc)(SP);
+		    base64_count = 1;
 		    open_mime(output_mode);
 		}
 		if (!nkf_noescape_mime(c)) {
