@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.143 2007/10/10 19:35:39 naruse Exp $ */
+/* $Id: nkf.c,v 1.144 2007/11/02 20:17:35 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-10-11"
 #define COPY_RIGHT \
@@ -223,6 +223,9 @@ void  djgpp_setbinmode(FILE *fp)
                     ('a'<=c&&c<='f') ? (c-'a'+10) : 0)
 #define bin2hex(c) ("0123456789ABCDEF"[c&15])
 #define is_eucg3(c2) (((unsigned short)c2 >> 8) == SS3)
+#define nkf_noescape_mime(c) ((c == CR) || (c == LF) || \
+    ((c > SP) && (c < DEL) && (c != '?') && (c != '=') && (c != '_') \
+     && (c != '.') && (c != 0x22)))
 
 #define CP932_TABLE_BEGIN 0xFA
 #define CP932_TABLE_END   0xFC
@@ -5707,6 +5710,12 @@ void mime_prechar(nkf_char c2, nkf_char c1)
                 (*o_base64conv)(0,LF);
                 (*o_base64conv)(0,SP);
             }
+        } else {
+            if (base64_count + mimeout_buf_count/3*4> 66){
+                (*o_base64conv)(EOF,0);
+                (*o_base64conv)(0,LF);
+                (*o_base64conv)(0,SP);
+            }
         }/*else if (mime_lastchar2){
             if (c1 <=DEL && !nkf_isspace(c1)){
                 (*o_base64conv)(0,SP);
@@ -5801,9 +5810,20 @@ void mime_putc(nkf_char c)
 		    (*o_mputc)(SP);
 		    base64_count++;
 		}
-            }
-            (*o_mputc)(c);
-            base64_count++;
+            } else {
+		if (base64_count > 70) {
+		    close_mime();
+		    (*o_mputc)(LF);
+		    base64_count = 0;
+		    open_mime(output_mode);
+		}
+		if (!nkf_noescape_mime(c)) {
+		    mimeout_addchar(c);
+		    return;
+		}
+	    }
+	    (*o_mputc)(c);
+	    base64_count++;
         }
         return;
     }
@@ -5882,6 +5902,8 @@ void mime_putc(nkf_char c)
                     base64_count = 0;
                     mimeout_buf_count = 0;
                 }
+                mimeout_buf[mimeout_buf_count++] = (char)c;
+		return;
             }
             if (c==SP || c==TAB || c==CR || c==LF) {
                 for (i=0;i<mimeout_buf_count;i++) {
@@ -5904,7 +5926,7 @@ void mime_putc(nkf_char c)
                     mimeout_buf_count = 0;
                 }
                 return;
-            }
+	    }
             if (mimeout_buf_count>0 && SP<c && c!='=') {
                 mimeout_buf[mimeout_buf_count++] = (char)c;
                 if (mimeout_buf_count>MIMEOUT_BUF_LENGTH) {
