@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.144 2007/11/02 20:17:35 naruse Exp $ */
+/* $Id: nkf.c,v 1.145 2007/11/02 21:40:15 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-10-11"
+#define NKF_RELEASE_DATE "2007-11-03"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -5562,7 +5562,6 @@ static nkf_char b64c;
 char mimeout_buf[MIMEOUT_BUF_LENGTH+1];
 int mimeout_buf_count = 0;
 int mimeout_preserve_space = 0;
-#define itoh4(c)   (c>=10?c+'A'-10:c+'0')
 
 void open_mime(nkf_char mode)
 {
@@ -5660,8 +5659,8 @@ void mimeout_addchar(nkf_char c)
 	    base64_count = 0;
 	} else if(!nkf_isalnum(c)) {
 	    (*o_mputc)('=');
-	    (*o_mputc)(itoh4(((c>>4)&0xf)));
-	    (*o_mputc)(itoh4((c&0xf)));
+	    (*o_mputc)(bin2hex(((c>>4)&0xf)));
+	    (*o_mputc)(bin2hex((c&0xf)));
 	    base64_count += 3;
 	} else {
 	    (*o_mputc)(c);
