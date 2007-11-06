@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.147 2007/11/03 08:02:49 naruse Exp $ */
+/* $Id: nkf.c,v 1.148 2007/11/06 12:09:44 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-11-03"
+#define NKF_RELEASE_DATE "2007-11-06"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -225,7 +225,7 @@ void  djgpp_setbinmode(FILE *fp)
 #define is_eucg3(c2) (((unsigned short)c2 >> 8) == SS3)
 #define nkf_noescape_mime(c) ((c == CR) || (c == LF) || \
     ((c > SP) && (c < DEL) && (c != '?') && (c != '=') && (c != '_') \
-     && (c != '.') && (c != 0x22)))
+     && (c != '(') && (c != ')') && (c != '.') && (c != 0x22)))
 
 #define CP932_TABLE_BEGIN 0xFA
 #define CP932_TABLE_END   0xFC
@@ -532,7 +532,7 @@ struct input_code input_code_list[] = {
     {0}
 };
 
-static int              mimeout_mode = 0;
+static int              mimeout_mode = 0; /* 0, -1, 'Q', 'B', 1, 2 */
 static int              base64_count = 0;
 
 /* X0208 -> ASCII converter */
@@ -3866,7 +3866,7 @@ void w_oconv(nkf_char c2, nkf_char c1)
 	output_mode = ASCII;
         (*o_putc)(c1);
     } else if (c2 == ISO8859_1) {
-	output_mode = ISO8859_1;
+	output_mode = UTF8;
         (*o_putc)(c1 | 0x080);
     } else {
         output_mode = UTF8;
@@ -5563,7 +5563,6 @@ static nkf_char b64c;
 #define MIMEOUT_BUF_LENGTH (60)
 char mimeout_buf[MIMEOUT_BUF_LENGTH+1];
 int mimeout_buf_count = 0;
-int mimeout_preserve_space = 0;
 
 void open_mime(nkf_char mode)
 {
@@ -5578,7 +5577,6 @@ void open_mime(nkf_char mode)
 	}
     }
     mimeout_mode = mime_encode_method[i];
-
     i = 0;
     if (base64_count>45) {
 	if (mimeout_buf_count>0 && nkf_isblank(mimeout_buf[i])){
@@ -5588,25 +5586,21 @@ void open_mime(nkf_char mode)
 	(*o_mputc)(LF);
 	(*o_mputc)(SP);
 	base64_count = 1;
-	if (!mimeout_preserve_space && mimeout_buf_count>0
+	if (mimeout_buf_count>0
 	    && (mimeout_buf[i]==SP || mimeout_buf[i]==TAB
 	    	|| mimeout_buf[i]==CR || mimeout_buf[i]==LF)) {
 	    i++;
 	}
     }
-    if (!mimeout_preserve_space) {
-	for (;i<mimeout_buf_count;i++) {
-	    if (mimeout_buf[i]==SP || mimeout_buf[i]==TAB
-		|| mimeout_buf[i]==CR || mimeout_buf[i]==LF) {
-		(*o_mputc)(mimeout_buf[i]);
-		base64_count ++;
-	    } else {
-		break;
-	    }
+    for (;i<mimeout_buf_count;i++) {
+	if (mimeout_buf[i]==SP || mimeout_buf[i]==TAB
+	    || mimeout_buf[i]==CR || mimeout_buf[i]==LF) {
+	    (*o_mputc)(mimeout_buf[i]);
+	    base64_count ++;
+	} else {
+	    break;
 	}
     }
-    mimeout_preserve_space = FALSE;
-
     while(*p) {
         (*o_mputc)(*p++);
         base64_count ++;
@@ -5644,7 +5638,7 @@ void eof_mime(void)
 	base64_count += 2;
 	break;
     }
-    if (mimeout_mode) {
+    if (mimeout_mode > 0) {
 	if (mimeout_f!=FIXED_MIME) {
 	    close_mime();
 	} else if (mimeout_mode != 'Q')
@@ -5698,7 +5692,7 @@ void mimeout_addchar(nkf_char c)
 
 void mime_prechar(nkf_char c2, nkf_char c1)
 {
-    if (mimeout_mode){
+    if (mimeout_mode > 0){
         if (c2 == EOF){
             if (base64_count + mimeout_buf_count/3*4> 73){
                 (*o_base64conv)(EOF,0);
@@ -5712,17 +5706,18 @@ void mime_prechar(nkf_char c2, nkf_char c1)
                 (*o_base64conv)(0,LF);
                 (*o_base64conv)(0,SP);
                 base64_count = 1;
-		open_mime(output_mode);
+                mimeout_mode = -1;
             }
         }
     } else if (c2) {
-	if (base64_count + mimeout_buf_count/3*4> 60) {
+	if (c2 != EOF && base64_count + mimeout_buf_count/3*4> 60) {
 	    mimeout_mode =  (output_mode==ASCII ||output_mode == ISO8859_1) ? 'Q' : 'B';
 	    open_mime(output_mode);
 	    (*o_base64conv)(EOF,0);
 	    (*o_base64conv)(0,LF);
 	    (*o_base64conv)(0,SP);
 	    base64_count = 1;
+	    mimeout_mode = -1;
 	}
     }
 }
@@ -5760,10 +5755,11 @@ void mime_putc(nkf_char c)
     /* mimeout_f != FIXED_MIME */
 
     if (c == EOF) { /* c==EOF */
+	if (mimeout_mode == -1 && mimeout_buf_count > 1) open_mime(output_mode);
 	j = mimeout_buf_count;
 	mimeout_buf_count = 0;
 	i = 0;
-	if (mimeout_mode) {
+	if (mimeout_mode > 0) {
 	    if (!nkf_isblank(mimeout_buf[j-1])) {
 		for (;i<j;i++) {
 		    if (nkf_isspace(mimeout_buf[i]) && base64_count < 71){
@@ -5787,6 +5783,12 @@ void mime_putc(nkf_char c)
 	    }
 	}
         return;
+    }
+
+    if (mimeout_buf_count > 0){
+        lastchar = mimeout_buf[mimeout_buf_count - 1];
+    }else{
+        lastchar = -1;
     }
 
     if (mimeout_mode=='Q') {
@@ -5825,17 +5827,20 @@ void mime_putc(nkf_char c)
         return;
     }
 
-    if (mimeout_buf_count > 0){
-        lastchar = mimeout_buf[mimeout_buf_count - 1];
-    }else{
-        lastchar = -1;
-    }
-
-    if (!mimeout_mode) {
+    if (mimeout_mode <= 0) {
         if (c <= DEL && (output_mode==ASCII ||output_mode == ISO8859_1)) {
             if (nkf_isspace(c)) {
+		int flag = 0;
+		if (mimeout_mode == -1) {
+		    flag = 1;
+		}
                 if (c==CR || c==LF) {
-                    base64_count=0;
+		    if (flag) {
+			open_mime(output_mode);
+			output_mode = 0;
+		    } else {
+			base64_count = 0;
+		    }
                 }
                 for (i=0;i<mimeout_buf_count;i++) {
                     (*o_mputc)(mimeout_buf[i]);
@@ -5845,8 +5850,13 @@ void mime_putc(nkf_char c)
                         base64_count++;
                     }
                 }
-                mimeout_buf[0] = (char)c;
-                mimeout_buf_count = 1;
+		if (flag) {
+		    eof_mime();
+		    base64_count = 0;
+		    mimeout_mode = 0;
+                }
+		mimeout_buf[0] = (char)c;
+		mimeout_buf_count = 1;
             }else{
                 if (base64_count > 1
                     && base64_count + mimeout_buf_count > 76
