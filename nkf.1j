@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2007-08-10" "nkf 2.0.8" " "
+.TH nkf 1 "2007-11-05" "nkf 2.0.8" " "
 .SH "NAME"
 nkf \- ネットワーク用漢字コード変換フィルタ
 .SH "SYNOPSIS"
@@ -219,7 +219,6 @@ Unicode を出力する。
 .IP "\fB\-M[\s-1BQ\s0]\fR" 4
 .IX Item "-M[BQ]"
 \&\s-1MIME\s0 に変換する。
-\&\s-1JIS\s0 にコード変換してから \s-1BASE64\s0 される。
 .RS 4
 .IP "\fB\-M\fR" 4
 .IX Item "-M"
@@ -535,8 +534,18 @@ morb@fujitsu, kiss@ayumi.stars.flab.fujitsu, cen122@flab.fujitsu,
 yuki@flab.fujitsu 他、fujitsu & flab.fujitsu の皆さんの協力に感謝。
 shinoda@cs.titech, kato@cs.titech, uematsu@cs.titech  \s-1TNX\s0
 kono@ie.u\-ryukyu.ac.jp
-.Sh "nkf 1.9\-"
-.IX Subsection "nkf 1.9-"
+void@merope.pleiades.or.jp (Kusakabe Youichi)
+\&\s-1NIDE\s0 Naoyuki <nide@ics.nara\-wu.ac.jp>
+ohta@src.ricoh.co.jp (Junn Ohta)
+inouet@strl.nhk.or.jp (Tomoyuki Inoue)
+kiri@pulser.win.or.jp (Tetsuaki Kiriyama)
+Kimihiko Sato <sato@sail.t.u\-tokyo.ac.jp>
+a_kuroe@kuroe.aoba.yokohama.jp (Akihiko Kuroe)
+kono@ie.u\-ryukyu.ac.jp (Shinji Kono)
+GHG00637@nifty\-serve.or.jp (\s-1COW\s0)
+.PP
+/* end */
+=head2 nkf 1.9\-
 .IP "河野真治" 4
 .PD 0
 .IP "Akio Furukawa" 4
