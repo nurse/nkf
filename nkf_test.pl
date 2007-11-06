@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.24 2007/11/02 20:17:35 naruse Exp $
+# $Id: nkf_test.pl,v 1.25 2007/11/06 12:10:48 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -720,8 +720,21 @@ M2D-):TI"<V]19ST]/ST*(#T_25-/+3(P,C(M2E`_0C]'>5)#2D-9:TM#47%'
 @>6A#/ST@86%A82!A86%A(&%A86$@86%A80HM+2TM"@H`
 eofeof
 
+$example{'test_data/mime_out.ans.alt3'} = unpack('u',<<'eofeof');
+M"BTM+2T*4W5B:F5C=#H@86%A82!A86%A(&%A86$@86%A82!A86%A(&%A86$@
+M86%A82!A86%A(&%A86$@86%A82!A86%A(&%A86$@86%A80H@86%A80HM+2TM
+M"E-U8FIE8W0Z(#T_25-/+3(P,C(M2E`_0C]'>5)#2D-):TI#46U*0V=K2VE1
+M<DI#,&M,>5%X2D1-:TY343-*1&MK3WE1.4=Y:$,_/0H@/3])4T\M,C`R,BU*
+M4#]"/T=Y4D-*1#AK45-214I%66M30U)+2D5S:U1#4DY*131K5'E24TI&56M7
+M0U)B2D8T:UAX<V]19ST]/ST*(#T_25-/+3(P,C(M2E`_0C]'>5)#2D=!:UE3
+M4FE*1U%K2D-2;4I#9VMA0G-O46<]/3\]"BTM+2T*4W5B:F5C=#H@86%A82!A
+M86%A(&%A86$@86%A82!A86%A(&%A86$@86%A82`]/TE33RTR,#(R+4I0/T(_
+M1WE20TI#26M*0G-O46<]/3\]"B`]/TE33RTR,#(R+4I0/T(_1WE20TI#66M+
+D0U%Q1WEH0S\](&%A86$@86%A82!A86%A(&%A86$*+2TM+0H*1
+eofeof
+
 printf "%-40s", "test_data/mime_out";
-    &test("$nkf -jM",$example{'test_data/mime_out'},$example{'test_data/mime_out.ans'},$example{'test_data/mime_out.ans.alt'},$example{'test_data/mime_out.ans.alt2'});
+    &test("$nkf -jM",$example{'test_data/mime_out'},$example{'test_data/mime_out.ans'},$example{'test_data/mime_out.ans.alt'},$example{'test_data/mime_out.ans.alt2'},$example{'test_data/mime_out.ans.alt3'});
 # test_data/mime_out3
 
 $example{'test_data/mime_out3'} = "\x82\xD9\x82\xB0 A";
