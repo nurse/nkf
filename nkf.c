@@ -30,15 +30,20 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.148 2007/11/06 12:09:44 naruse Exp $ */
+/* $Id: nkf.c,v 1.149 2007/11/18 12:05:18 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-11-06"
+#define NKF_RELEASE_DATE "2007-11-18"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
 
 #include "config.h"
 #include "utf8tbl.h"
+
+#ifndef MIME_DECODE_DEFAULT
+#define MIME_DECODE_DEFAULT STRICT_MIME
+#endif
+
 #if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C) || defined(__MINGW32__) || defined(__EMX__) || defined(__MSDOS__) || defined(__WINDOWS__) || defined(__DOS__) || defined(__OS2__)) && !defined(MSDOS)
 #define MSDOS
 #if (defined(__Win32__) || defined(_WIN32)) && !defined(__WIN32__)
@@ -417,7 +422,7 @@ static int             rot_f = FALSE;          /* rot14/43 mode */
 static int             hira_f = FALSE;          /* hira/kata henkan */
 static int             input_f = FALSE;        /* non fixed input code  */
 static int             alpha_f = FALSE;        /* convert JIx0208 alphbet to ASCII */
-static int             mime_f = STRICT_MIME;   /* convert MIME B base64 or Q */
+static int             mime_f = MIME_DECODE_DEFAULT;   /* convert MIME B base64 or Q */
 static int             mime_decode_f = FALSE;  /* mime decode is explicitly on */
 static int             mimebuf_f = FALSE;      /* MIME buffered input */
 static int             broken_f = FALSE;       /* convert ESC-less broken JIS */
@@ -707,7 +712,7 @@ static char *get_backup_filename(const char *suffix, const char *filename);
 #endif
 
 static int nlmode_f = 0;   /* CR, LF, CRLF */
-static int input_nextline = 0; /* 0: unestablished, EOF: MIXED */
+static int input_newline = 0; /* 0: unestablished, EOF: MIXED */
 static nkf_char prev_cr = 0; /* CR or 0 */
 #ifdef EASYWIN /*Easy Win */
 static int             end_check;
@@ -765,7 +770,7 @@ int main(int argc, char **argv)
 #ifdef X0213_ENABLE
 	    x0213_f = x0213_f_back;
 #endif
-    }
+	}
 #ifdef EXEC_IO
         if (exec_f){
             int fds[2], pid;
@@ -829,7 +834,7 @@ int main(int argc, char **argv)
 	int is_argument_error = FALSE;
       while (argc--) {
 	    input_codename = NULL;
-	    input_nextline = 0;
+	    input_newline = 0;
 #ifdef CHECK_OPTION
 	    iconv_for_check = 0;
 #endif
@@ -4359,14 +4364,14 @@ nkf_char broken_ungetc(nkf_char c, FILE *f)
 
 void nl_conv(nkf_char c2, nkf_char c1)
 {
-    if (guess_f && input_nextline != EOF) {
+    if (guess_f && input_newline != EOF) {
 	if (c2 == 0 && c1 == LF) {
-	    if (!input_nextline) input_nextline = prev_cr ? CRLF : LF;
-	    else if (input_nextline != (prev_cr ? CRLF : LF)) input_nextline = EOF;
-	} else if (c2 == 0 && c1 == CR && input_nextline == LF) input_nextline = EOF;
+	    if (!input_newline) input_newline = prev_cr ? CRLF : LF;
+	    else if (input_newline != (prev_cr ? CRLF : LF)) input_newline = EOF;
+	} else if (c2 == 0 && c1 == CR && input_newline == LF) input_newline = EOF;
 	else if (!prev_cr);
-	else if (!input_nextline) input_nextline = CR;
-	else if (input_nextline != CR) input_nextline = EOF;
+	else if (!input_newline) input_newline = CR;
+	else if (input_newline != CR) input_newline = EOF;
     }
     if (prev_cr || c2 == 0 && c1 == LF) {
 	prev_cr = 0;
@@ -5080,10 +5085,10 @@ void print_guessed_code(char *filename)
 	    }
 	    printf("%s%s\n",
 		   input_codename,
-		   input_nextline == CR   ? " (CR)" :
-		   input_nextline == LF   ? " (LF)" :
-		   input_nextline == CRLF ? " (CRLF)" :
-		   input_nextline == EOF  ? " (MIXED NL)" :
+		   input_newline == CR   ? " (CR)" :
+		   input_newline == LF   ? " (LF)" :
+		   input_newline == CRLF ? " (CRLF)" :
+		   input_newline == EOF  ? " (MIXED NL)" :
 		   "");
 	}
     }
@@ -5984,7 +5989,7 @@ void reinit(void)
     hira_f = FALSE;
     input_f = FALSE;
     alpha_f = FALSE;
-    mime_f = STRICT_MIME;
+    mime_f = MIME_DECODE_DEFAULT;
     mime_decode_f = FALSE;
     mimebuf_f = FALSE;
     broken_f = FALSE;
@@ -6077,7 +6082,7 @@ void reinit(void)
     mime_decode_mode = FALSE;
     file_out_f = FALSE;
     nlmode_f = 0;
-    input_nextline = 0;
+    input_newline = 0;
     prev_cr = 0;
     option_mode = 0;
     broken_counter = 0;
