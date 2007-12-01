@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.149 2007/11/18 12:05:18 naruse Exp $ */
+/* $Id: nkf.c,v 1.150 2007/11/30 15:59:05 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-11-18"
+#define NKF_RELEASE_DATE "2007-11-30"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -42,6 +42,9 @@
 
 #ifndef MIME_DECODE_DEFAULT
 #define MIME_DECODE_DEFAULT STRICT_MIME
+#endif
+#ifndef X0201_DEFAULT
+#define X0201_DEFAULT TRUE
 #endif
 
 #if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C) || defined(__MINGW32__) || defined(__EMX__) || defined(__MSDOS__) || defined(__WINDOWS__) || defined(__DOS__) || defined(__OS2__)) && !defined(MSDOS)
@@ -158,7 +161,6 @@ void  djgpp_setbinmode(FILE *fp)
 #define         X0208           1
 #define         X0201           2
 #define         ISO8859_1       8
-#define         NO_X0201        3
 #define         X0212      0x2844
 #define         X0213_1    0x284F
 #define         X0213_2    0x2850
@@ -189,8 +191,6 @@ void  djgpp_setbinmode(FILE *fp)
 #define		ENDIAN_LITTLE	4321
 #define		ENDIAN_2143	2143
 #define		ENDIAN_3412	3412
-
-#define         WISH_TRUE      15
 
 /* ASCII CODE */
 
@@ -428,12 +428,8 @@ static int             mimebuf_f = FALSE;      /* MIME buffered input */
 static int             broken_f = FALSE;       /* convert ESC-less broken JIS */
 static int             iso8859_f = FALSE;      /* ISO8859 through */
 static int             mimeout_f = FALSE;       /* base64 mode */
-#if defined(MSDOS) || defined(__OS2__)
-static int             x0201_f = TRUE;         /* Assume JISX0201 kana */
-#else
-static int             x0201_f = NO_X0201;     /* Assume NO JISX0201 */
-#endif
-static int             iso2022jp_f = FALSE;    /* convert ISO-2022-JP */
+static int             x0201_f = X0201_DEFAULT; /* convert JIS X 0201 */
+static int             iso2022jp_f = FALSE;    /* replace non ISO-2022-JP with GETA */
 
 #ifdef UNICODE_NORMALIZATION
 static int nfc_f = FALSE;
@@ -751,9 +747,7 @@ int main(int argc, char **argv)
 #ifdef X0212_ENABLE
 	    int x0212_f_back = x0212_f;
 #endif
-#ifdef X0212_ENABLE
 	    int x0213_f_back = x0213_f;
-#endif
 	    int guess_f_back = guess_f;
 	    reinit();
 	    guess_f = guess_f_back;
@@ -767,9 +761,7 @@ int main(int argc, char **argv)
 #ifdef X0212_ENABLE
 	    x0212_f = x0212_f_back;
 #endif
-#ifdef X0213_ENABLE
 	    x0213_f = x0213_f_back;
-#endif
 	}
 #ifdef EXEC_IO
         if (exec_f){
@@ -799,8 +791,6 @@ int main(int argc, char **argv)
         }
 #endif
     }
-    if(x0201_f == WISH_TRUE)
-         x0201_f = ((!iso2022jp_f)? TRUE : NO_X0201);
 
     if (binmode_f == TRUE)
 #if defined(__OS2__) && (defined(__IBMC__) || defined(__IBMCPP__))
@@ -1711,7 +1701,7 @@ void options(unsigned char *cp)
 #endif
 #ifndef PERL_XS
         case 'V':
-            version();
+            show_configuration();
             exit(1);
             break;
         case 'v':
@@ -1789,7 +1779,6 @@ void options(unsigned char *cp)
             continue;
         case 'S':   /* MS Kanji input */
             input_f = SJIS_INPUT;
-            if (x0201_f==NO_X0201) x0201_f=TRUE;
             continue;
         case 'Z':   /* Convert X0208 alphabet to asii */
             /* alpha_f
@@ -1817,8 +1806,7 @@ void options(unsigned char *cp)
                     0xa0-0xd    in MS Kanji (0xa0-0xdf)
             */
             continue;
-        case 'X':   /* Assume X0201 kana */
-            /* Default value is NO_X0201 for EUC/MS-Kanji mix */
+        case 'X':   /* Convert X0201 kana to X0208 */
             x0201_f = TRUE;
             continue;
         case 'F':   /* prserve new lines */
@@ -1887,9 +1875,9 @@ void options(unsigned char *cp)
         case 'd':/* delete cr code */
             nlmode_f = LF;
             continue;
-        case 'I':   /* ISO-2022-JP output */
-            iso2022jp_f = TRUE;
-            continue;
+	case 'I':   /* ISO-2022-JP output */
+	    iso2022jp_f = TRUE;
+	    continue;
         case 'L':  /* line mode */
             if (*cp=='u') {         /* unix */
                 nlmode_f = LF; cp++;
@@ -2676,7 +2664,7 @@ nkf_char kanji_convert(FILE *f)
                         SEND;
                     } else if (SSP<=c1 && c1<0xe0 && iconv == s_iconv) {
                         /* SJIS X0201 Case... */
-                        if(iso2022jp_f && x0201_f==NO_X0201) {
+                        if (iso2022jp_f && !x0201_f) {
                             (*oconv)(GETA1, GETA2);
                             NEXT;
                         } else {
@@ -2689,7 +2677,7 @@ nkf_char kanji_convert(FILE *f)
                         c1 = (*i_getc)(f);  /* skip SSO */
                         code_status(c1);
                         if (SSP<=c1 && c1<0xe0) {
-			    if(iso2022jp_f &&  x0201_f==NO_X0201) {
+			    if (iso2022jp_f && !x0201_f) {
 				(*oconv)(GETA1, GETA2);
 				NEXT;
 			    } else {
@@ -2721,7 +2709,7 @@ nkf_char kanji_convert(FILE *f)
                         SEND;
                     } else if (SP <= c1 && c1 < (0xe0&0x7f)){
                       /* output 1 shifted byte */
-			if(iso2022jp_f && x0201_f==NO_X0201) {
+			if (iso2022jp_f && !x0201_f) {
 			    (*oconv)(GETA1, GETA2);
 			    NEXT;
 			} else {
@@ -5995,11 +5983,7 @@ void reinit(void)
     broken_f = FALSE;
     iso8859_f = FALSE;
     mimeout_f = FALSE;
-#if defined(MSDOS) || defined(__OS2__)
-     x0201_f = TRUE;
-#else
-     x0201_f = NO_X0201;
-#endif
+    x0201_f = X0201_DEFAULT;
     iso2022jp_f = FALSE;
 #if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
     ms_ucs_map_f = UCS_MAP_ASCII;
@@ -6191,22 +6175,30 @@ void usage(void)
     version();
 }
 
+void show_configuration(void)
+{
+    fprintf(stderr, "Summary of my nkf " NKF_VERSION " (" NKF_RELEASE_DATE ") configuration:\n");
+    fprintf(stderr, "  Compile-time options:\n");
+    fprintf(stderr, "    Default encoding: "
+#if defined(DEFAULT_CODE_JIS)
+	    "ISO-2022-JP"
+#elif defined(DEFAULT_CODE_SJIS)
+	    "Shift_JIS"
+#elif defined(DEFAULT_CODE_EUC)
+	    "EUC-JP"
+#elif defined(DEFAULT_CODE_UTF8)
+	    "UTF-8"
+#else
+	    "UNKOWN"
+#endif
+	    "\n");
+    fprintf(stderr, "    Decode MIME encoded string:  %s\n", MIME_DECODE_DEFAULT ? "ON" : "OFF");
+    fprintf(stderr, "    Convert JIS X 0201 Katakana: %s\n", X0201_DEFAULT ? "ON" : "OFF");
+
+}
+
 void version(void)
 {
-    fprintf(stderr,"Network Kanji Filter Version %s (%s) "
-#if defined(MSDOS) && !defined(__WIN32__) && !defined(__WIN16__) && !defined(__OS2__)
-                  "for DOS"
-#endif
-#if defined(MSDOS) && defined(__WIN16__)
-                  "for Win16"
-#endif
-#if defined(MSDOS) && defined(__WIN32__)
-                  "for Win32"
-#endif
-#ifdef __OS2__
-                  "for OS/2"
-#endif
-                  ,NKF_VERSION,NKF_RELEASE_DATE);
-    fprintf(stderr,"\n%s\n",CopyRight);
+    fprintf(stderr,"Network Kanji Filter Version " NKF_VERSION " (" NKF_RELEASE_DATE ") \n" COPY_RIGHT "\n");
 }
 #endif /*PERL_XS*/
