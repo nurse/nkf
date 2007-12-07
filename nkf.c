@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.151 2007/12/06 20:13:58 naruse Exp $ */
+/* $Id: nkf.c,v 1.152 2007/12/06 20:23:55 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-12-07"
 #define COPY_RIGHT \
@@ -6127,7 +6127,6 @@ void usage(void)
     fprintf(stderr,"o[BJH]   Specify the Esc Seq for ASCII/Roman        (DEFAULT B)\n");
     fprintf(stderr,"r        {de/en}crypt ROT13/47\n");
     fprintf(stderr,"h        1 katakana->hiragana, 2 hiragana->katakana, 3 both\n");
-    fprintf(stderr,"v        Show this usage. V: show version\n");
     fprintf(stderr,"m[BQN0]  MIME decode [B:base64,Q:quoted,N:non-strict,0:no decode]\n");
     fprintf(stderr,"M[BQ]    MIME encode [B:base64 Q:quoted]\n");
     fprintf(stderr,"l        ISO8859-1 (Latin-1) support\n");
@@ -6144,6 +6143,7 @@ void usage(void)
     fprintf(stderr,"I        Convert non ISO-2022-JP charactor to GETA\n");
     fprintf(stderr,"d,c      Convert line breaks  -d: LF  -c: CRLF\n");
     fprintf(stderr,"-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n");
+    fprintf(stderr,"v, V     Show this usage. V: show configuration\n");
     fprintf(stderr,"\n");
     fprintf(stderr,"Long name options\n");
     fprintf(stderr," --ic=<input codeset>  --oc=<output codeset>\n");
@@ -6180,7 +6180,7 @@ void show_configuration(void)
 {
     fprintf(stderr, "Summary of my nkf " NKF_VERSION " (" NKF_RELEASE_DATE ") configuration:\n");
     fprintf(stderr, "  Compile-time options:\n");
-    fprintf(stderr, "    Default encoding: "
+    fprintf(stderr, "    Default output encoding:      "
 #if defined(DEFAULT_CODE_JIS)
 	    "ISO-2022-JP"
 #elif defined(DEFAULT_CODE_SJIS)
@@ -6193,9 +6193,20 @@ void show_configuration(void)
 	    "UNKOWN"
 #endif
 	    "\n");
-    fprintf(stderr, "    Decode MIME encoded string:  %s\n", MIME_DECODE_DEFAULT ? "ON" : "OFF");
-    fprintf(stderr, "    Convert JIS X 0201 Katakana: %s\n", X0201_DEFAULT ? "ON" : "OFF");
-
+    fprintf(stderr, "    Decode MIME encoded string:  "
+#if MIME_DECODE_DEFAULT
+	    "ON"
+#else
+	    "OFF"
+#endif
+	    "\n");
+    fprintf(stderr, "    Convert JIS X 0201 Katakana: "
+#if X0201_DEFAULT
+	    "ON"
+#else
+	    "OFF"
+#endif
+	    "\n");
 }
 
 void version(void)
