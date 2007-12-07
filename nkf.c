@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.150 2007/11/30 15:59:05 naruse Exp $ */
+/* $Id: nkf.c,v 1.151 2007/12/06 20:13:58 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-11-30"
+#define NKF_RELEASE_DATE "2007-12-07"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -389,6 +389,7 @@ static  void    mimeout_addchar(nkf_char c);
 #ifndef PERL_XS
 static  void    usage(void);
 static  void    version(void);
+static  void    show_configuration(void);
 #endif
 static  void    options(unsigned char *c);
 static  void    reinit(void);
