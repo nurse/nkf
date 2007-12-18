@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.152 2007/12/06 20:23:55 naruse Exp $ */
+/* $Id: nkf.c,v 1.153 2007/12/18 03:04:10 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-12-07"
+#define NKF_RELEASE_DATE "2007-12-18"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -1064,7 +1064,7 @@ static const struct {
     {"katakana","h2"},
     {"katakana-hiragana","h3"},
     {"guess=", ""},
-    {"guess", "g"},
+    {"guess", "g1"},
     {"cp932", ""},
     {"no-cp932", ""},
 #ifdef X0212_ENABLE
@@ -6180,7 +6180,7 @@ void show_configuration(void)
 {
     fprintf(stderr, "Summary of my nkf " NKF_VERSION " (" NKF_RELEASE_DATE ") configuration:\n");
     fprintf(stderr, "  Compile-time options:\n");
-    fprintf(stderr, "    Default output encoding:      "
+    fprintf(stderr, "    Default output encoding:     "
 #if defined(DEFAULT_CODE_JIS)
 	    "ISO-2022-JP"
 #elif defined(DEFAULT_CODE_SJIS)
