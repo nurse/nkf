@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.155 2007/12/19 04:18:39 naruse Exp $ */
+/* $Id: nkf.c,v 1.156 2007/12/19 08:57:58 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-12-19"
 #define COPY_RIGHT \
@@ -320,6 +320,7 @@ static const struct {
     {"ISO-2022-JP-1",		ISO_2022_JP_1},
     {"ISO-2022-JP-3",		ISO_2022_JP_3},
     {"SHIFT_JIS",		SHIFT_JIS},
+    {"SJIS",			SHIFT_JIS},
     {"WINDOWS-31J",		WINDOWS_31J},
     {"CSWINDOWS31J",		WINDOWS_31J},
     {"CP932",			WINDOWS_31J},
