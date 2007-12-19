@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.153 2007/12/18 03:04:10 naruse Exp $ */
+/* $Id: nkf.c,v 1.154 2007/12/18 18:20:16 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-12-18"
+#define NKF_RELEASE_DATE "2007-12-19"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -45,6 +45,24 @@
 #endif
 #ifndef X0201_DEFAULT
 #define X0201_DEFAULT TRUE
+#endif
+
+#if DEFAULT_NEWLINE == 0x0D0A
+#define PUT_NEWLINE(func) do {\
+    func(0x0D);\
+    func(0x0A);\
+} while (0)
+#define OCONV_NEWLINE(func) do {\
+    func(0, 0x0D);\
+    func(0, 0x0A);\
+} while (0)
+#elif DEFAULT_NEWLINE == 0x0D
+#define PUT_NEWLINE(func) func(0x0D)
+#define OCONV_NEWLINE(func) func(0, 0x0D)
+#else
+#define DEFAULT_NEWLINE 0x0A
+#define PUT_NEWLINE(func) func(0x0A)
+#define OCONV_NEWLINE(func) func(0, 0x0A)
 #endif
 
 #if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C) || defined(__MINGW32__) || defined(__EMX__) || defined(__MSDOS__) || defined(__WINDOWS__) || defined(__DOS__) || defined(__OS2__)) && !defined(MSDOS)
@@ -284,9 +302,6 @@ struct input_code{
 
 static char *input_codename = NULL; /* NULL: unestablished, "": BINARY */
 
-#ifndef PERL_XS
-static const char *CopyRight = COPY_RIGHT;
-#endif
 #if !defined(PERL_XS) && !defined(WIN32DLL)
 static  nkf_char     noconvert(FILE *f);
 #endif
@@ -4362,7 +4377,7 @@ void nl_conv(nkf_char c2, nkf_char c1)
 	else if (!input_newline) input_newline = CR;
 	else if (input_newline != CR) input_newline = EOF;
     }
-    if (prev_cr || c2 == 0 && c1 == LF) {
+    if (prev_cr || (c2 == 0 && c1 == LF)) {
 	prev_cr = 0;
 	if (nlmode_f != LF) (*o_nlconv)(0, CR);
 	if (nlmode_f != CR) (*o_nlconv)(0, LF);
@@ -4544,13 +4559,13 @@ void fold_conv(nkf_char c2, nkf_char c1)
     /* terminator process */
     switch(fold_state) {
         case LF:
-            (*o_fconv)(0,LF);
+            OCONV_NEWLINE((*o_fconv));
             (*o_fconv)(c2,c1);
             break;
         case 0:
             return;
         case CR:
-            (*o_fconv)(0,LF);
+            OCONV_NEWLINE((*o_fconv));
             break;
         case TAB:
         case SP:
@@ -5046,8 +5061,6 @@ void set_input_codename(char *codename)
 #if !defined(PERL_XS) && !defined(WIN32DLL)
 void print_guessed_code(char *filename)
 {
-    char *codename = "BINARY";
-    char *str_nlmode = NULL;
     if (filename != NULL) printf("%s: ", filename);
     if (input_codename && !*input_codename) {
 	printf("BINARY\n");
@@ -5577,7 +5590,7 @@ void open_mime(nkf_char mode)
             (*o_mputc)(mimeout_buf[i]);
 	    i++;
 	}
-	(*o_mputc)(LF);
+	PUT_NEWLINE((*o_mputc));
 	(*o_mputc)(SP);
 	base64_count = 1;
 	if (mimeout_buf_count>0
@@ -5690,14 +5703,14 @@ void mime_prechar(nkf_char c2, nkf_char c1)
         if (c2 == EOF){
             if (base64_count + mimeout_buf_count/3*4> 73){
                 (*o_base64conv)(EOF,0);
-                (*o_base64conv)(0,LF);
+                OCONV_NEWLINE((*o_base64conv));
                 (*o_base64conv)(0,SP);
                 base64_count = 1;
             }
         } else {
             if (base64_count + mimeout_buf_count/3*4> 66) {
                 (*o_base64conv)(EOF,0);
-                (*o_base64conv)(0,LF);
+                OCONV_NEWLINE((*o_base64conv));
                 (*o_base64conv)(0,SP);
                 base64_count = 1;
                 mimeout_mode = -1;
@@ -5708,7 +5721,7 @@ void mime_prechar(nkf_char c2, nkf_char c1)
 	    mimeout_mode =  (output_mode==ASCII ||output_mode == ISO8859_1) ? 'Q' : 'B';
 	    open_mime(output_mode);
 	    (*o_base64conv)(EOF,0);
-	    (*o_base64conv)(0,LF);
+	    OCONV_NEWLINE((*o_base64conv));
 	    (*o_base64conv)(0,SP);
 	    base64_count = 1;
 	    mimeout_mode = -1;
@@ -5726,14 +5739,14 @@ void mime_putc(nkf_char c)
             if (base64_count > 71){
                 if (c!=CR && c!=LF) {
                     (*o_mputc)('=');
-                    (*o_mputc)(LF);
+                    PUT_NEWLINE((*o_mputc));
                 }
                 base64_count = 0;
             }
         }else{
             if (base64_count > 71){
                 eof_mime();
-                (*o_mputc)(LF);
+                PUT_NEWLINE((*o_mputc));
                 base64_count = 0;
             }
             if (c == EOF) { /* c==EOF */
@@ -5795,7 +5808,7 @@ void mime_putc(nkf_char c)
             } else if (c <= SP) {
                 close_mime();
 		if (base64_count > 70) {
-		    (*o_mputc)(LF);
+		    PUT_NEWLINE((*o_mputc));
 		    base64_count = 0;
 		}
 		if (!nkf_isblank(c)) {
@@ -5805,7 +5818,7 @@ void mime_putc(nkf_char c)
             } else {
 		if (base64_count > 70) {
 		    close_mime();
-		    (*o_mputc)(LF);
+		    PUT_NEWLINE((*o_mputc));
 		    (*o_mputc)(SP);
 		    base64_count = 1;
 		    open_mime(output_mode);
@@ -5855,7 +5868,7 @@ void mime_putc(nkf_char c)
                 if (base64_count > 1
                     && base64_count + mimeout_buf_count > 76
 		    && mimeout_buf[0] != CR && mimeout_buf[0] != LF){
-                    (*o_mputc)(LF);
+                    PUT_NEWLINE((*o_mputc));
                     base64_count = 0;
                     if (!nkf_isspace(mimeout_buf[0])){
                         (*o_mputc)(SP);
@@ -6191,6 +6204,15 @@ void show_configuration(void)
 	    "UTF-8"
 #else
 	    "UNKOWN"
+#endif
+	    "\n");
+    fprintf(stderr, "    Default output newline:      "
+#if DEFAULT_NEWLINE == CR
+	    "CR"
+#elif DEFAULT_NEWLINE == CRLF
+	    "CRLF"
+#else
+	    "LF"
 #endif
 	    "\n");
     fprintf(stderr, "    Decode MIME encoded string:  "
