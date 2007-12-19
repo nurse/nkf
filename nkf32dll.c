@@ -756,7 +756,7 @@ BOOL WINAPI GetNkfSupportFunctions(void *outStr,DWORD nBufferLength /*in Bytes*/
 {
     *lpBytesReturned = sizeof NkfSupportFunctions;
     if ( outStr == NULL || nBufferLength == 0 ) return FALSE;
-    NkfSupportFunctions.copyrightA = CopyRight;
+    NkfSupportFunctions.copyrightA = COPY_RIGHT;
     memcpy(outStr,&NkfSupportFunctions,sizeof NkfSupportFunctions > nBufferLength ? nBufferLength : sizeof NkfSupportFunctions);
     return TRUE;
 }
