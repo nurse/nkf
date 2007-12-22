@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS = -O
+CFLAGS = -O -Wall
 # CFLAGS = -O3
 SHAR = shar 
 # SHAR = shar -T
