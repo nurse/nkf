@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.160 2007/12/23 08:12:27 naruse Exp $ */
+/* $Id: nkf.c,v 1.161 2007/12/23 09:25:35 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2007-12-22"
+#define NKF_RELEASE_DATE "2007-12-23"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon"
@@ -1358,6 +1358,7 @@ void options(unsigned char *cp)
     char codeset[32];
     nkf_encoding *enc;
 
+    if (!output_encoding) output_encoding = nkf_enc_from_index(DEFAULT_ENCODING);
     if (option_mode==1)
 	return;
     while(*cp && *cp++!='-');
@@ -1534,7 +1535,9 @@ void options(unsigned char *cp)
                 if (strcmp(long_option[i].name, "oc=") == 0){
 		    x0201_f = FALSE;
 		    nkf_str_upcase((char *)p, codeset, 32);
-		    output_encoding = nkf_enc_find(codeset);
+		    enc = nkf_enc_find(codeset);
+		    if (enc <= 0) continue;
+		    output_encoding = enc;
 		    switch (nkf_enc_to_index(output_encoding)) {
 		    case ISO_2022_JP:
 			output_conv = j_oconv;
