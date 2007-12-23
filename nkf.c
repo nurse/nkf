@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.159 2007/12/23 07:55:20 naruse Exp $ */
+/* $Id: nkf.c,v 1.160 2007/12/23 08:12:27 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-12-22"
 #define COPY_RIGHT \
@@ -913,7 +913,7 @@ char* nkf_strcpy(const char *str)
 static void nkf_str_upcase(const char *src, char *dest, size_t length)
 {
     int i = 0;
-    for (; i < length && dest[i]; i++) {
+    for (; i < length && src[i]; i++) {
 	dest[i] = nkf_toupper(src[i]);
     }
     dest[i] = 0;
@@ -1893,8 +1893,8 @@ void options(unsigned char *cp)
         case 't':           /* transparent mode */
             if (*cp=='1') {
 		/* alias of -t */
+		cp++;
 		nop_f = TRUE;
-		*cp += 1;
 	    } else if (*cp=='2') {
 		/*
 		 * -t with put/get
@@ -1902,8 +1902,8 @@ void options(unsigned char *cp)
 		 * nkf -t2MB hoge.bin | nkf -t2mB | diff -s - hoge.bin
 		 *
 		 */
+		cp++;
 		nop_f = 2;
-		*cp += 1;
             } else
 		nop_f = TRUE;
             continue;
