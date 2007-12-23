@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.158 2007/12/23 07:25:47 naruse Exp $ */
+/* $Id: nkf.c,v 1.159 2007/12/23 07:55:20 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2007-12-22"
 #define COPY_RIGHT \
@@ -910,13 +910,13 @@ char* nkf_strcpy(const char *str)
     return result;
 }
 
-static void nkf_str_upcase(const char *str, char *res, size_t length)
+static void nkf_str_upcase(const char *src, char *dest, size_t length)
 {
     int i = 0;
-    for (; i < length && str[i]; i++) {
-	res[i] = nkf_toupper(str[i]);
+    for (; i < length && dest[i]; i++) {
+	dest[i] = nkf_toupper(src[i]);
     }
-    res[i] = 0;
+    dest[i] = 0;
 }
 
 static nkf_encoding *nkf_enc_from_index(int idx)
@@ -1061,8 +1061,7 @@ int main(int argc, char **argv)
 	    iconv_for_check = 0;
 #endif
           if ((fin = fopen((origfname = *argv++), "r")) == NULL) {
-              perror(*--argv);
-		*argv++;
+		perror(*(argv-1));
 		is_argument_error = TRUE;
 		continue;
           } else {
@@ -1394,7 +1393,7 @@ void options(unsigned char *cp)
 		cp = (unsigned char *)long_option[i].alias;
 	    }else{
                 if (strcmp(long_option[i].name, "ic=") == 0){
-		    nkf_str_upcase(p, codeset, 32);
+		    nkf_str_upcase((char *)p, codeset, 32);
 		    enc = nkf_enc_find(codeset);
 		    switch (nkf_enc_to_index(enc)) {
 		    case ISO_2022_JP:
@@ -1534,7 +1533,7 @@ void options(unsigned char *cp)
 		}
                 if (strcmp(long_option[i].name, "oc=") == 0){
 		    x0201_f = FALSE;
-		    nkf_str_upcase(p, codeset, 32);
+		    nkf_str_upcase((char *)p, codeset, 32);
 		    output_encoding = nkf_enc_find(codeset);
 		    switch (nkf_enc_to_index(output_encoding)) {
 		    case ISO_2022_JP:
@@ -1895,7 +1894,7 @@ void options(unsigned char *cp)
             if (*cp=='1') {
 		/* alias of -t */
 		nop_f = TRUE;
-		*cp++;
+		*cp += 1;
 	    } else if (*cp=='2') {
 		/*
 		 * -t with put/get
@@ -1904,7 +1903,7 @@ void options(unsigned char *cp)
 		 *
 		 */
 		nop_f = 2;
-		*cp++;
+		*cp += 1;
             } else
 		nop_f = TRUE;
             continue;
