@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.25 2007/11/06 12:10:48 naruse Exp $
+# $Id: nkf_test.pl,v 1.26 2008/01/01 14:21:20 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -962,27 +962,27 @@ printf "%-40s", "test_data/bugs10904";
 
 printf "%-40s", "Guess NL";
 &command_tests(
-	"$nkf -g1","none",      "ASCII\n",
-	"$nkf -g1","\n",        "ASCII (LF)\n",
-	"$nkf -g1","\n\n",      "ASCII (LF)\n",
-	"$nkf -g1","\n\r",      "ASCII (MIXED NL)\n",
-	"$nkf -g1","\n\r\n",    "ASCII (MIXED NL)\n",
-	"$nkf -g1","\n.\n",     "ASCII (LF)\n",
-	"$nkf -g1","\n.\r",     "ASCII (MIXED NL)\n",
-	"$nkf -g1","\n.\r\n",   "ASCII (MIXED NL)\n",
-	"$nkf -g1","\r",        "ASCII (CR)\n",
-	"$nkf -g1","\r\r",      "ASCII (CR)\n",
-	"$nkf -g1","\r\r\n",    "ASCII (MIXED NL)\n",
-	"$nkf -g1","\r.\n",     "ASCII (MIXED NL)\n",
-	"$nkf -g1","\r.\r",     "ASCII (CR)\n",
-	"$nkf -g1","\r.\r\n",   "ASCII (MIXED NL)\n",
-	"$nkf -g1","\r\n",      "ASCII (CRLF)\n",
-	"$nkf -g1","\r\n\n",    "ASCII (MIXED NL)\n",
-	"$nkf -g1","\r\n\r",    "ASCII (MIXED NL)\n",
-	"$nkf -g1","\r\n\r\n",  "ASCII (CRLF)\n",
-	"$nkf -g1","\r\n.\n",   "ASCII (MIXED NL)\n",
-	"$nkf -g1","\r\n.\r",   "ASCII (MIXED NL)\n",
-	"$nkf -g1","\r\n.\r\n", "ASCII (CRLF)\n");
+	"$nkf --guess","none",      "ASCII\n",
+	"$nkf --guess","\n",        "ASCII (LF)\n",
+	"$nkf --guess","\n\n",      "ASCII (LF)\n",
+	"$nkf --guess","\n\r",      "ASCII (MIXED NL)\n",
+	"$nkf --guess","\n\r\n",    "ASCII (MIXED NL)\n",
+	"$nkf --guess","\n.\n",     "ASCII (LF)\n",
+	"$nkf --guess","\n.\r",     "ASCII (MIXED NL)\n",
+	"$nkf --guess","\n.\r\n",   "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r",        "ASCII (CR)\n",
+	"$nkf --guess","\r\r",      "ASCII (CR)\n",
+	"$nkf --guess","\r\r\n",    "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r.\n",     "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r.\r",     "ASCII (CR)\n",
+	"$nkf --guess","\r.\r\n",   "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n",      "ASCII (CRLF)\n",
+	"$nkf --guess","\r\n\n",    "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n\r",    "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n\r\n",  "ASCII (CRLF)\n",
+	"$nkf --guess","\r\n.\n",   "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n.\r",   "ASCII (MIXED NL)\n",
+	"$nkf --guess","\r\n.\r\n", "ASCII (CRLF)\n");
 
 printf "%-40s", "Convert NL to LF";
 &command_tests(
