@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.26 2008/01/01 14:21:20 naruse Exp $
+# $Id: nkf_test.pl,v 1.27 2008/01/22 00:30:05 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -287,7 +287,7 @@ printf "%-40s", "test_data/cp51932";
 
 # test_data/cp932inv
 printf "%-40s", "test_data/cp932inv";
-    &test("$nkf -sE --cp932inv",$example{'test_data/cp932.ans'},$example{'test_data/cp932'});
+    &test("$nkf -sE --cp932",$example{'test_data/cp932.ans'},$example{'test_data/cp932'});
 
 # test_data/no-cp932inv
 
@@ -395,7 +395,7 @@ $example{'ms_ucs_map_1_utf16'} = "\x30\x1C\x20\x16\x22\x12\x00\xA2\x00\xA3\x00\x
 $example{'ms_ucs_map_1_utf16_ms'} = "\xFF\x5E\x22\x25\xFF\x0D\xFF\xE0\xFF\xE1\xFF\xE2";
 
 printf "%-40s", "Normal UCS Mapping :";
-    &test("$nkf -w16B0 -S",$example{'ms_ucs_map_1_sjis'},$example{'ms_ucs_map_1_utf16'});
+    &test("$nkf -w16B0 --ic=Shift_JIS",$example{'ms_ucs_map_1_sjis'},$example{'ms_ucs_map_1_utf16'});
 
 printf "%-40s", "Microsoft UCS Mapping :";
     &test("$nkf -w16B0 -S --ms-ucs-map",$example{'ms_ucs_map_1_sjis'},$example{'ms_ucs_map_1_utf16_ms'});

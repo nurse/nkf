@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.164 2008/01/21 23:05:37 naruse Exp $ */
+/* $Id: nkf.c,v 1.165 2008/01/22 00:30:05 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-01-21"
 #define COPY_RIGHT \
@@ -39,14 +39,6 @@
 
 #include "config.h"
 #include "utf8tbl.h"
-
-#if defined(DEFAULT_CODE_JIS)
-#elif defined(DEFAULT_CODE_SJIS)
-#elif defined(DEFAULT_CODE_EUC)
-#elif defined(DEFAULT_CODE_UTF8)
-#else
-#define DEFAULT_CODE_JIS 1
-#endif
 
 #ifndef MIME_DECODE_DEFAULT
 #define MIME_DECODE_DEFAULT STRICT_MIME
@@ -172,6 +164,19 @@ void  djgpp_setbinmode(FILE *fp)
 #endif /* (__WIN32__) */
 #endif
 #endif
+#endif
+
+
+#ifndef __WIN32__
+#define HAVE_LANGINFO_H
+#define HAVE_LOCALE_H
+#endif
+
+#ifdef HAVE_LANGINFO_H
+#include <langinfo.h>
+#endif
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
 #endif
 
 #define         FALSE   0
@@ -386,13 +391,13 @@ struct {
 };
 
 #if defined(DEFAULT_CODE_JIS)
-#define	    DEFAULT_ENCODING ISO_2022_JP
+#define	    DEFAULT_ENCIDX ISO_2022_JP
 #elif defined(DEFAULT_CODE_SJIS)
-#define	    DEFAULT_ENCODING SHIFT_JIS
+#define	    DEFAULT_ENCIDX SHIFT_JIS
 #elif defined(DEFAULT_CODE_EUC)
-#define	    DEFAULT_ENCODING EUC_JP
+#define	    DEFAULT_ENCIDX EUC_JP
 #elif defined(DEFAULT_CODE_UTF8)
-#define	    DEFAULT_ENCODING UTF_8
+#define	    DEFAULT_ENCIDX UTF_8
 #endif
 
 
@@ -732,21 +737,6 @@ static unsigned char   ascii_intro = DEFAULT_R;
 
 static int             fold_margin  = FOLD_MARGIN;
 
-/* converters */
-
-#ifdef DEFAULT_CODE_JIS
-#   define  DEFAULT_CONV j_oconv
-#endif
-#ifdef DEFAULT_CODE_SJIS
-#   define  DEFAULT_CONV s_oconv
-#endif
-#ifdef DEFAULT_CODE_EUC
-#   define  DEFAULT_CONV e_oconv
-#endif
-#ifdef DEFAULT_CODE_UTF8
-#   define  DEFAULT_CONV w_oconv
-#endif
-
 /* process default */
 static nkf_char (*iconv)(nkf_char c2,nkf_char c1,nkf_char c0) = no_connection2;
 static void (*oconv)(nkf_char c2,nkf_char c1) = no_connection;
@@ -956,6 +946,40 @@ static nkf_encoding *nkf_enc_find(const char *name)
     nkf_enc_to_index(enc) == CP50221 ||\
     nkf_enc_to_index(enc) == CP50222)
 
+#ifndef DEFAULT_ENCIDX
+static char* nkf_locale_charmap()
+{
+#ifdef HAVE_LANGINFO_H
+    return nl_langinfo(CODESET);
+#elif defined(__WIN32__)
+    return sprintf("CP%d", GetACP());
+#else
+    return NULL;
+#endif
+}
+
+static nkf_encoding* nkf_locale_encoding()
+{
+    nkf_encoding *enc = 0;
+    char *encname = nkf_locale_charmap();
+    if (encname)
+	enc = nkf_enc_find(encname);
+    if (enc < 0) enc = 0;
+    return enc;
+}
+#endif
+
+static nkf_encoding* nkf_default_encoding()
+{
+#ifdef DEFAULT_ENCIDX
+    return nkf_enc_from_index(DEFAULT_ENCIDX);
+#else
+    nkf_encoding *enc = nkf_locale_encoding();
+    if (enc <= 0) enc = nkf_enc_from_index(ISO_2022_JP);
+    return enc;
+#endif
+}
+
 #ifdef WIN32DLL
 #include "nkf32dll.c"
 #elif defined(PERL_XS)
@@ -971,6 +995,7 @@ int main(int argc, char **argv)
 #ifdef EASYWIN /*Easy Win */
     _BufferSize.y = 400;/*Set Scroll Buffer Size*/
 #endif
+    setlocale(LC_CTYPE, "");
 
     for (argc--,argv++; (argc > 0) && **argv == '-'; argc--, argv++) {
         cp = (unsigned char *)*argv;
@@ -1379,6 +1404,8 @@ static void set_input_encoding(nkf_encoding *enc)
 #endif
 	x0213_f = TRUE;
 	break;
+    case SHIFT_JIS:
+	break;
     case WINDOWS_31J:
 #ifdef SHIFTJIS_CP932
 	cp51932_f = TRUE;
@@ -1386,6 +1413,8 @@ static void set_input_encoding(nkf_encoding *enc)
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_CP932;
 #endif
+	break;
+    case EUC_JP:
 	break;
     case CP10001:
 #ifdef SHIFTJIS_CP932
@@ -1463,12 +1492,11 @@ static void set_input_encoding(nkf_encoding *enc)
 
 static void set_output_encoding(nkf_encoding *enc)
 {
-    x0201_f = FALSE;
     switch (nkf_enc_to_index(enc)) {
     case CP50220:
 	x0201_f = TRUE;
 #ifdef SHIFTJIS_CP932
-	cp932inv_f = FALSE;
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_CP932;
@@ -1476,7 +1504,7 @@ static void set_output_encoding(nkf_encoding *enc)
 	break;
     case CP50221:
 #ifdef SHIFTJIS_CP932
-	cp932inv_f = FALSE;
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_CP932;
@@ -1487,7 +1515,7 @@ static void set_output_encoding(nkf_encoding *enc)
 	x0212_f = TRUE;
 #endif
 #ifdef SHIFTJIS_CP932
-	cp932inv_f = FALSE;
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
 	break;
     case ISO_2022_JP_3:
@@ -1496,8 +1524,10 @@ static void set_output_encoding(nkf_encoding *enc)
 #endif
 	x0213_f = TRUE;
 #ifdef SHIFTJIS_CP932
-	cp932inv_f = FALSE;
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
+	break;
+    case SHIFT_JIS:
 	break;
     case WINDOWS_31J:
 #ifdef UTF8_OUTPUT_ENABLE
@@ -1509,9 +1539,18 @@ static void set_output_encoding(nkf_encoding *enc)
 	ms_ucs_map_f = UCS_MAP_CP10001;
 #endif
 	break;
+    case EUC_JP:
+	x0212_f = TRUE;
+#ifdef SHIFTJIS_CP932
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP932;
+#endif
+	break;
     case CP51932:
 #ifdef SHIFTJIS_CP932
-	cp932inv_f = FALSE;
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_CP932;
@@ -1537,7 +1576,7 @@ static void set_output_encoding(nkf_encoding *enc)
     case SHIFT_JIS_2004:
 	x0213_f = TRUE;
 #ifdef SHIFTJIS_CP932
-	cp932inv_f = FALSE;
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
 	break;
     case EUC_JISX0213:
@@ -1547,7 +1586,7 @@ static void set_output_encoding(nkf_encoding *enc)
 #endif
 	x0213_f = TRUE;
 #ifdef SHIFTJIS_CP932
-	cp932inv_f = FALSE;
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
 	break;
 #ifdef UTF8_OUTPUT_ENABLE
@@ -1630,7 +1669,6 @@ void options(unsigned char *cp)
 		    enc = nkf_enc_find(codeset);
 		    if (!enc) continue;
 		    input_encoding = enc;
-		    set_input_encoding(enc);
                     continue;
 		}
                 if (strcmp(long_option[i].name, "oc=") == 0){
@@ -1638,7 +1676,6 @@ void options(unsigned char *cp)
 		    enc = nkf_enc_find(codeset);
 		    if (enc <= 0) continue;
 		    output_encoding = enc;
-		    set_output_encoding(output_encoding);
                     continue;
 		}
                 if (strcmp(long_option[i].name, "guess=") == 0){
@@ -1710,7 +1747,7 @@ void options(unsigned char *cp)
                 if (strcmp(long_option[i].name, "cp932") == 0){
 #ifdef SHIFTJIS_CP932
                     cp51932_f = TRUE;
-                    cp932inv_f = TRUE;
+                    cp932inv_f = -TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
                     ms_ucs_map_f = UCS_MAP_CP932;
@@ -1729,7 +1766,7 @@ void options(unsigned char *cp)
                 }
 #ifdef SHIFTJIS_CP932
                 if (strcmp(long_option[i].name, "cp932inv") == 0){
-                    cp932inv_f = TRUE;
+                    cp932inv_f = -TRUE;
                     continue;
                 }
 #endif
@@ -1861,7 +1898,6 @@ void options(unsigned char *cp)
             output_encoding = nkf_enc_from_index(ISO_2022_JP);
             continue;
         case 'e':           /* AT&T EUC output */
-            cp932inv_f = FALSE;
             output_encoding = nkf_enc_from_index(EUC_JP);
             continue;
         case 's':           /* SJIS output */
@@ -2538,10 +2574,11 @@ nkf_char noconvert(FILE *f)
 
 void module_connection(void)
 {
+    if (input_encoding) set_input_encoding(input_encoding);
     if (!output_encoding) {
-	output_encoding = nkf_enc_from_index(DEFAULT_ENCODING);
-	set_output_encoding(output_encoding);
+	output_encoding = nkf_default_encoding();
     }
+    set_output_encoding(output_encoding);
     oconv = nkf_enc_to_oconv(output_encoding);
     o_putc = std_putc;
 
@@ -4350,7 +4387,7 @@ void s_oconv(nkf_char c2, nkf_char c1)
 	    if (!x0213_f && 0xE000 <= c2 && c2 <= 0xE757) {
 		/* CP932 UDC */
 		c1 &= 0xFFF;
-		c2 = c1 / 188 + 0xF0;
+		c2 = c1 / 188 + (cp932inv_f ? 0xF0 : 0xEB);
 		c1 = c1 % 188;
 		c1 += 0x40 + (c1 > 0x3e);
 		(*o_putc)(c2);
@@ -6257,7 +6294,6 @@ void reinit(void)
     kanji_intro = DEFAULT_J;
     ascii_intro = DEFAULT_R;
     fold_margin  = FOLD_MARGIN;
-    oconv = DEFAULT_CONV;
     o_zconv = no_connection;
     o_fconv = no_connection;
     o_nlconv = no_connection;
@@ -6319,18 +6355,7 @@ void usage(void)
     fprintf(HELP_OUTPUT,"USAGE:  nkf(nkf32,wnkf,nkf2) -[flags] [in file] .. [out file for -O flag]\n");
     fprintf(HELP_OUTPUT,"Flags:\n");
     fprintf(HELP_OUTPUT,"b,u      Output is buffered (DEFAULT),Output is unbuffered\n");
-#ifdef DEFAULT_CODE_SJIS
-    fprintf(HELP_OUTPUT,"j,s,e,w  Output code is JIS 7 bit, Shift_JIS (DEFAULT), EUC-JP, UTF-8N\n");
-#endif
-#ifdef DEFAULT_CODE_JIS
-    fprintf(HELP_OUTPUT,"j,s,e,w  Output code is JIS 7 bit (DEFAULT), Shift JIS, EUC-JP, UTF-8N\n");
-#endif
-#ifdef DEFAULT_CODE_EUC
-    fprintf(HELP_OUTPUT,"j,s,e,w  Output code is JIS 7 bit, Shift JIS, EUC-JP (DEFAULT), UTF-8N\n");
-#endif
-#ifdef DEFAULT_CODE_UTF8
-    fprintf(HELP_OUTPUT,"j,s,e,w  Output code is JIS 7 bit, Shift JIS, EUC-JP, UTF-8N (DEFAULT)\n");
-#endif
+    fprintf(HELP_OUTPUT,"j,s,e,w  Output code is ISO-2022-JP, Shift JIS, EUC-JP, UTF-8N\n");
 #ifdef UTF8_OUTPUT_ENABLE
     fprintf(HELP_OUTPUT,"         After 'w' you can add more options. -w[ 8 [0], 16 [[BL] [0]] ]\n");
 #endif
@@ -6397,16 +6422,13 @@ void show_configuration(void)
     fprintf(HELP_OUTPUT, "Summary of my nkf " NKF_VERSION " (" NKF_RELEASE_DATE ") configuration:\n");
     fprintf(HELP_OUTPUT, "  Compile-time options:\n");
     fprintf(HELP_OUTPUT, "    Default output encoding:     "
-#if defined(DEFAULT_CODE_JIS)
-	    "ISO-2022-JP"
-#elif defined(DEFAULT_CODE_SJIS)
-	    "Shift_JIS"
-#elif defined(DEFAULT_CODE_EUC)
-	    "EUC-JP"
-#elif defined(DEFAULT_CODE_UTF8)
-	    "UTF-8"
+#ifdef DEFAULT_ENCIDX
+	    "%s\n", nkf_enc_name(nkf_default_encoding())
+#else
+	    "%s (%s)\n", nkf_locale_encoding() ? "LOCALE" : "DEFAULT",
+	    nkf_enc_name(nkf_default_encoding())
 #endif
-	    "\n");
+	    );
     fprintf(HELP_OUTPUT, "    Default output newline:      "
 #if DEFAULT_NEWLINE == CR
 	    "CR"
