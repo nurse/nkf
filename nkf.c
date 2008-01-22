@@ -30,9 +30,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.163 2008/01/11 00:45:06 naruse Exp $ */
+/* $Id: nkf.c,v 1.164 2008/01/21 23:05:37 naruse Exp $ */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2008-01-11"
+#define NKF_RELEASE_DATE "2008-01-21"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2008 Kono, Furukawa, Naruse, mastodon"
@@ -384,6 +384,7 @@ struct {
     {"BINARY",			BINARY},
     {NULL,			-1}
 };
+
 #if defined(DEFAULT_CODE_JIS)
 #define	    DEFAULT_ENCODING ISO_2022_JP
 #elif defined(DEFAULT_CODE_SJIS)
@@ -471,6 +472,7 @@ struct input_code{
 static char *input_codename = NULL; /* NULL: unestablished, "": BINARY */
 static nkf_encoding *input_encoding = NULL;
 static nkf_encoding *output_encoding = NULL;
+static void set_output_encoding(nkf_encoding *enc);
 
 #if !defined(PERL_XS) && !defined(WIN32DLL)
 static  nkf_char     noconvert(FILE *f);
@@ -973,32 +975,6 @@ int main(int argc, char **argv)
     for (argc--,argv++; (argc > 0) && **argv == '-'; argc--, argv++) {
         cp = (unsigned char *)*argv;
         options(cp);
-        if (guess_f) {
-#ifdef CHECK_OPTION
-	    int debug_f_back = debug_f;
-#endif
-#ifdef EXEC_IO
-	    int exec_f_back = exec_f;
-#endif
-#ifdef X0212_ENABLE
-	    int x0212_f_back = x0212_f;
-#endif
-	    int x0213_f_back = x0213_f;
-	    int guess_f_back = guess_f;
-	    reinit();
-	    guess_f = guess_f_back;
-	    mime_f = FALSE;
-#ifdef CHECK_OPTION
-	    debug_f = debug_f_back;
-#endif
-#ifdef EXEC_IO
-            exec_f = exec_f_back;
-#endif
-#ifdef X0212_ENABLE
-	    x0212_f = x0212_f_back;
-#endif
-	    x0213_f = x0213_f_back;
-	}
 #ifdef EXEC_IO
         if (exec_f){
             int fds[2], pid;
@@ -1026,6 +1002,33 @@ int main(int argc, char **argv)
             break;
         }
 #endif
+    }
+
+    if (guess_f) {
+#ifdef CHECK_OPTION
+	int debug_f_back = debug_f;
+#endif
+#ifdef EXEC_IO
+	int exec_f_back = exec_f;
+#endif
+#ifdef X0212_ENABLE
+	int x0212_f_back = x0212_f;
+#endif
+	int x0213_f_back = x0213_f;
+	int guess_f_back = guess_f;
+	reinit();
+	guess_f = guess_f_back;
+	mime_f = FALSE;
+#ifdef CHECK_OPTION
+	debug_f = debug_f_back;
+#endif
+#ifdef EXEC_IO
+	exec_f = exec_f_back;
+#endif
+#ifdef X0212_ENABLE
+	x0212_f = x0212_f_back;
+#endif
+	x0213_f = x0213_f_back;
     }
 
     if (binmode_f == TRUE)
@@ -1352,6 +1355,232 @@ static const struct {
     {"prefix=", ""},
 };
 
+static void set_input_encoding(nkf_encoding *enc)
+{
+    switch (nkf_enc_to_index(enc)) {
+    case CP50220:
+    case CP50221:
+    case CP50222:
+#ifdef SHIFTJIS_CP932
+	cp51932_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP932;
+#endif
+	break;
+    case ISO_2022_JP_1:
+#ifdef X0212_ENABLE
+	x0212_f = TRUE;
+#endif
+	break;
+    case ISO_2022_JP_3:
+#ifdef X0212_ENABLE
+	x0212_f = TRUE;
+#endif
+	x0213_f = TRUE;
+	break;
+    case WINDOWS_31J:
+#ifdef SHIFTJIS_CP932
+	cp51932_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP932;
+#endif
+	break;
+    case CP10001:
+#ifdef SHIFTJIS_CP932
+	cp51932_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP10001;
+#endif
+	break;
+    case CP51932:
+#ifdef SHIFTJIS_CP932
+	cp51932_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP932;
+#endif
+	break;
+    case EUCJP_MS:
+#ifdef SHIFTJIS_CP932
+	cp51932_f = FALSE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_MS;
+#endif
+	break;
+    case EUCJP_ASCII:
+#ifdef SHIFTJIS_CP932
+	cp51932_f = FALSE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_ASCII;
+#endif
+	break;
+    case SHIFT_JISX0213:
+    case SHIFT_JIS_2004:
+	x0213_f = TRUE;
+#ifdef SHIFTJIS_CP932
+	cp51932_f = FALSE;
+#endif
+	break;
+    case EUC_JISX0213:
+    case EUC_JIS_2004:
+	x0213_f = TRUE;
+#ifdef SHIFTJIS_CP932
+	cp51932_f = FALSE;
+#endif
+	break;
+#ifdef UTF8_INPUT_ENABLE
+#ifdef UNICODE_NORMALIZATION
+    case UTF8_MAC:
+	nfc_f = TRUE;
+	break;
+#endif
+    case UTF_16:
+    case UTF_16BE:
+    case UTF_16BE_BOM:
+	input_endian = ENDIAN_BIG;
+	break;
+    case UTF_16LE:
+    case UTF_16LE_BOM:
+	input_endian = ENDIAN_LITTLE;
+	break;
+    case UTF_32:
+    case UTF_32BE:
+    case UTF_32BE_BOM:
+	input_endian = ENDIAN_BIG;
+	break;
+    case UTF_32LE:
+    case UTF_32LE_BOM:
+	input_endian = ENDIAN_LITTLE;
+	break;
+#endif
+    }
+}
+
+static void set_output_encoding(nkf_encoding *enc)
+{
+    x0201_f = FALSE;
+    switch (nkf_enc_to_index(enc)) {
+    case CP50220:
+	x0201_f = TRUE;
+#ifdef SHIFTJIS_CP932
+	cp932inv_f = FALSE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP932;
+#endif
+	break;
+    case CP50221:
+#ifdef SHIFTJIS_CP932
+	cp932inv_f = FALSE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP932;
+#endif
+	break;
+    case ISO_2022_JP_1:
+#ifdef X0212_ENABLE
+	x0212_f = TRUE;
+#endif
+#ifdef SHIFTJIS_CP932
+	cp932inv_f = FALSE;
+#endif
+	break;
+    case ISO_2022_JP_3:
+#ifdef X0212_ENABLE
+	x0212_f = TRUE;
+#endif
+	x0213_f = TRUE;
+#ifdef SHIFTJIS_CP932
+	cp932inv_f = FALSE;
+#endif
+	break;
+    case WINDOWS_31J:
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP932;
+#endif
+	break;
+    case CP10001:
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP10001;
+#endif
+	break;
+    case CP51932:
+#ifdef SHIFTJIS_CP932
+	cp932inv_f = FALSE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_CP932;
+#endif
+	break;
+    case EUCJP_MS:
+#ifdef X0212_ENABLE
+	x0212_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_MS;
+#endif
+	break;
+    case EUCJP_ASCII:
+#ifdef X0212_ENABLE
+	x0212_f = TRUE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_ASCII;
+#endif
+	break;
+    case SHIFT_JISX0213:
+    case SHIFT_JIS_2004:
+	x0213_f = TRUE;
+#ifdef SHIFTJIS_CP932
+	cp932inv_f = FALSE;
+#endif
+	break;
+    case EUC_JISX0213:
+    case EUC_JIS_2004:
+#ifdef X0212_ENABLE
+	x0212_f = TRUE;
+#endif
+	x0213_f = TRUE;
+#ifdef SHIFTJIS_CP932
+	cp932inv_f = FALSE;
+#endif
+	break;
+#ifdef UTF8_OUTPUT_ENABLE
+    case UTF_8_BOM:
+	output_bom_f = TRUE;
+	break;
+    case UTF_16:
+    case UTF_16BE_BOM:
+	output_bom_f = TRUE;
+	break;
+    case UTF_16LE:
+	output_endian = ENDIAN_LITTLE;
+	output_bom_f = FALSE;
+	break;
+    case UTF_16LE_BOM:
+	output_endian = ENDIAN_LITTLE;
+	output_bom_f = TRUE;
+	break;
+    case UTF_32BE_BOM:
+	output_bom_f = TRUE;
+	break;
+    case UTF_32LE:
+	output_endian = ENDIAN_LITTLE;
+	output_bom_f = FALSE;
+	break;
+    case UTF_32LE_BOM:
+	output_endian = ENDIAN_LITTLE;
+	output_bom_f = TRUE;
+	break;
+#endif
+    }
+}
+
 static int option_mode = 0;
 
 void options(unsigned char *cp)
@@ -1401,231 +1630,15 @@ void options(unsigned char *cp)
 		    enc = nkf_enc_find(codeset);
 		    if (!enc) continue;
 		    input_encoding = enc;
-		    switch (nkf_enc_to_index(input_encoding)) {
-		    case CP50220:
-		    case CP50221:
-		    case CP50222:
-#ifdef SHIFTJIS_CP932
-			cp51932_f = TRUE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_CP932;
-#endif
-			break;
-		    case ISO_2022_JP_1:
-#ifdef X0212_ENABLE
-			x0212_f = TRUE;
-#endif
-			break;
-		    case ISO_2022_JP_3:
-#ifdef X0212_ENABLE
-			x0212_f = TRUE;
-#endif
-			x0213_f = TRUE;
-			break;
-		    case WINDOWS_31J:
-#ifdef SHIFTJIS_CP932
-			cp51932_f = TRUE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_CP932;
-#endif
-			break;
-		    case CP10001:
-#ifdef SHIFTJIS_CP932
-			cp51932_f = TRUE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_CP10001;
-#endif
-			break;
-		    case CP51932:
-#ifdef SHIFTJIS_CP932
-			cp51932_f = TRUE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_CP932;
-#endif
-			break;
-		    case EUCJP_MS:
-#ifdef SHIFTJIS_CP932
-			cp51932_f = FALSE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_MS;
-#endif
-			break;
-		    case EUCJP_ASCII:
-#ifdef SHIFTJIS_CP932
-			cp51932_f = FALSE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_ASCII;
-#endif
-			break;
-		    case SHIFT_JISX0213:
-		    case SHIFT_JIS_2004:
-			x0213_f = TRUE;
-#ifdef SHIFTJIS_CP932
-			cp51932_f = FALSE;
-#endif
-			break;
-		    case EUC_JISX0213:
-		    case EUC_JIS_2004:
-			x0213_f = TRUE;
-#ifdef SHIFTJIS_CP932
-			cp51932_f = FALSE;
-#endif
-			break;
-#ifdef UTF8_INPUT_ENABLE
-#ifdef UNICODE_NORMALIZATION
-		    case UTF8_MAC:
-			nfc_f = TRUE;
-			break;
-#endif
-		    case UTF_16:
-		    case UTF_16BE:
-		    case UTF_16BE_BOM:
-			input_endian = ENDIAN_BIG;
-			break;
-		    case UTF_16LE:
-		    case UTF_16LE_BOM:
-			input_endian = ENDIAN_LITTLE;
-			break;
-		    case UTF_32:
-		    case UTF_32BE:
-		    case UTF_32BE_BOM:
-			input_endian = ENDIAN_BIG;
-			break;
-		    case UTF_32LE:
-		    case UTF_32LE_BOM:
-			input_endian = ENDIAN_LITTLE;
-			break;
-#endif
-		    }
+		    set_input_encoding(enc);
                     continue;
 		}
                 if (strcmp(long_option[i].name, "oc=") == 0){
-		    x0201_f = FALSE;
 		    nkf_str_upcase((char *)p, codeset, 32);
 		    enc = nkf_enc_find(codeset);
 		    if (enc <= 0) continue;
 		    output_encoding = enc;
-		    switch (nkf_enc_to_index(output_encoding)) {
-		    case CP50220:
-			x0201_f = TRUE;
-#ifdef SHIFTJIS_CP932
-			cp932inv_f = FALSE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_CP932;
-#endif
-			break;
-		    case CP50221:
-#ifdef SHIFTJIS_CP932
-			cp932inv_f = FALSE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_CP932;
-#endif
-			break;
-		    case ISO_2022_JP_1:
-#ifdef X0212_ENABLE
-			x0212_f = TRUE;
-#endif
-#ifdef SHIFTJIS_CP932
-			cp932inv_f = FALSE;
-#endif
-			break;
-		    case ISO_2022_JP_3:
-#ifdef X0212_ENABLE
-			x0212_f = TRUE;
-#endif
-			x0213_f = TRUE;
-#ifdef SHIFTJIS_CP932
-			cp932inv_f = FALSE;
-#endif
-			break;
-		    case WINDOWS_31J:
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_CP932;
-#endif
-			break;
-		    case CP10001:
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_CP10001;
-#endif
-			break;
-		    case CP51932:
-#ifdef SHIFTJIS_CP932
-			cp932inv_f = FALSE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_CP932;
-#endif
-			break;
-		    case EUCJP_MS:
-#ifdef X0212_ENABLE
-			x0212_f = TRUE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_MS;
-#endif
-			break;
-		    case EUCJP_ASCII:
-#ifdef X0212_ENABLE
-			x0212_f = TRUE;
-#endif
-#ifdef UTF8_OUTPUT_ENABLE
-			ms_ucs_map_f = UCS_MAP_ASCII;
-#endif
-			break;
-		    case SHIFT_JISX0213:
-		    case SHIFT_JIS_2004:
-			x0213_f = TRUE;
-#ifdef SHIFTJIS_CP932
-			cp932inv_f = FALSE;
-#endif
-			break;
-		    case EUC_JISX0213:
-		    case EUC_JIS_2004:
-#ifdef X0212_ENABLE
-			x0212_f = TRUE;
-#endif
-			x0213_f = TRUE;
-#ifdef SHIFTJIS_CP932
-			cp932inv_f = FALSE;
-#endif
-			break;
-#ifdef UTF8_OUTPUT_ENABLE
-		    case UTF_8_BOM:
-			output_bom_f = TRUE;
-			break;
-		    case UTF_16:
-		    case UTF_16BE_BOM:
-			output_bom_f = TRUE;
-			break;
-		    case UTF_16LE:
-			output_endian = ENDIAN_LITTLE;
-			output_bom_f = FALSE;
-			break;
-		    case UTF_16LE_BOM:
-			output_endian = ENDIAN_LITTLE;
-			output_bom_f = TRUE;
-			break;
-		    case UTF_32BE_BOM:
-			output_bom_f = TRUE;
-			break;
-		    case UTF_32LE:
-			output_endian = ENDIAN_LITTLE;
-			output_bom_f = FALSE;
-			break;
-		    case UTF_32LE_BOM:
-			output_endian = ENDIAN_LITTLE;
-			output_bom_f = TRUE;
-			break;
-#endif
-		    }
+		    set_output_encoding(output_encoding);
                     continue;
 		}
                 if (strcmp(long_option[i].name, "guess=") == 0){
@@ -2045,6 +2058,8 @@ void options(unsigned char *cp)
             } else if (*cp=='0') {
                 mime_decode_f = FALSE;
                 mime_f = FALSE; cp++;
+            } else {
+                mime_f = STRICT_MIME;
             }
             continue;
         case 'M':   /* MIME output */
@@ -2523,7 +2538,10 @@ nkf_char noconvert(FILE *f)
 
 void module_connection(void)
 {
-    if (!output_encoding) output_encoding = nkf_enc_from_index(DEFAULT_ENCODING);
+    if (!output_encoding) {
+	output_encoding = nkf_enc_from_index(DEFAULT_ENCODING);
+	set_output_encoding(output_encoding);
+    }
     oconv = nkf_enc_to_oconv(output_encoding);
     o_putc = std_putc;
 
@@ -6274,7 +6292,7 @@ void reinit(void)
 #endif
     input_codename = NULL;
     input_encoding = NULL;
-    output_encoding = nkf_enc_from_index(DEFAULT_ENCODING);
+    output_encoding = NULL;
 #ifdef WIN32DLL
     reinitdll();
 #endif /*WIN32DLL*/
@@ -6325,7 +6343,7 @@ void usage(void)
     fprintf(HELP_OUTPUT,"o[BJH]   Specify the Esc Seq for ASCII/Roman        (DEFAULT B)\n");
     fprintf(HELP_OUTPUT,"r        {de/en}crypt ROT13/47\n");
     fprintf(HELP_OUTPUT,"h        1 katakana->hiragana, 2 hiragana->katakana, 3 both\n");
-    fprintf(HELP_OUTPUT,"m[BQN0]  MIME decode [B:base64,Q:quoted,N:non-strict,0:no decode]\n");
+    fprintf(HELP_OUTPUT,"m[BQSN0] MIME decode [B:base64,Q:quoted,S:strict,N:non-strict,0:no decode]\n");
     fprintf(HELP_OUTPUT,"M[BQ]    MIME encode [B:base64 Q:quoted]\n");
     fprintf(HELP_OUTPUT,"l        ISO8859-1 (Latin-1) support\n");
     fprintf(HELP_OUTPUT,"f/F      Folding: -f60 or -f or -f60-10 (fold margin 10) F preserve nl\n");
