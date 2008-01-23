@@ -30,157 +30,16 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-/* $Id: nkf.c,v 1.165 2008/01/22 00:30:05 naruse Exp $ */
+#define NKF_IDENT "$Id: nkf.c,v 1.166 2008/01/23 09:10:25 naruse Exp $"
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2008-01-21"
+#define NKF_RELEASE_DATE "2008-01-23"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2008 Kono, Furukawa, Naruse, mastodon"
 
 #include "config.h"
+#include "nkf.h"
 #include "utf8tbl.h"
-
-#ifndef MIME_DECODE_DEFAULT
-#define MIME_DECODE_DEFAULT STRICT_MIME
-#endif
-#ifndef X0201_DEFAULT
-#define X0201_DEFAULT TRUE
-#endif
-
-#if DEFAULT_NEWLINE == 0x0D0A
-#define PUT_NEWLINE(func) do {\
-    func(0x0D);\
-    func(0x0A);\
-} while (0)
-#define OCONV_NEWLINE(func) do {\
-    func(0, 0x0D);\
-    func(0, 0x0A);\
-} while (0)
-#elif DEFAULT_NEWLINE == 0x0D
-#define PUT_NEWLINE(func) func(0x0D)
-#define OCONV_NEWLINE(func) func(0, 0x0D)
-#else
-#define DEFAULT_NEWLINE 0x0A
-#define PUT_NEWLINE(func) func(0x0A)
-#define OCONV_NEWLINE(func) func(0, 0x0A)
-#endif
-#ifdef HELP_OUTPUT_STDERR
-#define HELP_OUTPUT stderr
-#else
-#define HELP_OUTPUT stdout
-#endif
-
-#if (defined(__TURBOC__) || defined(_MSC_VER) || defined(LSI_C) || defined(__MINGW32__) || defined(__EMX__) || defined(__MSDOS__) || defined(__WINDOWS__) || defined(__DOS__) || defined(__OS2__)) && !defined(MSDOS)
-#define MSDOS
-#if (defined(__Win32__) || defined(_WIN32)) && !defined(__WIN32__)
-#define __WIN32__
-#endif
-#endif
-
-#ifdef PERL_XS
-#undef OVERWRITE
-#endif
-
-#ifndef PERL_XS
-#include <stdio.h>
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-
-#if defined(MSDOS) || defined(__OS2__)
-#include <fcntl.h>
-#include <io.h>
-#if defined(_MSC_VER) || defined(__WATCOMC__)
-#define mktemp _mktemp
-#endif
-#endif
-
-#ifdef MSDOS
-#ifdef LSI_C
-#define setbinmode(fp) fsetbin(fp)
-#elif defined(__DJGPP__)
-#include <libc/dosio.h>
-#define setbinmode(fp) djgpp_setbinmode(fp)
-#else /* Microsoft C, Turbo C */
-#define setbinmode(fp) setmode(fileno(fp), O_BINARY)
-#endif
-#else /* UNIX */
-#define setbinmode(fp)
-#endif
-
-#if defined(__DJGPP__)
-void  djgpp_setbinmode(FILE *fp)
-{
-    /* we do not use libc's setmode(), which changes COOKED/RAW mode in device. */
-    int fd, m;
-    fd = fileno(fp);
-    m = (__file_handle_modes[fd] & (~O_TEXT)) | O_BINARY;
-    __file_handle_set(fd, m);
-}
-#endif
-
-#ifdef _IOFBF /* SysV and MSDOS, Windows */
-#define       setvbuffer(fp, buf, size)       setvbuf(fp, buf, _IOFBF, size)
-#else /* BSD */
-#define       setvbuffer(fp, buf, size)       setbuffer(fp, buf, size)
-#endif
-
-/*Borland C++ 4.5 EasyWin*/
-#if defined(__TURBOC__) && defined(_Windows) && !defined(__WIN32__) /*Easy Win */
-#define         EASYWIN
-#ifndef __WIN16__
-#define __WIN16__
-#endif
-#include <windows.h>
-#endif
-
-#ifdef OVERWRITE
-/* added by satoru@isoternet.org */
-#if defined(__EMX__)
-#include <sys/types.h>
-#endif
-#include <sys/stat.h>
-#if !defined(MSDOS) || defined(__DJGPP__) /* UNIX, djgpp */
-#include <unistd.h>
-#if defined(__WATCOMC__)
-#include <sys/utime.h>
-#else
-#include <utime.h>
-#endif
-#else /* defined(MSDOS) */
-#ifdef __WIN32__
-#ifdef __BORLANDC__ /* BCC32 */
-#include <utime.h>
-#else /* !defined(__BORLANDC__) */
-#include <sys/utime.h>
-#endif /* (__BORLANDC__) */
-#else /* !defined(__WIN32__) */
-#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__WATCOMC__) || defined(__OS2__) || defined(__EMX__) || defined(__IBMC__) || defined(__IBMCPP__)  /* VC++, MinGW, Watcom, emx+gcc, IBM VAC++ */
-#include <sys/utime.h>
-#elif defined(__TURBOC__) /* BCC */
-#include <utime.h>
-#elif defined(LSI_C) /* LSI C */
-#endif /* (__WIN32__) */
-#endif
-#endif
-#endif
-
-
-#ifndef __WIN32__
-#define HAVE_LANGINFO_H
-#define HAVE_LOCALE_H
-#endif
-
-#ifdef HAVE_LANGINFO_H
-#include <langinfo.h>
-#endif
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
-
-#define         FALSE   0
-#define         TRUE    1
 
 /* state of output_mode and input_mode
 
@@ -424,10 +283,6 @@ struct {
     ((c > SP) && (c < DEL) && (c != '?') && (c != '=') && (c != '_') \
      && (c != '(') && (c != ')') && (c != '.') && (c != 0x22)))
 
-#define CP932_TABLE_BEGIN 0xFA
-#define CP932_TABLE_END   0xFC
-#define CP932INV_TABLE_BEGIN 0xED
-#define CP932INV_TABLE_END   0xEE
 #define is_ibmext_in_sjis(c2) (CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END)
 
 #define         HOLD_SIZE       1024
@@ -440,22 +295,11 @@ struct {
 #define         DEFAULT_J       'B'
 #define         DEFAULT_R       'B'
 
-#define         SJ0162  0x00e1          /* 01 - 62 ku offset */
-#define         SJ6394  0x0161          /* 63 - 94 ku offset */
 
 #define         RANGE_NUM_MAX   18
 #define         GETA1   0x22
 #define         GETA2   0x2e
 
-
-#if defined(UTF8_OUTPUT_ENABLE) || defined(UTF8_INPUT_ENABLE)
-#define sizeof_euc_to_utf8_1byte 94
-#define sizeof_euc_to_utf8_2bytes 94
-#define sizeof_utf8_to_euc_C2 64
-#define sizeof_utf8_to_euc_E5B8 64
-#define sizeof_utf8_to_euc_2bytes 112
-#define sizeof_utf8_to_euc_3bytes 16
-#endif
 
 /* MIME preprocessor */
 
@@ -569,7 +413,6 @@ static  void    eof_mime(void);
 static  void    mimeout_addchar(nkf_char c);
 #ifndef PERL_XS
 static  void    usage(void);
-static  void    version(void);
 static  void    show_configuration(void);
 #endif
 static  void    options(unsigned char *c);
@@ -634,11 +477,6 @@ static nkf_char url_getc(FILE *f);
 static nkf_char url_ungetc(nkf_char c,FILE *f);
 #endif
 
-#if defined(INT_IS_SHORT)
-#define NKF_INT32_C(n)   (n##L)
-#else
-#define NKF_INT32_C(n)   (n)
-#endif
 #define PREFIX_EUCG3	NKF_INT32_C(0x8F00)
 #define CLASS_MASK	NKF_INT32_C(0xFF000000)
 #define CLASS_UNICODE	NKF_INT32_C(0x01000000)
@@ -3437,6 +3275,8 @@ nkf_char s2e_conv(nkf_char c2, nkf_char c1, nkf_char *p2, nkf_char *p1)
 		if (0x9E < c1) c2++;
 	    }
 	}else{
+#define         SJ0162  0x00e1          /* 01 - 62 ku offset */
+#define         SJ6394  0x0161          /* 63 - 94 ku offset */
 	    c2 = c2 + c2 - ((c2 <= 0x9F) ? SJ0162 : SJ6394);
 	    if (0x9E < c1) c2++;
 	}
@@ -5450,7 +5290,7 @@ nkf_char nfc_getc(FILE *f)
     nkf_char (*u)(nkf_char c ,FILE *f) = i_nfc_ungetc;
     int i=0, j, k=1, lower, upper;
     nkf_char buf[9];
-    const nkf_nfchar *array;
+    const unsigned char *array;
 
     buf[i] = (*g)(f);
     while (k > 0 && ((buf[i] & 0xc0) != 0x80)){
@@ -6350,86 +6190,100 @@ nkf_char no_connection2(nkf_char c2, nkf_char c1, nkf_char c0)
 #ifdef WIN32DLL
 #define fprintf dllprintf
 #endif
+
+void version(void)
+{
+    fprintf(HELP_OUTPUT,"Network Kanji Filter Version " NKF_VERSION " (" NKF_RELEASE_DATE ") \n" COPY_RIGHT "\n");
+}
+
 void usage(void)
 {
-    fprintf(HELP_OUTPUT,"USAGE:  nkf(nkf32,wnkf,nkf2) -[flags] [in file] .. [out file for -O flag]\n");
-    fprintf(HELP_OUTPUT,"Flags:\n");
-    fprintf(HELP_OUTPUT,"b,u      Output is buffered (DEFAULT),Output is unbuffered\n");
-    fprintf(HELP_OUTPUT,"j,s,e,w  Output code is ISO-2022-JP, Shift JIS, EUC-JP, UTF-8N\n");
+    fprintf(HELP_OUTPUT,
+	    "USAGE:  nkf(nkf32,wnkf,nkf2) -[flags] [in file] .. [out file for -O flag]\n"
+	    "Flags:\n"
+	    "b,u      Output is buffered (DEFAULT),Output is unbuffered\n"
+	    "j,s,e,w  Output code is ISO-2022-JP, Shift JIS, EUC-JP, UTF-8N\n"
 #ifdef UTF8_OUTPUT_ENABLE
-    fprintf(HELP_OUTPUT,"         After 'w' you can add more options. -w[ 8 [0], 16 [[BL] [0]] ]\n");
+	    "         After 'w' you can add more options. -w[ 8 [0], 16 [[BL] [0]] ]\n"
 #endif
-    fprintf(HELP_OUTPUT,"J,S,E,W  Input assumption is JIS 7 bit , Shift JIS, EUC-JP, UTF-8\n");
+	    "J,S,E,W  Input assumption is JIS 7 bit , Shift JIS, EUC-JP, UTF-8\n"
 #ifdef UTF8_INPUT_ENABLE
-    fprintf(HELP_OUTPUT,"         After 'W' you can add more options. -W[ 8, 16 [BL] ] \n");
+	    "         After 'W' you can add more options. -W[ 8, 16 [BL] ] \n"
 #endif
-    fprintf(HELP_OUTPUT,"t        no conversion\n");
-    fprintf(HELP_OUTPUT,"i[@B]    Specify the Esc Seq for JIS X 0208-1978/83 (DEFAULT B)\n");
-    fprintf(HELP_OUTPUT,"o[BJH]   Specify the Esc Seq for ASCII/Roman        (DEFAULT B)\n");
-    fprintf(HELP_OUTPUT,"r        {de/en}crypt ROT13/47\n");
-    fprintf(HELP_OUTPUT,"h        1 katakana->hiragana, 2 hiragana->katakana, 3 both\n");
-    fprintf(HELP_OUTPUT,"m[BQSN0] MIME decode [B:base64,Q:quoted,S:strict,N:non-strict,0:no decode]\n");
-    fprintf(HELP_OUTPUT,"M[BQ]    MIME encode [B:base64 Q:quoted]\n");
-    fprintf(HELP_OUTPUT,"l        ISO8859-1 (Latin-1) support\n");
-    fprintf(HELP_OUTPUT,"f/F      Folding: -f60 or -f or -f60-10 (fold margin 10) F preserve nl\n");
-    fprintf(HELP_OUTPUT,"Z[0-4]   Default/0: Convert JISX0208 Alphabet to ASCII\n");
-    fprintf(HELP_OUTPUT,"         1: Kankaku to one space  2: to two spaces  3: HTML Entity\n");
-    fprintf(HELP_OUTPUT,"         4: JISX0208 Katakana to JISX0201 Katakana\n");
-    fprintf(HELP_OUTPUT,"X,x      Assume X0201 kana in MS-Kanji, -x preserves X0201\n");
-    fprintf(HELP_OUTPUT,"B[0-2]   Broken input  0: missing ESC,1: any X on ESC-[($]-X,2: ASCII on NL\n");
+	    "t        no conversion\n"
+	    "i[@B]    Specify the Esc Seq for JIS X 0208-1978/83 (DEFAULT B)\n"
+	    "o[BJH]   Specify the Esc Seq for ASCII/Roman        (DEFAULT B)\n"
+	    "r        {de/en}crypt ROT13/47\n"
+	    "h        1 katakana->hiragana, 2 hiragana->katakana, 3 both\n"
+	    "m[BQSN0] MIME decode [B:base64,Q:quoted,S:strict,N:non-strict,0:no decode]\n"
+	    "M[BQ]    MIME encode [B:base64 Q:quoted]\n"
+	    "l        ISO8859-1 (Latin-1) support\n"
+	    "f/F      Folding: -f60 or -f or -f60-10 (fold margin 10) F preserve nl\n"
+	    "Z[0-4]   Default/0: Convert JISX0208 Alphabet to ASCII\n"
+	    "         1: Kankaku to one space  2: to two spaces  3: HTML Entity\n"
+	    "         4: JISX0208 Katakana to JISX0201 Katakana\n"
+	    "X,x      Assume X0201 kana in MS-Kanji, -x preserves X0201\n"
+	    "B[0-2]   Broken input  0: missing ESC,1: any X on ESC-[($]-X,2: ASCII on NL\n"
 #ifdef MSDOS
-    fprintf(HELP_OUTPUT,"T        Text mode output\n");
+	    "T        Text mode output\n"
 #endif
-    fprintf(HELP_OUTPUT,"O        Output to File (DEFAULT 'nkf.out')\n");
-    fprintf(HELP_OUTPUT,"I        Convert non ISO-2022-JP charactor to GETA\n");
-    fprintf(HELP_OUTPUT,"d,c      Convert line breaks  -d: LF  -c: CRLF\n");
-    fprintf(HELP_OUTPUT,"-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n");
-    fprintf(HELP_OUTPUT,"v, V     Show this usage. V: show configuration\n");
-    fprintf(HELP_OUTPUT,"\n");
-    fprintf(HELP_OUTPUT,"Long name options\n");
-    fprintf(HELP_OUTPUT," --ic=<input codeset>  --oc=<output codeset>\n");
-    fprintf(HELP_OUTPUT,"                   Specify the input or output codeset\n");
-    fprintf(HELP_OUTPUT," --fj  --unix --mac  --windows\n");
-    fprintf(HELP_OUTPUT," --jis  --euc  --sjis  --utf8  --utf16  --mime  --base64\n");
-    fprintf(HELP_OUTPUT,"                   Convert for the system or code\n");
-    fprintf(HELP_OUTPUT," --hiragana  --katakana  --katakana-hiragana\n");
-    fprintf(HELP_OUTPUT,"                   To Hiragana/Katakana Conversion\n");
-    fprintf(HELP_OUTPUT," --prefix=         Insert escape before troublesome characters of Shift_JIS\n");
+	    "O        Output to File (DEFAULT 'nkf.out')\n"
+	    "I        Convert non ISO-2022-JP charactor to GETA\n"
+	    "d,c      Convert line breaks  -d: LF  -c: CRLF\n"
+	    "-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n"
+	    "v, V     Show this usage. V: show configuration\n"
+	    "\n"
+	    "Long name options\n"
+	    " --ic=<input codeset>  --oc=<output codeset>\n"
+	    "                   Specify the input or output codeset\n"
+	    " --fj  --unix --mac  --windows\n"
+	    " --jis  --euc  --sjis  --utf8  --utf16  --mime  --base64\n"
+	    "                   Convert for the system or code\n"
+	    " --hiragana  --katakana  --katakana-hiragana\n"
+	    "                   To Hiragana/Katakana Conversion\n"
+	    " --prefix=         Insert escape before troublesome characters of Shift_JIS\n"
 #ifdef INPUT_OPTION
-    fprintf(HELP_OUTPUT," --cap-input, --url-input  Convert hex after ':' or '%%'\n");
+	    " --cap-input, --url-input  Convert hex after ':' or '%%'\n"
 #endif
 #ifdef NUMCHAR_OPTION
-    fprintf(HELP_OUTPUT," --numchar-input   Convert Unicode Character Reference\n");
+	    " --numchar-input   Convert Unicode Character Reference\n"
 #endif
 #ifdef UTF8_INPUT_ENABLE
-    fprintf(HELP_OUTPUT," --fb-{skip, html, xml, perl, java, subchar}\n");
-    fprintf(HELP_OUTPUT,"                   Specify how nkf handles unassigned characters\n");
+	    " --fb-{skip, html, xml, perl, java, subchar}\n"
+	    "                   Specify how nkf handles unassigned characters\n"
 #endif
 #ifdef OVERWRITE
-    fprintf(HELP_OUTPUT," --in-place[=SUFFIX]  --overwrite[=SUFFIX]\n");
-    fprintf(HELP_OUTPUT,"                   Overwrite original listed files by filtered result\n");
-    fprintf(HELP_OUTPUT,"                   --overwrite preserves timestamp of original files\n");
+	    " --in-place[=SUFFIX]  --overwrite[=SUFFIX]\n"
+	    "                   Overwrite original listed files by filtered result\n"
+	    "                   --overwrite preserves timestamp of original files\n"
 #endif
-    fprintf(HELP_OUTPUT," -g  --guess       Guess the input code\n");
-    fprintf(HELP_OUTPUT," --help  --version Show this help/the version\n");
-    fprintf(HELP_OUTPUT,"                   For more information, see also man nkf\n");
-    fprintf(HELP_OUTPUT,"\n");
+	    " -g  --guess       Guess the input code\n"
+	    " --help  --version Show this help/the version\n"
+	    "                   For more information, see also man nkf\n"
+	    "\n");
     version();
 }
 
 void show_configuration(void)
 {
-    fprintf(HELP_OUTPUT, "Summary of my nkf " NKF_VERSION " (" NKF_RELEASE_DATE ") configuration:\n");
-    fprintf(HELP_OUTPUT, "  Compile-time options:\n");
-    fprintf(HELP_OUTPUT, "    Default output encoding:     "
+    fprintf(HELP_OUTPUT,
+	    "Summary of my nkf " NKF_VERSION " (" NKF_RELEASE_DATE ") configuration:\n"
+	    "  nkf identity:\n"
+	    "    " NKF_IDENT "\n"
+	    "  Compile-time options:\n"
+	    "    Compiled at:                 " __DATE__ " " __TIME__ "\n"
+	   );
+    fprintf(HELP_OUTPUT,
+	    "    Default output encoding:     "
 #ifdef DEFAULT_ENCIDX
 	    "%s\n", nkf_enc_name(nkf_default_encoding())
 #else
 	    "%s (%s)\n", nkf_locale_encoding() ? "LOCALE" : "DEFAULT",
 	    nkf_enc_name(nkf_default_encoding())
 #endif
-	    );
-    fprintf(HELP_OUTPUT, "    Default output newline:      "
+	   );
+    fprintf(HELP_OUTPUT,
+	    "    Default output newline:      "
 #if DEFAULT_NEWLINE == CR
 	    "CR"
 #elif DEFAULT_NEWLINE == CRLF
@@ -6437,32 +6291,27 @@ void show_configuration(void)
 #else
 	    "LF"
 #endif
-	    "\n");
-    fprintf(HELP_OUTPUT, "    Decode MIME encoded string:  "
+	    "\n"
+	    "    Decode MIME encoded string:  "
 #if MIME_DECODE_DEFAULT
 	    "ON"
 #else
 	    "OFF"
 #endif
-	    "\n");
-    fprintf(HELP_OUTPUT, "    Convert JIS X 0201 Katakana: "
+	    "\n"
+	    "    Convert JIS X 0201 Katakana: "
 #if X0201_DEFAULT
 	    "ON"
 #else
 	    "OFF"
 #endif
-	    "\n");
-    fprintf(HELP_OUTPUT, "    --help, --version output:    "
+	    "\n"
+	    "    --help, --version output:    "
 #if HELP_OUTPUT_HELP_OUTPUT
-"HELP_OUTPUT"
+	    "HELP_OUTPUT"
 #else
-"STDOUT"
+	    "STDOUT"
 #endif
-"\n");
-}
-
-void version(void)
-{
-    fprintf(HELP_OUTPUT,"Network Kanji Filter Version " NKF_VERSION " (" NKF_RELEASE_DATE ") \n" COPY_RIGHT "\n");
+	    "\n");
 }
 #endif /*PERL_XS*/

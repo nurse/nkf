@@ -7,10 +7,13 @@ PERL = perl
 RM = rm -rf
 VERSION = 2.0.8
 
-nkf : nkf.c config.h utf8tbl.o
-	$(CC) $(CFLAGS) -o nkf nkf.c utf8tbl.o
+nkf : nkf.o utf8tbl.o
+	$(CC) $(CFLAGS) -o nkf nkf.o utf8tbl.o
 
-utf8tbl.o : utf8tbl.c config.h
+nkf.o : nkf.c nkf.h utf8tbl.h config.h
+	$(CC) $(CFLAGS) -c nkf.c
+
+utf8tbl.o : utf8tbl.c utf8tbl.h config.h
 	$(CC) $(CFLAGS) -c utf8tbl.c
 
 clean:
