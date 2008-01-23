@@ -15,6 +15,7 @@ utf8tbl.c
 utf8tbl.h
 nkf.mak
 nkf32.c
+nkf32.h
 nkf32dll.c
 version.rc
 dll.rc
