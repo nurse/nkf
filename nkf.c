@@ -30,7 +30,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.166 2008/01/23 09:10:25 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.167 2008/01/23 09:21:39 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-01-23"
 #define COPY_RIGHT \
@@ -6053,6 +6053,99 @@ void mime_putc(nkf_char c)
     }
     mimeout_addchar(c);
 }
+
+#ifdef HAVE_ICONV_H
+typedef struct nkf_iconv_t {
+    iconv_t cd;
+    char *input_buffer;
+    size_t input_buffer_size;
+    char *output_buffer;
+    size_t output_buffer_size;
+}
+
+nkf_iconv_t nkf_iconv_new(char *tocode, char *fromcode)
+{
+    nkf_iconv_t converter;
+
+    converter->input_buffer_size = IOBUF_SIZE;
+    converter->input_buffer = malloc(converter->input_buffer_size);
+    if (converter->input_buffer == NULL)
+        perror("can't malloc");
+
+    converter->output_buffer_size = IOBUF_SIZE * 2;
+    converter->output_buffer = malloc(converter->output_buffer_size);
+    if (converter->output_buffer == NULL)
+        perror("can't malloc");
+
+    converter->cd = iconv_open(tocode, fromcode);
+    if (converter->cd == (iconv_t)-1)
+    {
+        switch (errno) {
+        case EINVAL:
+            perror(fprintf("iconv doesn't support %s to %s conversion.", fromcode, tocode));
+            return -1;
+        default:
+            perror("can't iconv_open");
+        }
+    }
+}
+
+size_t nkf_iconv_convert(nkf_iconv_t *converter, FILE *input)
+{
+    size_t invalid = (size_t)0;
+    char *input_buffer = converter->input_buffer;
+    size_t input_length = (size_t)0;
+    char *output_buffer = converter->output_buffer;
+    size_t output_length = converter->output_buffer_size;
+    int c;
+
+    do {
+        if (c != EOF) {
+            while ((c = (*i_getc)(f)) != EOF) {
+                input_buffer[input_length++] = c;
+                if (input_length < converter->input_buffer_size) break;
+            }
+        }
+
+        size_t ret = iconv(converter->cd, &input_buffer, &input_length, &output_buffer, &output_length);
+        while (output_length-- > 0) {
+            (*o_putc)(output_buffer[converter->output_buffer_size-output_length]);
+        }
+        if (ret == (size_t) - 1) {
+            switch (errno) {
+            case EINVAL:
+                if (input_buffer != converter->input_buffer)
+                    memmove(converter->input_buffer, input_buffer, input_length);
+                break;
+            case E2BIG:
+                converter->output_buffer_size *= 2;
+                output_buffer = realloc(converter->outbuf, converter->output_buffer_size);
+                if (output_buffer == NULL) {
+                    perror("can't realloc");
+                    return -1;
+                }
+                converter->output_buffer = output_buffer;
+                break;
+            default:
+                perror("can't iconv");
+                return -1;
+            }
+        } else {
+            invalid += ret;
+        }
+    } while (1);
+
+    return invalid;
+}
+
+
+void nkf_iconv_close(nkf_iconv_t *convert)
+{
+        free(converter->inbuf);
+        free(converter->outbuf);
+        iconv_close(converter->cd);
+}
+#endif
 
 
 void reinit(void)
