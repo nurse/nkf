@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.170 2008/02/01 09:07:56 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.171 2008/02/01 12:03:28 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-02-01"
 #define COPY_RIGHT \
@@ -322,7 +322,7 @@ static char *input_codename = NULL; /* NULL: unestablished, "": BINARY */
 static nkf_encoding *input_encoding = NULL;
 static nkf_encoding *output_encoding = NULL;
 
-static  nkf_char     kanji_convert(FILE *f);
+static int kanji_convert(FILE *f);
 #if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
 /* UCS Mapping
  * 0: Shift_JIS, eucJP-ascii
@@ -738,7 +738,6 @@ static nkf_encoding* nkf_default_encoding()
 #elif DEFAULT_ENCIDX
     enc = nkf_enc_from_index(DEFAULT_ENCIDX);
 #endif
-    if (enc <= 0) enc = nkf_enc_from_index(ISO_2022_JP);
     return enc;
 }
 
@@ -832,12 +831,11 @@ void show_configuration(void)
     fprintf(HELP_OUTPUT,
 	    "    Default output encoding:     "
 #ifdef DEFAULT_CODE_LOCALE
-	    "%s\n", nkf_enc_name(nkf_default_encoding())
+	    "LOCALE (%s)\n", nkf_enc_name(nkf_default_encoding())
 #elif DEFAULT_ENCIDX
-	    "%s (%s)\n", nkf_locale_encoding() ? "LOCALE" : "DEFAULT",
-	    nkf_enc_name(nkf_default_encoding())
+	    "CONFIG (%s)\n", nkf_enc_name(nkf_default_encoding())
 #else
-            "NONE"
+            "NONE\n"
 #endif
 	   );
     fprintf(HELP_OUTPUT,
@@ -4943,11 +4941,14 @@ void reinit(void)
 #endif /*WIN32DLL*/
 }
 
-void module_connection(void)
+int module_connection(void)
 {
     if (input_encoding) set_input_encoding(input_encoding);
     if (!output_encoding) {
 	output_encoding = nkf_default_encoding();
+    }
+    if (!output_encoding) {
+	return -1;
     }
     set_output_encoding(output_encoding);
     oconv = nkf_enc_to_oconv(output_encoding);
@@ -5035,6 +5036,7 @@ void module_connection(void)
             status_reinit(p++);
         }
     }
+    return 0;
 }
 
 /*
@@ -5055,7 +5057,7 @@ nkf_char noconvert(FILE *f)
 }
 #endif
 
-nkf_char kanji_convert(FILE *f)
+int kanji_convert(FILE *f)
 {
     nkf_char    c3, c2=0, c1, c0=0;
     int is_8bit = FALSE;
@@ -5072,7 +5074,12 @@ nkf_char kanji_convert(FILE *f)
 #define SEND ;             /* output c1 and c2, get next */
 #define LAST break         /* end of loop, go closing  */
 
-    module_connection();
+    if (module_connection() < 0) {
+#if !defined(PERL_XS) && !defined(WIN32DLL)
+	fprintf(stderr, "no output encoding given\n");
+#endif
+	return -1;
+    }
     check_bom(f);
 
     while ((c1 = (*i_getc)(f)) != EOF) {
@@ -5493,7 +5500,8 @@ nkf_char kanji_convert(FILE *f)
 		0x7F <= c2 && c2 <= 0x92 &&
 		0x21 <= c1 && c1 <= 0x7E) {
 		/* CP932 UDC */
-		if(c1 == 0x7F) return 0;
+		if(c1 == 0x7F)
+		    NEXT;
 		c1 = (c2 - 0x7F) * 94 + c1 - 0x21 + 0xE000 + CLASS_UNICODE;
 		c2 = 0;
 	    }
@@ -5534,10 +5542,17 @@ nkf_char kanji_convert(FILE *f)
 #endif
 	}
     }
-    return 1;
+    return 0;
 }
 
-void options(unsigned char *cp)
+/*
+ * int options(unsigned char *cp)
+ * 
+ * return values:
+ *    0: success
+ *   -1: ArgumentError
+ */
+int options(unsigned char *cp)
 {
     nkf_char i, j;
     unsigned char *p;
@@ -5546,7 +5561,7 @@ void options(unsigned char *cp)
     nkf_encoding *enc;
 
     if (option_mode==1)
-	return;
+	return 0;
     while(*cp && *cp++!='-');
     while (*cp || cp_back) {
 	if(!*cp){
@@ -5555,188 +5570,190 @@ void options(unsigned char *cp)
 	    continue;
 	}
 	p = 0;
-        switch (*cp++) {
-        case '-':  /* literal options */
+	switch (*cp++) {
+	case '-':  /* literal options */
 	    if (!*cp || *cp == SP) {        /* ignore the rest of arguments */
 		option_mode = 1;
-		return;
+		return 0;
 	    }
-            for (i=0;i<sizeof(long_option)/sizeof(long_option[0]);i++) {
-                p = (unsigned char *)long_option[i].name;
-                for (j=0;*p && *p != '=' && *p == cp[j];p++, j++);
+	    for (i=0;i<sizeof(long_option)/sizeof(long_option[0]);i++) {
+		p = (unsigned char *)long_option[i].name;
+		for (j=0;*p && *p != '=' && *p == cp[j];p++, j++);
 		if (*p == cp[j] || cp[j] == SP){
 		    p = &cp[j] + 1;
 		    break;
 		}
 		p = 0;
-            }
+	    }
 	    if (p == 0) {
+#if !defined(PERL_XS) && !defined(WIN32DLL)
 		fprintf(stderr, "unknown long option: --%s\n", cp);
-		return;
+#endif
+		return -1;
 	    }
 	    while(*cp && *cp != SP && cp++);
-            if (long_option[i].alias[0]){
+	    if (long_option[i].alias[0]){
 		cp_back = cp;
 		cp = (unsigned char *)long_option[i].alias;
 	    }else{
-                if (strcmp(long_option[i].name, "ic=") == 0){
+		if (strcmp(long_option[i].name, "ic=") == 0){
 		    nkf_str_upcase((char *)p, codeset, 32);
 		    enc = nkf_enc_find(codeset);
 		    if (!enc) continue;
 		    input_encoding = enc;
-                    continue;
+		    continue;
 		}
-                if (strcmp(long_option[i].name, "oc=") == 0){
+		if (strcmp(long_option[i].name, "oc=") == 0){
 		    nkf_str_upcase((char *)p, codeset, 32);
 		    enc = nkf_enc_find(codeset);
 		    if (enc <= 0) continue;
 		    output_encoding = enc;
-                    continue;
+		    continue;
 		}
-                if (strcmp(long_option[i].name, "guess=") == 0){
+		if (strcmp(long_option[i].name, "guess=") == 0){
 		    if (p[0] == '0' || p[0] == '1') {
 			guess_f = 1;
 		    } else {
 			guess_f = 2;
 		    }
-                    continue;
-                }
+		    continue;
+		}
 #ifdef OVERWRITE
-                if (strcmp(long_option[i].name, "overwrite") == 0){
-                    file_out_f = TRUE;
-                    overwrite_f = TRUE;
+		if (strcmp(long_option[i].name, "overwrite") == 0){
+		    file_out_f = TRUE;
+		    overwrite_f = TRUE;
 		    preserve_time_f = TRUE;
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "overwrite=") == 0){
-                    file_out_f = TRUE;
-                    overwrite_f = TRUE;
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "overwrite=") == 0){
+		    file_out_f = TRUE;
+		    overwrite_f = TRUE;
 		    preserve_time_f = TRUE;
 		    backup_f = TRUE;
 		    backup_suffix = malloc(strlen((char *) p) + 1);
 		    strcpy(backup_suffix, (char *) p);
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "in-place") == 0){
-                    file_out_f = TRUE;
-                    overwrite_f = TRUE;
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "in-place") == 0){
+		    file_out_f = TRUE;
+		    overwrite_f = TRUE;
 		    preserve_time_f = FALSE;
 		    continue;
-                }
-                if (strcmp(long_option[i].name, "in-place=") == 0){
-                    file_out_f = TRUE;
-                    overwrite_f = TRUE;
+		}
+		if (strcmp(long_option[i].name, "in-place=") == 0){
+		    file_out_f = TRUE;
+		    overwrite_f = TRUE;
 		    preserve_time_f = FALSE;
 		    backup_f = TRUE;
 		    backup_suffix = malloc(strlen((char *) p) + 1);
 		    strcpy(backup_suffix, (char *) p);
 		    continue;
-                }
+		}
 #endif
 #ifdef INPUT_OPTION
-                if (strcmp(long_option[i].name, "cap-input") == 0){
-                    cap_f = TRUE;
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "url-input") == 0){
-                    url_f = TRUE;
-                    continue;
-                }
+		if (strcmp(long_option[i].name, "cap-input") == 0){
+		    cap_f = TRUE;
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "url-input") == 0){
+		    url_f = TRUE;
+		    continue;
+		}
 #endif
 #ifdef NUMCHAR_OPTION
-                if (strcmp(long_option[i].name, "numchar-input") == 0){
-                    numchar_f = TRUE;
-                    continue;
-                }
+		if (strcmp(long_option[i].name, "numchar-input") == 0){
+		    numchar_f = TRUE;
+		    continue;
+		}
 #endif
 #ifdef CHECK_OPTION
-                if (strcmp(long_option[i].name, "no-output") == 0){
-                    noout_f = TRUE;
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "debug") == 0){
-                    debug_f = TRUE;
-                    continue;
-                }
+		if (strcmp(long_option[i].name, "no-output") == 0){
+		    noout_f = TRUE;
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "debug") == 0){
+		    debug_f = TRUE;
+		    continue;
+		}
 #endif
-                if (strcmp(long_option[i].name, "cp932") == 0){
+		if (strcmp(long_option[i].name, "cp932") == 0){
 #ifdef SHIFTJIS_CP932
-                    cp51932_f = TRUE;
-                    cp932inv_f = -TRUE;
+		    cp51932_f = TRUE;
+		    cp932inv_f = -TRUE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = UCS_MAP_CP932;
+		    ms_ucs_map_f = UCS_MAP_CP932;
 #endif
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "no-cp932") == 0){
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "no-cp932") == 0){
 #ifdef SHIFTJIS_CP932
-                    cp51932_f = FALSE;
-                    cp932inv_f = FALSE;
+		    cp51932_f = FALSE;
+		    cp932inv_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                    ms_ucs_map_f = UCS_MAP_ASCII;
+		    ms_ucs_map_f = UCS_MAP_ASCII;
 #endif
-                    continue;
-                }
+		    continue;
+		}
 #ifdef SHIFTJIS_CP932
-                if (strcmp(long_option[i].name, "cp932inv") == 0){
-                    cp932inv_f = -TRUE;
-                    continue;
-                }
+		if (strcmp(long_option[i].name, "cp932inv") == 0){
+		    cp932inv_f = -TRUE;
+		    continue;
+		}
 #endif
 
 #ifdef X0212_ENABLE
-                if (strcmp(long_option[i].name, "x0212") == 0){
-                    x0212_f = TRUE;
-                    continue;
-                }
+		if (strcmp(long_option[i].name, "x0212") == 0){
+		    x0212_f = TRUE;
+		    continue;
+		}
 #endif
 
 #ifdef EXEC_IO
-                  if (strcmp(long_option[i].name, "exec-in") == 0){
-                      exec_f = 1;
-                      return;
-                  }
-                  if (strcmp(long_option[i].name, "exec-out") == 0){
-                      exec_f = -1;
-                      return;
-                  }
+		if (strcmp(long_option[i].name, "exec-in") == 0){
+		    exec_f = 1;
+		    return 0;
+		}
+		if (strcmp(long_option[i].name, "exec-out") == 0){
+		    exec_f = -1;
+		    return 0;
+		}
 #endif
 #if defined(UTF8_OUTPUT_ENABLE) && defined(UTF8_INPUT_ENABLE)
-                if (strcmp(long_option[i].name, "no-cp932ext") == 0){
+		if (strcmp(long_option[i].name, "no-cp932ext") == 0){
 		    no_cp932ext_f = TRUE;
-                    continue;
-                }
+		    continue;
+		}
 		if (strcmp(long_option[i].name, "no-best-fit-chars") == 0){
 		    no_best_fit_chars_f = TRUE;
 		    continue;
 		}
-                if (strcmp(long_option[i].name, "fb-skip") == 0){
+		if (strcmp(long_option[i].name, "fb-skip") == 0){
 		    encode_fallback = NULL;
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "fb-html") == 0){
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "fb-html") == 0){
 		    encode_fallback = encode_fallback_html;
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "fb-xml") == 0){
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "fb-xml") == 0){
 		    encode_fallback = encode_fallback_xml;
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "fb-java") == 0){
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "fb-java") == 0){
 		    encode_fallback = encode_fallback_java;
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "fb-perl") == 0){
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "fb-perl") == 0){
 		    encode_fallback = encode_fallback_perl;
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "fb-subchar") == 0){
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "fb-subchar") == 0){
 		    encode_fallback = encode_fallback_subchar;
-                    continue;
-                }
-                if (strcmp(long_option[i].name, "fb-subchar=") == 0){
+		    continue;
+		}
+		if (strcmp(long_option[i].name, "fb-subchar=") == 0){
 		    encode_fallback = encode_fallback_subchar;
 		    unicode_subchar = 0;
 		    if (p[0] != '0'){
@@ -5760,14 +5777,14 @@ void options(unsigned char *cp)
 		    }
 		    w16e_conv(unicode_subchar, &i, &j);
 		    unicode_subchar = i<<8 | j;
-                    continue;
-                }
+		    continue;
+		}
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-                if (strcmp(long_option[i].name, "ms-ucs-map") == 0){
-                    ms_ucs_map_f = UCS_MAP_MS;
-                    continue;
-                }
+		if (strcmp(long_option[i].name, "ms-ucs-map") == 0){
+		    ms_ucs_map_f = UCS_MAP_MS;
+		    continue;
+		}
 #endif
 #ifdef UNICODE_NORMALIZATION
 		if (strcmp(long_option[i].name, "utf8mac-input") == 0){
@@ -5775,24 +5792,28 @@ void options(unsigned char *cp)
 		    continue;
 		}
 #endif
-                if (strcmp(long_option[i].name, "prefix=") == 0){
-                    if (nkf_isgraph(p[0])){
-                        for (i = 1; nkf_isgraph(p[i]); i++){
-                            prefix_table[p[i]] = p[0];
-                        }
-                    }
-                    continue;
-                }
-            }
-            continue;
-        case 'b':           /* buffered mode */
-            unbuf_f = FALSE;
-            continue;
-        case 'u':           /* non bufferd mode */
-            unbuf_f = TRUE;
-            continue;
-        case 't':           /* transparent mode */
-            if (*cp=='1') {
+		if (strcmp(long_option[i].name, "prefix=") == 0){
+		    if (nkf_isgraph(p[0])){
+			for (i = 1; nkf_isgraph(p[i]); i++){
+			    prefix_table[p[i]] = p[0];
+			}
+		    }
+		    continue;
+		}
+#if !defined(PERL_XS) && !defined(WIN32DLL)
+		fprintf(stderr, "unsupported long option: --%s\n", long_option[i].name);
+#endif
+		return -1;
+	    }
+	    continue;
+	case 'b':           /* buffered mode */
+	    unbuf_f = FALSE;
+	    continue;
+	case 'u':           /* non bufferd mode */
+	    unbuf_f = TRUE;
+	    continue;
+	case 't':           /* transparent mode */
+	    if (*cp=='1') {
 		/* alias of -t */
 		cp++;
 		nop_f = TRUE;
@@ -5805,62 +5826,62 @@ void options(unsigned char *cp)
 		 */
 		cp++;
 		nop_f = 2;
-            } else
+	    } else
 		nop_f = TRUE;
-            continue;
-        case 'j':           /* JIS output */
-        case 'n':
-            output_encoding = nkf_enc_from_index(ISO_2022_JP);
-            continue;
-        case 'e':           /* AT&T EUC output */
-            output_encoding = nkf_enc_from_index(EUC_JP);
-            continue;
-        case 's':           /* SJIS output */
-            output_encoding = nkf_enc_from_index(WINDOWS_31J);
-            continue;
-        case 'l':           /* ISO8859 Latin-1 support, no conversion */
-            iso8859_f = TRUE;  /* Only compatible with ISO-2022-JP */
-            input_encoding = nkf_enc_from_index(ISO_8859_1);
-            continue;
-        case 'i':           /* Kanji IN ESC-$-@/B */
-            if (*cp=='@'||*cp=='B')
-                kanji_intro = *cp++;
-            continue;
-        case 'o':           /* ASCII IN ESC-(-J/B */
-            if (*cp=='J'||*cp=='B'||*cp=='H')
-                ascii_intro = *cp++;
-            continue;
-        case 'h':
-            /*
-                bit:1   katakana->hiragana
-                bit:2   hiragana->katakana
-            */
-            if ('9'>= *cp && *cp>='0')
-                hira_f |= (*cp++ -'0');
-            else
-                hira_f |= 1;
-            continue;
-        case 'r':
-            rot_f = TRUE;
-            continue;
+	    continue;
+	case 'j':           /* JIS output */
+	case 'n':
+	    output_encoding = nkf_enc_from_index(ISO_2022_JP);
+	    continue;
+	case 'e':           /* AT&T EUC output */
+	    output_encoding = nkf_enc_from_index(EUC_JP);
+	    continue;
+	case 's':           /* SJIS output */
+	    output_encoding = nkf_enc_from_index(WINDOWS_31J);
+	    continue;
+	case 'l':           /* ISO8859 Latin-1 support, no conversion */
+	    iso8859_f = TRUE;  /* Only compatible with ISO-2022-JP */
+	    input_encoding = nkf_enc_from_index(ISO_8859_1);
+	    continue;
+	case 'i':           /* Kanji IN ESC-$-@/B */
+	    if (*cp=='@'||*cp=='B')
+		kanji_intro = *cp++;
+	    continue;
+	case 'o':           /* ASCII IN ESC-(-J/B */
+	    if (*cp=='J'||*cp=='B'||*cp=='H')
+		ascii_intro = *cp++;
+	    continue;
+	case 'h':
+	    /*
+	       bit:1   katakana->hiragana
+	       bit:2   hiragana->katakana
+	     */
+	    if ('9'>= *cp && *cp>='0')
+		hira_f |= (*cp++ -'0');
+	    else
+		hira_f |= 1;
+	    continue;
+	case 'r':
+	    rot_f = TRUE;
+	    continue;
 #if defined(MSDOS) || defined(__OS2__)
-        case 'T':
-            binmode_f = FALSE;
-            continue;
+	case 'T':
+	    binmode_f = FALSE;
+	    continue;
 #endif
 #ifndef PERL_XS
-        case 'V':
-            show_configuration();
-            exit(1);
-            break;
-        case 'v':
-            usage();
-            exit(1);
-            break;
+	case 'V':
+	    show_configuration();
+	    exit(1);
+	    break;
+	case 'v':
+	    usage();
+	    exit(1);
+	    break;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-        case 'w':           /* UTF-8 output */
-            if (cp[0] == '8') {
+	case 'w':           /* UTF-8 output */
+	    if (cp[0] == '8') {
 		cp++;
 		if (cp[0] == '0'){
 		    cp++;
@@ -5886,10 +5907,10 @@ void options(unsigned char *cp)
 		    output_endian = ENDIAN_LITTLE;
 		} else if (cp[0] == 'B') {
 		    cp++;
-                } else {
+		} else {
 		    output_encoding = nkf_enc_from_index(enc_idx);
 		    continue;
-                }
+		}
 		if (cp[0] == '0'){
 		    cp++;
 		    enc_idx = enc_idx == UTF_16
@@ -5903,10 +5924,10 @@ void options(unsigned char *cp)
 		}
 		output_encoding = nkf_enc_from_index(enc_idx);
 	    }
-            continue;
+	    continue;
 #endif
 #ifdef UTF8_INPUT_ENABLE
-        case 'W':           /* UTF input */
+	case 'W':           /* UTF input */
 	    if (cp[0] == '8') {
 		cp++;
 		input_encoding = nkf_enc_from_index(UTF_8);
@@ -5936,9 +5957,9 @@ void options(unsigned char *cp)
 		    : (output_endian == ENDIAN_LITTLE ? UTF_32LE : UTF_32BE);
 		input_encoding = nkf_enc_from_index(enc_idx);
 	    }
-            continue;
+	    continue;
 #endif
-        /* Input code assumption */
+	    /* Input code assumption */
 	case 'J':   /* ISO-2022-JP input */
 	    input_encoding = nkf_enc_from_index(ISO_2022_JP);
 	    continue;
@@ -5948,46 +5969,46 @@ void options(unsigned char *cp)
 	case 'S':   /* Windows-31J input */
 	    input_encoding = nkf_enc_from_index(WINDOWS_31J);
 	    continue;
-        case 'Z':   /* Convert X0208 alphabet to asii */
-            /* alpha_f
+	case 'Z':   /* Convert X0208 alphabet to asii */
+	    /* alpha_f
 	       bit:0   Convert JIS X 0208 Alphabet to ASCII
 	       bit:1   Convert Kankaku to one space
 	       bit:2   Convert Kankaku to two spaces
 	       bit:3   Convert HTML Entity
 	       bit:4   Convert JIS X 0208 Katakana to JIS X 0201 Katakana
-            */
+	     */
 	    while ('0'<= *cp && *cp <='9') {
 		alpha_f |= 1 << (*cp++ - '0');
 	    }
-            if (!alpha_f) alpha_f = 1;
-            continue;
-        case 'x':   /* Convert X0201 kana to X0208 or X0201 Conversion */
-            x0201_f = FALSE;    /* No X0201->X0208 conversion */
-            /* accept  X0201
-                    ESC-(-I     in JIS, EUC, MS Kanji
-                    SI/SO       in JIS, EUC, MS Kanji
-                    SSO         in EUC, JIS, not in MS Kanji
-                    MS Kanji (0xa0-0xdf)
-               output  X0201
-                    ESC-(-I     in JIS (0x20-0x5f)
-                    SSO         in EUC (0xa0-0xdf)
-                    0xa0-0xd    in MS Kanji (0xa0-0xdf)
-            */
-            continue;
-        case 'X':   /* Convert X0201 kana to X0208 */
-            x0201_f = TRUE;
-            continue;
-        case 'F':   /* prserve new lines */
+	    if (!alpha_f) alpha_f = 1;
+	    continue;
+	case 'x':   /* Convert X0201 kana to X0208 or X0201 Conversion */
+	    x0201_f = FALSE;    /* No X0201->X0208 conversion */
+	    /* accept  X0201
+	       ESC-(-I     in JIS, EUC, MS Kanji
+	       SI/SO       in JIS, EUC, MS Kanji
+	       SSO         in EUC, JIS, not in MS Kanji
+	       MS Kanji (0xa0-0xdf)
+	       output  X0201
+	       ESC-(-I     in JIS (0x20-0x5f)
+	       SSO         in EUC (0xa0-0xdf)
+	       0xa0-0xd    in MS Kanji (0xa0-0xdf)
+	     */
+	    continue;
+	case 'X':   /* Convert X0201 kana to X0208 */
+	    x0201_f = TRUE;
+	    continue;
+	case 'F':   /* prserve new lines */
 	    fold_preserve_f = TRUE;
-        case 'f':   /* folding -f60 or -f */
-            fold_f = TRUE;
-            fold_len = 0;
-            while('0'<= *cp && *cp <='9') { /* we don't use atoi here */
+	case 'f':   /* folding -f60 or -f */
+	    fold_f = TRUE;
+	    fold_len = 0;
+	    while('0'<= *cp && *cp <='9') { /* we don't use atoi here */
 		fold_len *= 10;
 		fold_len += *cp++ - '0';
 	    }
-            if (!(0<fold_len && fold_len<BUFSIZ))
-                fold_len = DEFAULT_FOLD;
+	    if (!(0<fold_len && fold_len<BUFSIZ))
+		fold_len = DEFAULT_FOLD;
 	    if (*cp=='-') {
 		fold_margin = 0;
 		cp++;
@@ -5996,92 +6017,95 @@ void options(unsigned char *cp)
 		    fold_margin += *cp++ - '0';
 		}
 	    }
-            continue;
-        case 'm':   /* MIME support */
-            /* mime_decode_f = TRUE; */ /* this has too large side effects... */
-            if (*cp=='B'||*cp=='Q') {
-                mime_decode_mode = *cp++;
-                mimebuf_f = FIXED_MIME;
-            } else if (*cp=='N') {
-                mime_f = TRUE; cp++;
-            } else if (*cp=='S') {
-                mime_f = STRICT_MIME; cp++;
-            } else if (*cp=='0') {
-                mime_decode_f = FALSE;
-                mime_f = FALSE; cp++;
-            } else {
-                mime_f = STRICT_MIME;
-            }
-            continue;
-        case 'M':   /* MIME output */
-            if (*cp=='B') {
-                mimeout_mode = 'B';
-                mimeout_f = FIXED_MIME; cp++;
-            } else if (*cp=='Q') {
-                mimeout_mode = 'Q';
-                mimeout_f = FIXED_MIME; cp++;
-            } else {
+	    continue;
+	case 'm':   /* MIME support */
+	    /* mime_decode_f = TRUE; */ /* this has too large side effects... */
+	    if (*cp=='B'||*cp=='Q') {
+		mime_decode_mode = *cp++;
+		mimebuf_f = FIXED_MIME;
+	    } else if (*cp=='N') {
+		mime_f = TRUE; cp++;
+	    } else if (*cp=='S') {
+		mime_f = STRICT_MIME; cp++;
+	    } else if (*cp=='0') {
+		mime_decode_f = FALSE;
+		mime_f = FALSE; cp++;
+	    } else {
+		mime_f = STRICT_MIME;
+	    }
+	    continue;
+	case 'M':   /* MIME output */
+	    if (*cp=='B') {
+		mimeout_mode = 'B';
+		mimeout_f = FIXED_MIME; cp++;
+	    } else if (*cp=='Q') {
+		mimeout_mode = 'Q';
+		mimeout_f = FIXED_MIME; cp++;
+	    } else {
 		mimeout_f = TRUE;
 	    }
-            continue;
-        case 'B':   /* Broken JIS support */
-            /*  bit:0   no ESC JIS
-                bit:1   allow any x on ESC-(-x or ESC-$-x
-                bit:2   reset to ascii on NL
-            */
-            if ('9'>= *cp && *cp>='0')
-                broken_f |= 1<<(*cp++ -'0');
-            else
-                broken_f |= TRUE;
-            continue;
+	    continue;
+	case 'B':   /* Broken JIS support */
+	    /*  bit:0   no ESC JIS
+	       bit:1   allow any x on ESC-(-x or ESC-$-x
+	       bit:2   reset to ascii on NL
+	     */
+	    if ('9'>= *cp && *cp>='0')
+		broken_f |= 1<<(*cp++ -'0');
+	    else
+		broken_f |= TRUE;
+	    continue;
 #ifndef PERL_XS
-        case 'O':/* for Output file */
-            file_out_f = TRUE;
-            continue;
+	case 'O':/* for Output file */
+	    file_out_f = TRUE;
+	    continue;
 #endif
-        case 'c':/* add cr code */
-            eolmode_f = CRLF;
-            continue;
-        case 'd':/* delete cr code */
-            eolmode_f = LF;
-            continue;
+	case 'c':/* add cr code */
+	    eolmode_f = CRLF;
+	    continue;
+	case 'd':/* delete cr code */
+	    eolmode_f = LF;
+	    continue;
 	case 'I':   /* ISO-2022-JP output */
 	    iso2022jp_f = TRUE;
 	    continue;
-        case 'L':  /* line mode */
-            if (*cp=='u') {         /* unix */
-                eolmode_f = LF; cp++;
-            } else if (*cp=='m') { /* mac */
-                eolmode_f = CR; cp++;
-            } else if (*cp=='w') { /* windows */
-                eolmode_f = CRLF; cp++;
-            } else if (*cp=='0') { /* no conversion  */
-                eolmode_f = 0; cp++;
-            }
-            continue;
+	case 'L':  /* line mode */
+	    if (*cp=='u') {         /* unix */
+		eolmode_f = LF; cp++;
+	    } else if (*cp=='m') { /* mac */
+		eolmode_f = CR; cp++;
+	    } else if (*cp=='w') { /* windows */
+		eolmode_f = CRLF; cp++;
+	    } else if (*cp=='0') { /* no conversion  */
+		eolmode_f = 0; cp++;
+	    }
+	    continue;
 #ifndef PERL_XS
-        case 'g':
-            if ('2' <= *cp && *cp <= '9') {
-                guess_f = 2;
-                cp++;
-            } else if (*cp == '0' || *cp == '1') {
+	case 'g':
+	    if ('2' <= *cp && *cp <= '9') {
+		guess_f = 2;
+		cp++;
+	    } else if (*cp == '0' || *cp == '1') {
 		guess_f = 1;
-                cp++;
-            } else {
+		cp++;
+	    } else {
 		guess_f = 1;
-            }
-            continue;
+	    }
+	    continue;
 #endif
-        case SP:
-        /* module muliple options in a string are allowed for Perl moudle  */
+	case SP:
+	    /* module muliple options in a string are allowed for Perl moudle  */
 	    while(*cp && *cp++!='-');
-            continue;
-        default:
+	    continue;
+	default:
+#if !defined(PERL_XS) && !defined(WIN32DLL)
 	    fprintf(stderr, "unknown option: -%c\n", *(cp-1));
-            /* bogus option but ignored */
-            continue;
-        }
+#endif
+	    /* bogus option but ignored */
+	    return -1;
+	}
     }
+    return 0;
 }
 
 #ifdef WIN32DLL

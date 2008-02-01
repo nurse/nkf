@@ -46,6 +46,6 @@
 /* #define DEFAULT_CODE_SJIS   */
 /* #define DEFAULT_CODE_EUC    */
 /* #define DEFAULT_CODE_UTF8   */
-/* #define DEFAULT_CODE_LOCALE */
+#define DEFAULT_CODE_LOCALE
 
 #endif /* _CONFIG_H_ */
