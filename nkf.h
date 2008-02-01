@@ -2,9 +2,8 @@
  * 
  * nkf.h - Header file for nkf
  * 
- * $Id: nkf.h,v 1.2 2008/01/23 09:10:25 naruse Exp $
+ * $Id: nkf.h,v 1.3 2008/02/01 09:07:56 naruse Exp $
  */
-
 
 #ifndef NKF_H
 
@@ -144,9 +143,15 @@ void  setbinmode(FILE *fp)
 #endif
 #endif
 
+#ifdef DEFAULT_CODE_LOCALE
+
 #ifndef __WIN32__ /* not win32 is posix */
+#ifndef HAVE_LANGINFO_H
 #define HAVE_LANGINFO_H
+#endif
+#ifndef HAVE_LOCALE_H
 #define HAVE_LOCALE_H
+#endif
 #endif
 
 #ifdef HAVE_LANGINFO_H
@@ -156,6 +161,8 @@ void  setbinmode(FILE *fp)
 #include <locale.h>
 #endif
 
+#endif /* DEFAULT_CODE_LOCALE */
+
 #define         FALSE   0
 #define         TRUE    1
 
@@ -163,4 +170,4 @@ void  setbinmode(FILE *fp)
 #include "nkf32.h"
 #endif
 
-#endif
+#endif /* NKF_H */

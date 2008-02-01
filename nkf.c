@@ -1,4 +1,5 @@
 /** Network Kanji Filter. (PDS Version)
+** -*- coding: ISO-2022-JP -*-
 ************************************************************************
 ** Copyright (C) 1987, Fujitsu LTD. (Itaru ICHIKAWA)
 ** 連絡先： （株）富士通研究所　ソフト３研　市川　至
@@ -30,9 +31,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.169 2008/01/24 00:18:53 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.170 2008/02/01 09:07:56 naruse Exp $"
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2008-01-23"
+#define NKF_RELEASE_DATE "2008-02-01"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2008 Kono, Furukawa, Naruse, mastodon"
@@ -322,7 +323,6 @@ static nkf_encoding *input_encoding = NULL;
 static nkf_encoding *output_encoding = NULL;
 
 static  nkf_char     kanji_convert(FILE *f);
-static  nkf_char     h_conv(FILE *f,nkf_char c2,nkf_char c1);
 #if defined(UTF8_INPUT_ENABLE) || defined(UTF8_OUTPUT_ENABLE)
 /* UCS Mapping
  * 0: Shift_JIS, eucJP-ascii
@@ -350,12 +350,6 @@ static  void    w_status(struct input_code *, nkf_char);
 static  int     output_bom_f = FALSE;
 static  int     output_endian = ENDIAN_BIG;
 #endif
-static  void    fold_conv(nkf_char c2,nkf_char c1);
-static  void    eol_conv(nkf_char c2,nkf_char c1);
-static  void    z_conv(nkf_char c2,nkf_char c1);
-static  void    rot_conv(nkf_char c2,nkf_char c1);
-static  void    hira_conv(nkf_char c2,nkf_char c1);
-static  void    iso2022jp_check_conv(nkf_char c2,nkf_char c1);
 
 static  void    std_putc(nkf_char c);
 static  nkf_char     std_getc(FILE *f);
@@ -713,7 +707,7 @@ static nkf_encoding *nkf_enc_find(const char *name)
     nkf_enc_to_index(enc) == CP50221 ||\
     nkf_enc_to_index(enc) == CP50222)
 
-#ifndef DEFAULT_ENCIDX
+#ifdef DEFAULT_CODE_LOCALE
 static char* nkf_locale_charmap()
 {
 #ifdef HAVE_LANGINFO_H
@@ -734,17 +728,18 @@ static nkf_encoding* nkf_locale_encoding()
     if (enc < 0) enc = 0;
     return enc;
 }
-#endif
+#endif /* DEFAULT_CODE_LOCALE */
 
 static nkf_encoding* nkf_default_encoding()
 {
-#ifdef DEFAULT_ENCIDX
-    return nkf_enc_from_index(DEFAULT_ENCIDX);
-#else
-    nkf_encoding *enc = nkf_locale_encoding();
+    nkf_encoding *enc = 0;
+#ifdef DEFAULT_CODE_LOCALE
+    enc = nkf_locale_encoding();
+#elif DEFAULT_ENCIDX
+    enc = nkf_enc_from_index(DEFAULT_ENCIDX);
+#endif
     if (enc <= 0) enc = nkf_enc_from_index(ISO_2022_JP);
     return enc;
-#endif
 }
 
 #ifndef PERL_XS
@@ -836,11 +831,13 @@ void show_configuration(void)
 	   );
     fprintf(HELP_OUTPUT,
 	    "    Default output encoding:     "
-#ifdef DEFAULT_ENCIDX
+#ifdef DEFAULT_CODE_LOCALE
 	    "%s\n", nkf_enc_name(nkf_default_encoding())
-#else
+#elif DEFAULT_ENCIDX
 	    "%s (%s)\n", nkf_locale_encoding() ? "LOCALE" : "DEFAULT",
 	    nkf_enc_name(nkf_default_encoding())
+#else
+            "NONE"
 #endif
 	   );
     fprintf(HELP_OUTPUT,
@@ -6102,8 +6099,9 @@ int main(int argc, char **argv)
 #ifdef EASYWIN /*Easy Win */
     _BufferSize.y = 400;/*Set Scroll Buffer Size*/
 #endif
+#ifdef DEFAULT_CODE_LOCALE
     setlocale(LC_CTYPE, "");
-
+#endif
     for (argc--,argv++; (argc > 0) && **argv == '-'; argc--, argv++) {
         cp = (unsigned char *)*argv;
         options(cp);
