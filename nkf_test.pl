@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.27 2008/01/22 00:30:05 naruse Exp $
+# $Id: nkf_test.pl,v 1.28 2008/02/06 20:46:39 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -599,7 +599,7 @@ eofeof
 # Without -l, ISO-8859-1 was handled as X0201.
 
 printf "%-40s", "MIME ISO-8859-1 (Q)";
-    &test("$nkf -ml",$example{'mime.is8859'},$example{'mime.is8859.ans'});
+    &test("$nkf -jml",$example{'mime.is8859'},$example{'mime.is8859.ans'});
 
 # test for -f is not so simple.
 
@@ -875,7 +875,7 @@ $example{'test_data/slash.ans'} = unpack('u',<<'eofeof');
 eofeof
 
 printf "%-40s", "test_data/slash";
-    &test("$nkf  ",$example{'test_data/slash'},$example{'test_data/slash.ans'});
+    &test("$nkf -j",$example{'test_data/slash'},$example{'test_data/slash.ans'});
 # test_data/z1space-0
 
 $example{'test_data/z1space-0'} = unpack('u',<<'eofeof');
@@ -986,73 +986,73 @@ printf "%-40s", "Guess NL";
 
 printf "%-40s", "Convert NL to LF";
 &command_tests(
-	"$nkf -Lu","none",      "none",
-	"$nkf -Lu","\n",        "\n",
-	"$nkf -Lu","\n\n",      "\n\n",
-	"$nkf -Lu","\n\r",      "\n\n",
-	"$nkf -Lu","\n\r\n",    "\n\n",
-	"$nkf -Lu","\n.\n",     "\n.\n",
-	"$nkf -Lu","\n.\r",     "\n.\n",
-	"$nkf -Lu","\n.\r\n",   "\n.\n",
-	"$nkf -Lu","\r",        "\n",
-	"$nkf -Lu","\r\r",      "\n\n",
-	"$nkf -Lu","\r\r\n",    "\n\n",
-	"$nkf -Lu","\r.\n",     "\n.\n",
-	"$nkf -Lu","\r.\r",     "\n.\n",
-	"$nkf -Lu","\r.\r\n",   "\n.\n",
-	"$nkf -Lu","\r\n",      "\n",
-	"$nkf -Lu","\r\n\n",    "\n\n",
-	"$nkf -Lu","\r\n\r",    "\n\n",
-	"$nkf -Lu","\r\n\r\n",  "\n\n",
-	"$nkf -Lu","\r\n.\n",   "\n.\n",
-	"$nkf -Lu","\r\n.\r",   "\n.\n",
-	"$nkf -Lu","\r\n.\r\n", "\n.\n");
+	"$nkf -jLu","none",      "none",
+	"$nkf -jLu","\n",        "\n",
+	"$nkf -jLu","\n\n",      "\n\n",
+	"$nkf -jLu","\n\r",      "\n\n",
+	"$nkf -jLu","\n\r\n",    "\n\n",
+	"$nkf -jLu","\n.\n",     "\n.\n",
+	"$nkf -jLu","\n.\r",     "\n.\n",
+	"$nkf -jLu","\n.\r\n",   "\n.\n",
+	"$nkf -jLu","\r",        "\n",
+	"$nkf -jLu","\r\r",      "\n\n",
+	"$nkf -jLu","\r\r\n",    "\n\n",
+	"$nkf -jLu","\r.\n",     "\n.\n",
+	"$nkf -jLu","\r.\r",     "\n.\n",
+	"$nkf -jLu","\r.\r\n",   "\n.\n",
+	"$nkf -jLu","\r\n",      "\n",
+	"$nkf -jLu","\r\n\n",    "\n\n",
+	"$nkf -jLu","\r\n\r",    "\n\n",
+	"$nkf -jLu","\r\n\r\n",  "\n\n",
+	"$nkf -jLu","\r\n.\n",   "\n.\n",
+	"$nkf -jLu","\r\n.\r",   "\n.\n",
+	"$nkf -jLu","\r\n.\r\n", "\n.\n");
 
 printf "%-40s", "Convert NL to LF";
 &command_tests(
-	"$nkf -Lm","none",      "none",
-	"$nkf -Lm","\n",        "\r",
-	"$nkf -Lm","\n\n",      "\r\r",
-	"$nkf -Lm","\n\r",      "\r\r",
-	"$nkf -Lm","\n\r\n",    "\r\r",
-	"$nkf -Lm","\n.\n",     "\r.\r",
-	"$nkf -Lm","\n.\r",     "\r.\r",
-	"$nkf -Lm","\n.\r\n",   "\r.\r",
-	"$nkf -Lm","\r",        "\r",
-	"$nkf -Lm","\r\r",      "\r\r",
-	"$nkf -Lm","\r\r\n",    "\r\r",
-	"$nkf -Lm","\r.\n",     "\r.\r",
-	"$nkf -Lm","\r.\r",     "\r.\r",
-	"$nkf -Lm","\r.\r\n",   "\r.\r",
-	"$nkf -Lm","\r\n",      "\r",
-	"$nkf -Lm","\r\n\n",    "\r\r",
-	"$nkf -Lm","\r\n\r",    "\r\r",
-	"$nkf -Lm","\r\n\r\n",  "\r\r",
-	"$nkf -Lm","\r\n.\n",   "\r.\r",
-	"$nkf -Lm","\r\n.\r",   "\r.\r",
-	"$nkf -Lm","\r\n.\r\n", "\r.\r");
+	"$nkf -jLm","none",      "none",
+	"$nkf -jLm","\n",        "\r",
+	"$nkf -jLm","\n\n",      "\r\r",
+	"$nkf -jLm","\n\r",      "\r\r",
+	"$nkf -jLm","\n\r\n",    "\r\r",
+	"$nkf -jLm","\n.\n",     "\r.\r",
+	"$nkf -jLm","\n.\r",     "\r.\r",
+	"$nkf -jLm","\n.\r\n",   "\r.\r",
+	"$nkf -jLm","\r",        "\r",
+	"$nkf -jLm","\r\r",      "\r\r",
+	"$nkf -jLm","\r\r\n",    "\r\r",
+	"$nkf -jLm","\r.\n",     "\r.\r",
+	"$nkf -jLm","\r.\r",     "\r.\r",
+	"$nkf -jLm","\r.\r\n",   "\r.\r",
+	"$nkf -jLm","\r\n",      "\r",
+	"$nkf -jLm","\r\n\n",    "\r\r",
+	"$nkf -jLm","\r\n\r",    "\r\r",
+	"$nkf -jLm","\r\n\r\n",  "\r\r",
+	"$nkf -jLm","\r\n.\n",   "\r.\r",
+	"$nkf -jLm","\r\n.\r",   "\r.\r",
+	"$nkf -jLm","\r\n.\r\n", "\r.\r");
 
 printf "%-40s", "Convert NL to CRLF";
 &command_tests(
-	"$nkf -Lw","none",      "none",
-	"$nkf -Lw","\n",        "\r\n",
-	"$nkf -Lw","\n\n",      "\r\n\r\n",
-	"$nkf -Lw","\n\r",      "\r\n\r\n",
-	"$nkf -Lw","\n\r\n",    "\r\n\r\n",
-	"$nkf -Lw","\n.\n",     "\r\n.\r\n",
-	"$nkf -Lw","\n.\r",     "\r\n.\r\n",
-	"$nkf -Lw","\n.\r\n",   "\r\n.\r\n",
-	"$nkf -Lw","\r",        "\r\n",
-	"$nkf -Lw","\r\r",      "\r\n\r\n",
-	"$nkf -Lw","\r\r\n",    "\r\n\r\n",
-	"$nkf -Lw","\r.\n",     "\r\n.\r\n",
-	"$nkf -Lw","\r.\r",     "\r\n.\r\n",
-	"$nkf -Lw","\r.\r\n",   "\r\n.\r\n",
-	"$nkf -Lw","\r\n",      "\r\n",
-	"$nkf -Lw","\r\n\n",    "\r\n\r\n",
-	"$nkf -Lw","\r\n\r",    "\r\n\r\n",
-	"$nkf -Lw","\r\n\r\r\n",  "\r\n\r\n\r\n",
-	"$nkf -Lw","\r\n.\n",   "\r\n.\r\n",
-	"$nkf -Lw","\r\n.\r",   "\r\n.\r\n",
-	"$nkf -Lw","\r\n.\r\n", "\r\n.\r\n");
+	"$nkf -jLw","none",      "none",
+	"$nkf -jLw","\n",        "\r\n",
+	"$nkf -jLw","\n\n",      "\r\n\r\n",
+	"$nkf -jLw","\n\r",      "\r\n\r\n",
+	"$nkf -jLw","\n\r\n",    "\r\n\r\n",
+	"$nkf -jLw","\n.\n",     "\r\n.\r\n",
+	"$nkf -jLw","\n.\r",     "\r\n.\r\n",
+	"$nkf -jLw","\n.\r\n",   "\r\n.\r\n",
+	"$nkf -jLw","\r",        "\r\n",
+	"$nkf -jLw","\r\r",      "\r\n\r\n",
+	"$nkf -jLw","\r\r\n",    "\r\n\r\n",
+	"$nkf -jLw","\r.\n",     "\r\n.\r\n",
+	"$nkf -jLw","\r.\r",     "\r\n.\r\n",
+	"$nkf -jLw","\r.\r\n",   "\r\n.\r\n",
+	"$nkf -jLw","\r\n",      "\r\n",
+	"$nkf -jLw","\r\n\n",    "\r\n\r\n",
+	"$nkf -jLw","\r\n\r",    "\r\n\r\n",
+	"$nkf -jLw","\r\n\r\r\n",  "\r\n\r\n\r\n",
+	"$nkf -jLw","\r\n.\n",   "\r\n.\r\n",
+	"$nkf -jLw","\r\n.\r",   "\r\n.\r\n",
+	"$nkf -jLw","\r\n.\r\n", "\r\n.\r\n");
 # end
