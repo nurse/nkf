@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.172 2008/02/06 20:46:39 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.173 2008/02/06 22:14:13 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-02-07"
 #define COPY_RIGHT \
@@ -1579,7 +1579,9 @@ nkf_char nkf_utf8_to_unicode(int c1, int c2, int c3, int c4)
 #endif
 
 #ifdef UTF8_INPUT_ENABLE
-nkf_char w_iconv_common(nkf_char c1, nkf_char c0, const unsigned short *const *pp, nkf_char psize, nkf_char *p2, nkf_char *p1)
+static int unicode_to_jis_common2(nkf_char c1, nkf_char c0,
+				const unsigned short *const *pp, nkf_char psize,
+				nkf_char *p2, nkf_char *p1)
 {
     nkf_char c2;
     const unsigned short *p;
@@ -1613,7 +1615,7 @@ nkf_char w_iconv_common(nkf_char c1, nkf_char c0, const unsigned short *const *p
     return 0;
 }
 
-nkf_char unicode_to_jis_common(nkf_char c2, nkf_char c1, nkf_char c0, nkf_char *p2, nkf_char *p1)
+static nkf_char unicode_to_jis_common(nkf_char c2, nkf_char c1, nkf_char c0, nkf_char *p2, nkf_char *p1)
 {
     const unsigned short *const *pp;
     const unsigned short *const *const *ppp;
@@ -1686,7 +1688,7 @@ nkf_char unicode_to_jis_common(nkf_char c2, nkf_char c1, nkf_char c0, nkf_char *
 	    ms_ucs_map_f == UCS_MAP_MS ? utf8_to_euc_2bytes_ms :
 	    ms_ucs_map_f == UCS_MAP_CP10001 ? utf8_to_euc_2bytes_mac :
 	    utf8_to_euc_2bytes;
-	ret =  w_iconv_common(c2, c1, pp, sizeof_utf8_to_euc_2bytes, p2, p1);
+	ret =  unicode_to_jis_common2(c2, c1, pp, sizeof_utf8_to_euc_2bytes, p2, p1);
     }else if(c0 < 0xF0){
 	if(no_best_fit_chars_f){
 	    if(ms_ucs_map_f == UCS_MAP_CP932){
@@ -1753,7 +1755,7 @@ nkf_char unicode_to_jis_common(nkf_char c2, nkf_char c1, nkf_char c0, nkf_char *
 	    ms_ucs_map_f == UCS_MAP_MS ? utf8_to_euc_3bytes_ms :
 	    ms_ucs_map_f == UCS_MAP_CP10001 ? utf8_to_euc_3bytes_mac :
 	    utf8_to_euc_3bytes;
-	ret = w_iconv_common(c1, c0, ppp[c2 - 0xE0], sizeof_utf8_to_euc_C2, p2, p1);
+	ret = unicode_to_jis_common2(c1, c0, ppp[c2 - 0xE0], sizeof_utf8_to_euc_C2, p2, p1);
     }else return -1;
 #ifdef SHIFTJIS_CP932
     if (!ret && !cp932inv_f && is_eucg3(*p2)) {
@@ -2029,7 +2031,7 @@ static size_t unicode_iconv(nkf_char wc)
     if (wc < 0x80) {
 	c2 = 0;
 	c1 = wc;
-    }else if ((wc>>3) == 27) {
+    }else if ((wc>>11) == 27) {
 	/* unpaired surrogate */
 	return NKF_ICONV_INVALID_CODE_RANGE;
     }else if (wc < 0xFFFF) {
@@ -2226,7 +2228,7 @@ void e_oconv(nkf_char c2, nkf_char c1)
         w16e_conv(c1, &c2, &c1);
         if (c2 == 0 && nkf_char_unicode_p(c1)){
 	    c2 = c1 & VALUE_MASK;
-	    if (x0212_f && 0xE000 <= c2 && c2 <= 0xE757) {
+	    if (x0212_f && ms_ucs_map_f && 0xE000 <= c2 && c2 <= 0xE757) {
 		/* eucJP-ms UDC */
 		c1 &= 0xFFF;
 		c2 = c1 / 94;
@@ -2395,9 +2397,6 @@ void w_oconv(nkf_char c2, nkf_char c1)
 
     if (c2 == 0) {
         (*o_putc)(c1);
-    } else if (c2 == ISO_8859_1) {
-	(*o_putc)(0xC2 + (c1 >= 0x40));
-	(*o_putc)(c1 + 0x40);
     } else {
 	val = e2w_conv(c2, c1);
         if (val){
@@ -2428,10 +2427,7 @@ void w_oconv16(nkf_char c2, nkf_char c1)
         return;
     }
 
-    if (c2 == ISO_8859_1) {
-        c2 = 0;
-        c1 |= 0x80;
-    } else if (c2 == 0 && nkf_char_unicode_p(c1)) {
+    if (c2 == 0 && nkf_char_unicode_p(c1)) {
         if (nkf_char_unicode_bmp_p(c1)) {
             c2 = (c1 >> 8) & 0xff;
             c1 &= 0xff;
