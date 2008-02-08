@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.175 2008/02/07 19:59:13 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.176 2008/02/08 11:37:12 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-02-07"
 #define COPY_RIGHT \
@@ -294,6 +294,7 @@ struct {
      && (c != '(') && (c != ')') && (c != '.') && (c != 0x22)))
 
 #define is_ibmext_in_sjis(c2) (CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END)
+#define nkf_byte_jisx0201_katakana_p(c) (SP <= c && c < (0xE0&0x7F))
 
 #define         HOLD_SIZE       1024
 #if defined(INT_IS_SHORT)
@@ -5128,10 +5129,23 @@ nkf_char noconvert(FILE *f)
 }
 #endif
 
+#define NEXT continue        /* no output, get next */
+#define SKIP c2=0;continue        /* no output, get next */
+#define MORE c2=c1;continue  /* need one more byte */
+#define SEND ;               /* output c1 and c2, get next */
+#define LAST break           /* end of loop, go closing  */
+#define set_input_mode(mode) do { \
+    input_mode = mode; \
+    shift_mode = 0; \
+    set_input_codename("ISO-2022-JP"); \
+    debug("ISO-2022-JP"); \
+} while (0)
+
 int kanji_convert(FILE *f)
 {
     nkf_char c1=0, c2=0, c3=0, c4=0;
-    int shift_mode =  FALSE; /* TRUE or FALSE or JIS_X_0201_1976_K */
+    int shift_mode = 0; /* 0, 1, 2, 3 */
+    char g2 = 0;
     int is_8bit = FALSE;
 
     if (input_encoding && !nkf_enc_asciicompat(input_encoding)) {
@@ -5140,12 +5154,6 @@ int kanji_convert(FILE *f)
 
     input_mode = ASCII;
     output_mode = ASCII;
-
-#define NEXT continue        /* no output, get next */
-#define SKIP c2=0;continue        /* no output, get next */
-#define MORE c2=c1;continue  /* need one more byte */
-#define SEND ;               /* output c1 and c2, get next */
-#define LAST break           /* end of loop, go closing  */
 
     if (module_connection() < 0) {
 #if !defined(PERL_XS) && !defined(WIN32DLL)
@@ -5183,16 +5191,19 @@ int kanji_convert(FILE *f)
 	if (!input_encoding)
 #endif
 	    code_status(c1);
-        if (c2) {
-            /* second byte */
-            if (c2 > DEL) {
-                /* in case of 8th bit is on */
-                if (!estab_f&&!mime_decode_mode) {
-                    /* in case of not established yet */
-                    /* It is still ambiguious */
-                    if (h_conv(f, c2, c1)==EOF)
-                        LAST;
-		    SKIP;
+	if (c2) {
+	    /* second byte */
+	    if (c2 > DEL) {
+		/* in case of 8th bit is on */
+		if (!estab_f&&!mime_decode_mode) {
+		    /* in case of not established yet */
+		    /* It is still ambiguious */
+		    if (h_conv(f, c2, c1)==EOF) {
+			LAST;
+		    }
+		    else {
+			SKIP;
+		    }
 		}
 		else {
 		    /* in case of already established */
@@ -5204,8 +5215,10 @@ int kanji_convert(FILE *f)
 		    }
 		}
 	    }
-	    /* 2nd byte of 7 bit code or SJIS */
-	    SEND;
+	    else {
+		/* 2nd byte of 7 bit code or SJIS */
+		SEND;
+	    }
 	}
 	else {
 	    /* first byte */
@@ -5242,7 +5255,7 @@ int kanji_convert(FILE *f)
 		    if (iso8859_f) {
 			c2 = ISO_8859_1;
 			SEND;
-		    } else if (SP <= c1 && c1 < (0xE0&0x7F)){
+		    } else if (nkf_byte_jisx0201_katakana_p(c1)){
 			/* output 1 shifted byte */
 			c2 = JIS_X_0201_1976_K;
 			SEND;
@@ -5279,31 +5292,37 @@ int kanji_convert(FILE *f)
 		    SEND;
 		}
 	    } else if (c1 == SI && (!is_8bit || mime_decode_mode)) {
-		shift_mode = FALSE;
+		shift_mode = 0;
 		SKIP;
 	    } else if (c1 == SO && (!is_8bit || mime_decode_mode)) {
-		shift_mode = TRUE;
+		shift_mode = 1;
 		SKIP;
-            } else if (c1 == ESC && (!is_8bit || mime_decode_mode)) {
-                if ((c1 = (*i_getc)(f)) == EOF) {
-                    /*  (*oconv)(0, ESC); don't send bogus code */
-                    LAST;
-                } else if (c1 == '$') {
-                    if ((c1 = (*i_getc)(f)) == EOF) {
-                        /*
-                        (*oconv)(0, ESC); don't send bogus code
-                        (*oconv)(0, '$'); */
-                        LAST;
-                    } else if (c1 == '@'|| c1 == 'B') {
-                        /* This is kanji introduction */
-                        input_mode = JIS_X_0208;
-                        shift_mode = FALSE;
-                        set_input_codename("ISO-2022-JP");
-#ifdef CHECK_OPTION
-                        debug("ISO-2022-JP");
-#endif
+	    } else if (c1 == ESC && (!is_8bit || mime_decode_mode)) {
+		if ((c1 = (*i_getc)(f)) == EOF) {
+		    /*  (*oconv)(0, ESC); don't send bogus code */
+		    LAST;
+		}
+		else if (c1 == '&') {
+		    /* IRR */
+		    if ((c1 = (*i_getc)(f)) == EOF) {
+			LAST;
+		    } else {
+			SKIP;
+		    }
+		}
+		else if (c1 == '$') {
+		    /* GZDMx */
+		    if ((c1 = (*i_getc)(f)) == EOF) {
+			/* don't send bogus code
+			   (*oconv)(0, ESC);
+			   (*oconv)(0, '$'); */
+			LAST;
+		    } else if (c1 == '@' || c1 == 'B') {
+			/* JIS X 0208 */
+			set_input_mode(JIS_X_0208);
 			SKIP;
 		    } else if (c1 == '(') {
+			/* GZDM4 */
 			if ((c1 = (*i_getc)(f)) == EOF) {
 			    /* don't send bogus code
 			       (*oconv)(0, ESC);
@@ -5312,23 +5331,19 @@ int kanji_convert(FILE *f)
 			     */
 			    LAST;
 			} else if (c1 == '@'|| c1 == 'B') {
-			    /* This is kanji introduction */
-			    input_mode = JIS_X_0208;
-			    shift_mode = FALSE;
+			    /* JIS X 0208 */
+			    set_input_mode(JIS_X_0208);
 			    SKIP;
 #ifdef X0212_ENABLE
 			} else if (c1 == 'D'){
-			    input_mode = JIS_X_0212;
-			    shift_mode = FALSE;
+			    set_input_mode(JIS_X_0212);
 			    SKIP;
 #endif /* X0212_ENABLE */
 			} else if (c1 == 'O' || c1 == 'Q'){
-			    input_mode = JIS_X_0213_1;
-			    shift_mode = FALSE;
+			    set_input_mode(JIS_X_0213_1);
 			    SKIP;
 			} else if (c1 == 'P'){
-			    input_mode = JIS_X_0213_2;
-			    shift_mode = FALSE;
+			    set_input_mode(JIS_X_0213_2);
 			    SKIP;
 			} else {
 			    /* could be some special code */
@@ -5341,7 +5356,7 @@ int kanji_convert(FILE *f)
 		    } else if (broken_f&0x2) {
 			/* accept any ESC-(-x as broken code ... */
 			input_mode = JIS_X_0208;
-			shift_mode = FALSE;
+			shift_mode = 0;
 			SKIP;
 		    } else {
 			(*oconv)(0, ESC);
@@ -5350,48 +5365,67 @@ int kanji_convert(FILE *f)
 			SKIP;
 		    }
 		} else if (c1 == '(') {
+		    /* GZD4 */
 		    if ((c1 = (*i_getc)(f)) == EOF) {
 			/* don't send bogus code
 			   (*oconv)(0, ESC);
 			   (*oconv)(0, '('); */
 			LAST;
-		    } else {
-			if (c1 == 'I') {
-			    /* This is X0201 kana introduction */
-			    input_mode = JIS_X_0201_1976_K; shift_mode = JIS_X_0201_1976_K;
-			    SKIP;
-			} else if (c1 == 'B' || c1 == 'J' || c1 == 'H') {
-			    /* This is X0208 kanji introduction */
-			    input_mode = ASCII; shift_mode = FALSE;
-			    SKIP;
-			} else if (broken_f&0x2) {
-			    input_mode = ASCII; shift_mode = FALSE;
-			    SKIP;
-			} else {
-                            (*oconv)(0, ESC);
-                            (*oconv)(0, '(');
-                            /* maintain various input_mode here */
-                            SEND;
-                        }
-                    }
-               } else if ( c1 == 'N' || c1 == 'n'){
-                   /* SS2 */
-                   c4 = (*i_getc)(f);  /* skip SS2 */
-                   if ( (SP<=c4 && c4 < 0x60) || (0xa0<=c4 && c4 < 0xe0)){
-                       c1 = c4;
-                       c2 = JIS_X_0201_1976_K;
-                       SEND;
-                   }else{
-                       (*i_ungetc)(c4, f);
-                       /* lonely ESC  */
-                       (*oconv)(0, ESC);
-                       SEND;
-                   }
-                } else {
-                    /* lonely ESC  */
-                    (*oconv)(0, ESC);
-                    SEND;
-                }
+		    }
+		    else if (c1 == 'I') {
+			/* JIS X 0201 Katakana */
+			set_input_mode(JIS_X_0201_1976_K);
+			SKIP;
+		    }
+		    else if (c1 == 'B' || c1 == 'J' || c1 == 'H') {
+			/* ISO-646IRV:1983 or JIS X 0201 Roman or JUNET */
+			set_input_mode(ASCII);
+			SKIP;
+		    }
+		    else if (broken_f&0x2) {
+			set_input_mode(ASCII);
+			SKIP;
+		    }
+		    else {
+			(*oconv)(0, ESC);
+			(*oconv)(0, '(');
+			SEND;
+		    }
+		}
+		else if (c1 == '.') {
+		    /* G2D6 */
+		    if ((c1 = (*i_getc)(f)) == EOF) {
+			LAST;
+		    }
+		    else if (c1 == 'A') {
+			/* ISO-8859-1 */
+			g2 = ISO_8859_1;
+			SKIP;
+		    }
+		    else {
+			(*oconv)(0, ESC);
+			(*oconv)(0, '.');
+			SEND;
+		    }
+		}
+		else if (c1 == 'N') {
+		    /* SS2 */
+		    c1 = (*i_getc)(f);
+		    if (g2 == ISO_8859_1) {
+			c2 = ISO_8859_1;
+			SEND;
+		    }else{
+			(*i_ungetc)(c1, f);
+			/* lonely ESC  */
+			(*oconv)(0, ESC);
+			SEND;
+		    }
+		}
+		else {
+		    /* lonely ESC  */
+		    (*oconv)(0, ESC);
+		    SEND;
+		}
 	    } else if (c1 == ESC && iconv == s_iconv) {
 		/* ESC in Shift_JIS */
 		if ((c1 = (*i_getc)(f)) == EOF) {
@@ -5400,32 +5434,33 @@ int kanji_convert(FILE *f)
 		} else if (c1 == '$') {
 		    /* J-PHONE emoji */
 		    if ((c1 = (*i_getc)(f)) == EOF) {
-			/*
-			   (*oconv)(0, ESC); don't send bogus code
-			   (*oconv)(0, '$'); */
 			LAST;
-		    } else {
-			if (('E' <= c1 && c1 <= 'G') ||
-			    ('O' <= c1 && c1 <= 'Q')) {
-			    /*
-			       NUM : 0 1 2 3 4 5
-			       BYTE: G E F O P Q
-			       C%7 : 1 6 0 2 3 4
-			       C%7 : 0 1 2 3 4 5 6
-			       NUM : 2 0 3 4 5 X 1
-			     */
-			    static const char jphone_emoji_first_table[7] = {2, 0, 3, 4, 5, 0, 1};
-			    c3 = nkf_char_unicode_new((jphone_emoji_first_table[c1 % 7] << 8) - SP + 0xE000);
-			    while ((c1 = (*i_getc)(f)) != EOF) {
-				if (SP <= c1 && c1 <= 'z') {
-				    (*oconv)(0, c1 + c3);
-				} else break; /* c1 == SO */
-			    }
+		    } else if (('E' <= c1 && c1 <= 'G') ||
+			       ('O' <= c1 && c1 <= 'Q')) {
+			/*
+			   NUM : 0 1 2 3 4 5
+			   BYTE: G E F O P Q
+			   C%7 : 1 6 0 2 3 4
+			   C%7 : 0 1 2 3 4 5 6
+			   NUM : 2 0 3 4 5 X 1
+			 */
+			static const int jphone_emoji_first_table[7] =
+			{0xE1E0, 0xDFE0, 0xE2E0, 0xE3E0, 0xE4E0, 0xDFE0, 0xE0E0};
+			c3 = nkf_char_unicode_new(jphone_emoji_first_table[c1 % 7]);
+			if ((c1 = (*i_getc)(f)) == EOF) LAST;
+			while (SP <= c1 && c1 <= 'z') {
+			    (*oconv)(0, c1 + c3);
+			    if ((c1 = (*i_getc)(f)) == EOF) LAST;
 			}
+			SKIP;
 		    }
-		    if (c1 == EOF) LAST;
-		    SKIP;
-		} else {
+		    else {
+			(*oconv)(0, ESC);
+			(*oconv)(0, '$');
+			SEND;
+		    }
+		}
+		else {
 		    /* lonely ESC  */
 		    (*oconv)(0, ESC);
 		    SEND;
@@ -5496,8 +5531,6 @@ int kanji_convert(FILE *f)
 		0x7F <= c2 && c2 <= 0x92 &&
 		0x21 <= c1 && c1 <= 0x7E) {
 		/* CP932 UDC */
-		if(c1 == 0x7F)
-		    SKIP;
 		c1 = nkf_char_unicode_new((c2 - 0x7F) * 94 + c1 - 0x21 + 0xE000);
 		c2 = 0;
 	    }
