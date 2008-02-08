@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.173 2008/02/06 22:14:13 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.174 2008/02/07 19:25:29 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-02-07"
 #define COPY_RIGHT \
@@ -93,10 +93,12 @@ enum nkf_encodings {
     CP50222,
     ISO_2022_JP_1,
     ISO_2022_JP_3,
+    ISO_2022_JP_2004,
     SHIFT_JIS,
     WINDOWS_31J,
     CP10001,
     EUC_JP,
+    EUCJP_NKF,
     CP51932,
     EUCJP_MS,
     EUCJP_ASCII,
@@ -118,6 +120,7 @@ enum nkf_encodings {
     UTF_32BE_BOM,
     UTF_32LE,
     UTF_32LE_BOM,
+    BINARY,
     NKF_ENCODING_TABLE_SIZE,
     JIS_X_0201_1976_K = 0x1013, /* I */ /* JIS C 6220-1969 */
     /* JIS_X_0201_1976_R = 0x1014, */ /* J */ /* JIS C 6220-1969 */
@@ -128,7 +131,6 @@ enum nkf_encodings {
     /* JIS_X_0213_2000_1 = 0x1228, */ /* O */
     JIS_X_0213_2 = 0x1229, /* P */
     JIS_X_0213_1 = 0x1233, /* Q */
-    BINARY
 };
 
 nkf_char s_iconv(nkf_char c2, nkf_char c1, nkf_char c0);
@@ -172,10 +174,12 @@ nkf_encoding nkf_encoding_table[] = {
     {CP50222,		"CP50222",		&NkfEncodingISO_2022_JP},
     {ISO_2022_JP_1,	"ISO-2022-JP-1",	&NkfEncodingISO_2022_JP},
     {ISO_2022_JP_3,	"ISO-2022-JP-3",	&NkfEncodingISO_2022_JP},
+    {ISO_2022_JP_2004,	"ISO-2022-JP-2004",	&NkfEncodingISO_2022_JP},
     {SHIFT_JIS,		"Shift_JIS",		&NkfEncodingShift_JIS},
     {WINDOWS_31J,	"Windows-31J",		&NkfEncodingShift_JIS},
     {CP10001,		"CP10001",		&NkfEncodingShift_JIS},
     {EUC_JP,		"EUC-JP",		&NkfEncodingEUC_JP},
+    {EUCJP_NKF,		"eucJP-nkf",		&NkfEncodingEUC_JP},
     {CP51932,		"CP51932",		&NkfEncodingEUC_JP},
     {EUCJP_MS,		"eucJP-MS",		&NkfEncodingEUC_JP},
     {EUCJP_ASCII,	"eucJP-ASCII",		&NkfEncodingEUC_JP},
@@ -214,6 +218,7 @@ struct {
     {"CP50222",			CP50222},
     {"ISO-2022-JP-1",		ISO_2022_JP_1},
     {"ISO-2022-JP-3",		ISO_2022_JP_3},
+    {"ISO-2022-JP-2004",	ISO_2022_JP_2004},
     {"SHIFT_JIS",		SHIFT_JIS},
     {"SJIS",			SHIFT_JIS},
     {"WINDOWS-31J",		WINDOWS_31J},
@@ -223,6 +228,7 @@ struct {
     {"CP10001",			CP10001},
     {"EUCJP",			EUC_JP},
     {"EUC-JP",			EUC_JP},
+    {"EUCJP-NKF",		EUCJP_NKF},
     {"CP51932",			CP51932},
     {"EUC-JP-MS",		EUCJP_MS},
     {"EUCJP-MS",		EUCJP_MS},
@@ -447,9 +453,7 @@ static int cp932inv_f = TRUE;
 /* static nkf_char cp932_conv(nkf_char c2, nkf_char c1); */
 #endif /* SHIFTJIS_CP932 */
 
-#ifdef X0212_ENABLE
 static int x0212_f = FALSE;
-#endif
 static int x0213_f = FALSE;
 
 static unsigned char prefix_table[256];
@@ -1090,6 +1094,7 @@ static void set_input_encoding(nkf_encoding *enc)
     switch (nkf_enc_to_index(enc)) {
     case ISO_8859_1:
 	iso8859_f = TRUE;
+	break;
     case CP50220:
     case CP50221:
     case CP50222:
@@ -1101,14 +1106,14 @@ static void set_input_encoding(nkf_encoding *enc)
 #endif
 	break;
     case ISO_2022_JP_1:
-#ifdef X0212_ENABLE
 	x0212_f = TRUE;
-#endif
 	break;
     case ISO_2022_JP_3:
-#ifdef X0212_ENABLE
 	x0212_f = TRUE;
-#endif
+	x0213_f = TRUE;
+	break;
+    case ISO_2022_JP_2004:
+	x0212_f = TRUE;
 	x0213_f = TRUE;
 	break;
     case SHIFT_JIS:
@@ -1121,7 +1126,6 @@ static void set_input_encoding(nkf_encoding *enc)
 	ms_ucs_map_f = UCS_MAP_CP932;
 #endif
 	break;
-    case EUC_JP:
 	break;
     case CP10001:
 #ifdef SHIFTJIS_CP932
@@ -1131,6 +1135,10 @@ static void set_input_encoding(nkf_encoding *enc)
 	ms_ucs_map_f = UCS_MAP_CP10001;
 #endif
 	break;
+    case EUC_JP:
+    	break;
+    case EUCJP_NKF:
+    	break;
     case CP51932:
 #ifdef SHIFTJIS_CP932
 	cp51932_f = TRUE;
@@ -1218,17 +1226,13 @@ static void set_output_encoding(nkf_encoding *enc)
 #endif
 	break;
     case ISO_2022_JP_1:
-#ifdef X0212_ENABLE
 	x0212_f = TRUE;
-#endif
 #ifdef SHIFTJIS_CP932
 	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
 	break;
     case ISO_2022_JP_3:
-#ifdef X0212_ENABLE
 	x0212_f = TRUE;
-#endif
 	x0213_f = TRUE;
 #ifdef SHIFTJIS_CP932
 	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
@@ -1252,7 +1256,16 @@ static void set_output_encoding(nkf_encoding *enc)
 	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-	ms_ucs_map_f = UCS_MAP_CP932;
+	ms_ucs_map_f = UCS_MAP_ASCII;
+#endif
+	break;
+    case EUCJP_NKF:
+	x0212_f = FALSE;
+#ifdef SHIFTJIS_CP932
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
+#endif
+#ifdef UTF8_OUTPUT_ENABLE
+	ms_ucs_map_f = UCS_MAP_ASCII;
 #endif
 	break;
     case CP51932:
@@ -1264,17 +1277,13 @@ static void set_output_encoding(nkf_encoding *enc)
 #endif
 	break;
     case EUCJP_MS:
-#ifdef X0212_ENABLE
 	x0212_f = TRUE;
-#endif
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_MS;
 #endif
 	break;
     case EUCJP_ASCII:
-#ifdef X0212_ENABLE
 	x0212_f = TRUE;
-#endif
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_ASCII;
 #endif
@@ -1288,9 +1297,7 @@ static void set_output_encoding(nkf_encoding *enc)
 	break;
     case EUC_JISX0213:
     case EUC_JIS_2004:
-#ifdef X0212_ENABLE
 	x0212_f = TRUE;
-#endif
 	x0213_f = TRUE;
 #ifdef SHIFTJIS_CP932
 	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
@@ -1609,7 +1616,7 @@ static int unicode_to_jis_common2(nkf_char c1, nkf_char c0,
         c2 |= PREFIX_EUCG3;
     }
     if (c2 == SO) c2 = JIS_X_0201_1976_K;
-    c1 = val & 0x7f;
+    c1 = val & 0xFF;
     if (p2) *p2 = c2;
     if (p1) *p1 = c1;
     return 0;
@@ -2159,7 +2166,7 @@ void output_escape_sequence(int mode)
 	(*o_putc)(ESC);
 	(*o_putc)('$');
 	(*o_putc)('(');
-	(*o_putc)('O'); /* TODO */
+	(*o_putc)('Q');
     	break;
     case JIS_X_0213_2:
 	(*o_putc)(ESC);
@@ -2223,12 +2230,11 @@ void j_oconv(nkf_char c2, nkf_char c1)
 
 void e_oconv(nkf_char c2, nkf_char c1)
 {
-#ifdef NUMCHAR_OPTION
     if (c2 == 0 && nkf_char_unicode_p(c1)){
         w16e_conv(c1, &c2, &c1);
         if (c2 == 0 && nkf_char_unicode_p(c1)){
 	    c2 = c1 & VALUE_MASK;
-	    if (x0212_f && ms_ucs_map_f && 0xE000 <= c2 && c2 <= 0xE757) {
+	    if (x0212_f && 0xE000 <= c2 && c2 <= 0xE757) {
 		/* eucJP-ms UDC */
 		c1 &= 0xFFF;
 		c2 = c1 / 94;
@@ -2249,7 +2255,7 @@ void e_oconv(nkf_char c2, nkf_char c1)
 	    }
         }
     }
-#endif
+
     if (c2 == EOF) {
         (*o_putc)(EOF);
     } else if (c2 == 0) {
@@ -5823,7 +5829,7 @@ int options(unsigned char *cp)
 	    output_encoding = nkf_enc_from_index(ISO_2022_JP);
 	    continue;
 	case 'e':           /* AT&T EUC output */
-	    output_encoding = nkf_enc_from_index(EUC_JP);
+	    output_encoding = nkf_enc_from_index(EUCJP_NKF);
 	    continue;
 	case 's':           /* SJIS output */
 	    output_encoding = nkf_enc_from_index(WINDOWS_31J);
@@ -5953,7 +5959,7 @@ int options(unsigned char *cp)
 	    input_encoding = nkf_enc_from_index(ISO_2022_JP);
 	    continue;
 	case 'E':   /* EUC-JP input */
-	    input_encoding = nkf_enc_from_index(EUC_JP);
+	    input_encoding = nkf_enc_from_index(EUCJP_NKF);
 	    continue;
 	case 'S':   /* Windows-31J input */
 	    input_encoding = nkf_enc_from_index(WINDOWS_31J);
@@ -6168,9 +6174,7 @@ int main(int argc, char **argv)
 #ifdef EXEC_IO
 	exec_f = exec_f_back;
 #endif
-#ifdef X0212_ENABLE
 	x0212_f = x0212_f_back;
-#endif
 	x0213_f = x0213_f_back;
     }
 
