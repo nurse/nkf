@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
 ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.174 2008/02/07 19:25:29 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.175 2008/02/07 19:59:13 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-02-07"
 #define COPY_RIGHT \
@@ -215,6 +215,7 @@ struct {
     {"ISO2022JP-CP932",		CP50220},
     {"CP50220",			CP50220},
     {"CP50221",			CP50221},
+    {"CSISO2022JP",		CP50221},
     {"CP50222",			CP50222},
     {"ISO-2022-JP-1",		ISO_2022_JP_1},
     {"ISO-2022-JP-3",		ISO_2022_JP_3},
