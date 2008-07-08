@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.178 2008/05/21 20:41:06 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.179 2008/07/08 09:34:08 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-02-08"
 #define COPY_RIGHT \
@@ -915,7 +915,8 @@ get_backup_filename(const char *suffix, const char *filename)
 	}
 	backup_filename[j] = '\0';
     }else{
-	backup_filename = malloc(filename_length + strlen(suffix) + 1);
+	j = filename_length + strlen(suffix);
+	backup_filename = malloc(j + 1);
 	strcpy(backup_filename, filename);
 	strcat(backup_filename, suffix);
 	backup_filename[j] = '\0';
@@ -2501,6 +2502,7 @@ w_oconv16(nkf_char c2, nkf_char c1)
 	c1 = val & 0xff;
 	if (!val) return;
     }
+
     if (output_endian == ENDIAN_LITTLE){
 	(*o_putc)(c1);
 	(*o_putc)(c2);
@@ -6085,9 +6087,9 @@ options(unsigned char *cp)
 		    cp++;
 		    input_endian = ENDIAN_BIG;
 		}
-		enc_idx = enc_idx == UTF_16
-		    ? (output_endian == ENDIAN_LITTLE ? UTF_16LE : UTF_16BE)
-		    : (output_endian == ENDIAN_LITTLE ? UTF_32LE : UTF_32BE);
+		enc_idx = (enc_idx == UTF_16
+		    ? (input_endian == ENDIAN_LITTLE ? UTF_16LE : UTF_16BE)
+		    : (input_endian == ENDIAN_LITTLE ? UTF_32LE : UTF_32BE));
 		input_encoding = nkf_enc_from_index(enc_idx);
 	    }
 	    continue;
