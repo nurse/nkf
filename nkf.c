@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.180 2008/09/18 18:40:48 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.181 2008/10/04 10:15:10 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-02-08"
 #define COPY_RIGHT \
@@ -318,7 +318,7 @@ extern POINT _BufferSize;
 #endif
 
 struct input_code{
-    char *name;
+    const char *name;
     nkf_char stat;
     nkf_char score;
     nkf_char index;
@@ -328,7 +328,7 @@ struct input_code{
     int _file_stat;
 };
 
-static char *input_codename = NULL; /* NULL: unestablished, "": BINARY */
+static const char *input_codename = NULL; /* NULL: unestablished, "": BINARY */
 static nkf_encoding *input_encoding = NULL;
 static nkf_encoding *output_encoding = NULL;
 
@@ -438,7 +438,7 @@ static nkf_char (*iconv_for_check)(nkf_char c2,nkf_char c1,nkf_char c0) = 0;
 #endif
 
 static int guess_f = 0; /* 0: OFF, 1: ON, 2: VERBOSE */
-static  void    set_input_codename(char *codename);
+static  void    set_input_codename(const char *codename);
 
 #ifdef EXEC_IO
 static int exec_f = 0;
@@ -3501,7 +3501,7 @@ z_conv(nkf_char c2, nkf_char c1)
 
     if (alpha_f&8 && c2 == 0) {
 	/* HTML Entity */
-	char *entity = 0;
+	const char *entity = 0;
 	switch (c1){
 	case '>': entity = "&gt;"; break;
 	case '<': entity = "&lt;"; break;
@@ -3984,7 +3984,7 @@ debug(const char *str)
 #endif
 
 static void
-set_input_codename(char *codename)
+set_input_codename(const char *codename)
 {
     if (!input_codename) {
 	input_codename = codename;
@@ -3993,7 +3993,7 @@ set_input_codename(char *codename)
     }
 }
 
-static char*
+static const char*
 get_guessed_code(void)
 {
     if (input_codename && !*input_codename) {
