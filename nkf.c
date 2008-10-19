@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.181 2008/10/04 10:15:10 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.182 2008/10/19 09:32:59 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-02-08"
 #define COPY_RIGHT \
@@ -41,6 +41,10 @@
 #include "config.h"
 #include "nkf.h"
 #include "utf8tbl.h"
+#ifdef __WIN32__
+#include <windows.h>
+#include <locale.h>
+#endif
 
 /* state of output_mode and input_mode
 
@@ -718,7 +722,16 @@ nkf_locale_charmap()
 #ifdef HAVE_LANGINFO_H
     return nl_langinfo(CODESET);
 #elif defined(__WIN32__)
-    return sprintf("CP%d", GetACP());
+    char buf[16];
+    char *str;
+    int len = sprintf(buf, "CP%d", GetACP());
+    if (len > 0) {
+      str = malloc(len + 1);
+      strcpy(str, buf);
+      str[len] = '\0';
+      return str;
+    }
+    else return NULL;
 #else
     return NULL;
 #endif
