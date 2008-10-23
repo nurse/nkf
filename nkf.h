@@ -2,7 +2,7 @@
  * 
  * nkf.h - Header file for nkf
  * 
- * $Id: nkf.h,v 1.3 2008/02/01 09:07:56 naruse Exp $
+ * $Id: nkf.h,v 1.4 2008/10/22 18:27:57 naruse Exp $
  */
 
 #ifndef NKF_H
@@ -145,7 +145,7 @@ void  setbinmode(FILE *fp)
 
 #ifdef DEFAULT_CODE_LOCALE
 
-#ifndef __WIN32__ /* not win32 is posix */
+#ifndef __WIN32__ /* not win32 should be posix */
 #ifndef HAVE_LANGINFO_H
 #define HAVE_LANGINFO_H
 #endif

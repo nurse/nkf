@@ -5,6 +5,10 @@
 #define CLASS_DECLSPEC
 #endif
 
+#ifndef LPSTR
+#include <windows.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -13,7 +17,7 @@ extern "C" {
 #endif /*__BORLANDC__*/
 /* uminchu nkf32103a.lzh 1.00 */
 void CALLBACK CLASS_DECLSPEC GetNkfVersion(LPSTR verStr);
-int CALLBACK CLASS_DECLSPEC SetNkfOption(LPCSTR optStr);
+int CALLBACK CLASS_DECLSPEC SetNkfOption(LPSTR optStr);
 void CALLBACK CLASS_DECLSPEC NkfConvert(LPSTR outStr, LPCSTR inStr);
 /* uminchu nkf32103a.lzh 1.02 */
 void CALLBACK CLASS_DECLSPEC ToHankaku(LPSTR inStr);
@@ -70,6 +74,9 @@ LPCSTR versionA;
 LPCSTR dateA;
 DWORD functions;
 };
+
+
+void reinitdll(void);
 #endif /*!defined(NKF32103A)*/
 
 #ifdef __cplusplus

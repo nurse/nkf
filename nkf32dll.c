@@ -53,7 +53,7 @@ wchar_t *guessbuffW = NULL;
 UINT guessCodePage = CP_OEMCP;
 DWORD guessdwFlags = MB_PRECOMPOSED;
 
-wchar_t *tounicode(char *p)
+wchar_t *tounicode(const char *p)
 {
 static wchar_t buff[GUESS];
     int sts;
@@ -182,14 +182,7 @@ void
 print_guessed_code (filename)
     char *filename;
 {
-    char *codename = "BINARY";
-    if (!is_inputcode_mixed) {
-        if (strcmp(input_codename, "") == 0) {
-            codename = "ASCII";
-        } else {
-            codename = input_codename;
-        }
-    }
+    const char *codename = get_guessed_code();
     if (filename != NULL) {
         guessbuffA = realloc(guessbuffA,(strlen(filename) + GUESS + 1) * sizeof (char) );
         sprintf(guessbuffA,"%s:%s", filename,codename);
@@ -204,20 +197,16 @@ void
 print_guessed_codeW (filename)
     wchar_t *filename;
 {
-    char *codename = "BINARY";
-    if (!is_inputcode_mixed) {
-        if (strcmp(input_codename, "") == 0) {
-            codename = "ASCII";
-        } else {
-            codename = input_codename;
-        }
-    }
+    const char *codename = get_guessed_code();
+    size_t size;
     if (filename != NULL) {
-        guessbuffW = realloc(guessbuffW,(wcslen(filename) + GUESS + 1) * sizeof (wchar_t) );
-        swprintf(guessbuffW,L"%s:%s",filename,tounicode(codename));
+	size = (wcslen(filename) + GUESS + 1) * sizeof (wchar_t);
+	guessbuffW = realloc(guessbuffW, size);
+	_snwprintf(guessbuffW, size, L"%s:%s", filename, tounicode(codename));
     } else {
-        guessbuffW = realloc(guessbuffW,(GUESS + 1) * sizeof (wchar_t));
-        swprintf(guessbuffW,L"%s",tounicode(codename));
+	size = (GUESS + 1) * sizeof (wchar_t);
+	guessbuffW = realloc(guessbuffW, size);
+	_snwprintf(guessbuffW, size, L"%s", tounicode(codename));
     }
 }
 #endif /*UNICODESUPPORT*/
@@ -236,8 +225,8 @@ print_guessed_codeW (filename)
  **
  **/
 
-void 
-reinitdll()
+void
+reinitdll(void)
 {
     cin = NULL;
     nin = -1;
