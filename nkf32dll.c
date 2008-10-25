@@ -6,9 +6,9 @@
 /* こちらのバージョンも更新してください。 */
 #define NKF_VERSIONW L"2.0.8"
 /* NKF_VERSION のワイド文字 */
-#define DLL_VERSION   "2.0.8.0 1"
+#define DLL_VERSION   "2.0.8.0 2"
 /* DLLが返す */
-#define DLL_VERSIONW L"2.0.8.0 1"
+#define DLL_VERSIONW L"2.0.8.0 2"
 /* DLLが返す DLL_VERSION のワイド文字 */
 
 /* nkf32.dll main */
@@ -320,27 +320,38 @@ BOOL WINAPI GetNkfVersionSafeW(LPWSTR verStr,DWORD nBufferLength /*in TCHARs*/,L
 #endif /*UNICODESUPPORT*/
 }
 
+static LPSTR optStr0 = NULL;
+
 int CALLBACK SetNkfOption(LPSTR optStr)
 {
     LPSTR p;
+    int len;
 
     if ( *optStr == '-' ) {
-        reinit();
-        options(optStr);
+        len = strlen(optStr) + 1;
+        p = realloc(optStr0,len);
+        strcpy(p,optStr);
     } else {
-        p = malloc(strlen(optStr) + 2);
-        if ( p == NULL ) return -1;
+        len = strlen(optStr) + 2;
+        p = realloc(optStr0,len);
         *p = '-';
         strcpy(p + 1,optStr);
-        reinit();
-        options(p);
-        free(p);
     }
+    optStr0 = p;
     return 0;
+}
+
+void options0(void)
+{
+    reinit();
+    if ( optStr0 != NULL ) {
+        options(optStr0);
+    }
 }
 
 void CALLBACK NkfConvert(LPSTR outStr, LPCSTR inStr)
 {
+    options0();
     std_putc_mode = 2;
     cout = outStr;
     noutmax = -1;
@@ -355,6 +366,7 @@ void CALLBACK NkfConvert(LPSTR outStr, LPCSTR inStr)
 
 BOOL WINAPI NkfConvertSafe(LPSTR outStr,DWORD nOutBufferLength /*in Bytes*/,LPDWORD lpBytesReturned /*in Bytes*/, LPCSTR inStr,DWORD nInBufferLength /*in Bytes*/){
     if ( inStr == NULL ) return FALSE;
+    options0();
     std_putc_mode = 6;
     cout = outStr;
     noutmax = nOutBufferLength;
@@ -378,7 +390,6 @@ void CALLBACK ToHankaku(LPSTR inStr)
     p = malloc(len);
     if ( p == NULL ) return;
     memcpy(p,inStr,len);
-    reinit();
     options("-ZSs");
     NkfConvert(inStr,p);
     free(p);
@@ -386,34 +397,29 @@ void CALLBACK ToHankaku(LPSTR inStr)
 
 BOOL WINAPI ToHankakuSafe(LPSTR outStr,DWORD nOutBufferLength /*in Bytes*/,LPDWORD lpBytesReturned /*in Bytes*/,LPCSTR inStr,DWORD nInBufferLength /*in Bytes*/)
 {
-    reinit();
     options("-ZSs");
     return NkfConvertSafe(outStr,nOutBufferLength,lpBytesReturned,inStr,nInBufferLength);
 }
 
 void CALLBACK ToZenkakuKana(LPSTR outStr, LPCSTR inStr)
 {
-    reinit();
     options("-Ss");
     NkfConvert(outStr, inStr);
 }
 
 BOOL WINAPI ToZenkakuKanaSafe(LPSTR outStr,DWORD nOutBufferLength /*in Bytes*/,LPDWORD lpBytesReturned /*in Bytes*/,LPCSTR inStr,DWORD nInBufferLength /*in Bytes*/)
 {
-    reinit();
     options("-Ss");
     return NkfConvertSafe(outStr,nOutBufferLength,lpBytesReturned,inStr,nInBufferLength);
 }
 
 void CALLBACK EncodeSubject(LPSTR outStr ,LPCSTR inStr){
-    reinit();
     options("-jM");
     NkfConvert(outStr, inStr);
 }
 
 BOOL WINAPI EncodeSubjectSafe(LPSTR outStr,DWORD nOutBufferLength /*in Bytes*/,LPDWORD lpBytesReturned /*in Bytes*/,LPCSTR inStr,DWORD nInBufferLength /*in Bytes*/)
 {
-    reinit();
     options("-jM");
     return NkfConvertSafe(outStr,nOutBufferLength,lpBytesReturned,inStr,nInBufferLength);
 }
