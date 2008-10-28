@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.185 2008/10/28 13:42:25 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.186 2008/10/28 14:26:31 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-10-28"
 #define COPY_RIGHT \
@@ -5340,6 +5340,10 @@ kanji_convert(FILE *f)
 		/* 2nd byte of 7 bit code or SJIS */
 		SEND;
 	    }
+	}
+	else if (nkf_char_unicode_p(c1)) {
+	    (*oconv)(0, c1);
+	    NEXT;
 	}
 	else {
 	    /* first byte */
