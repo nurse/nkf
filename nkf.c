@@ -31,9 +31,9 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.184 2008/10/22 18:27:57 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.185 2008/10/28 13:42:25 naruse Exp $"
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2008-10-23"
+#define NKF_RELEASE_DATE "2008-10-28"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2008 Kono, Furukawa, Naruse, mastodon"
@@ -4113,7 +4113,7 @@ numchar_getc(FILE *f)
     nkf_char (*g)(FILE *) = i_ngetc;
     nkf_char (*u)(nkf_char c ,FILE *f) = i_nungetc;
     int i = 0, j;
-    nkf_char buf[8];
+    nkf_char buf[12];
     long c = -1;
 
     buf[i] = (*g)(f);
