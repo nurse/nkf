@@ -2,7 +2,7 @@
  * 
  * nkf.h - Header file for nkf
  * 
- * $Id: nkf.h,v 1.5 2008/11/07 02:37:21 naruse Exp $
+ * $Id: nkf.h,v 1.6 2008/11/07 02:43:43 naruse Exp $
  */
 
 #ifndef NKF_H
@@ -172,7 +172,6 @@ void  setbinmode(FILE *fp)
 #  define HAVE_LOCALE_H
 # endif
 #endif
-
 
 #ifdef HAVE_LANGINFO_H
 #include <langinfo.h>
