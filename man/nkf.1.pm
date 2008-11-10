@@ -330,9 +330,9 @@ Microsoft Version of EUC-JP.
 
 a.k.a. SJIS, MS-Kanji
 
-=item CP932
+=item Windows-31J
 
-a.k.a. Windows-31J
+a.k.a. CP932
 
 =item UTF-8
 
@@ -416,9 +416,9 @@ Overwrite B<original> listed files by filtered result.
 
 B<Note> --overwrite preserves timestamps of original files.
 
-=item B<--guess>
+=item B<--guess=[12]>
 
-Print guessed encoding.
+Print guessed encoding and newline. (2 is default, 1 is only encoding)
 
 =item B<--help>
 

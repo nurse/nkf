@@ -382,6 +382,7 @@ BOM 付きの UTF-8。B<-w8> または B<-W> と同じ。
 =item B<UTF8-MAC>
 
 UTF8-MAC。互換分解されたひらがな・カタカナ等を結合します。
+入力のみの対応です。
 
 =item B<UTF-16 UTF-16BE-BOM>
 

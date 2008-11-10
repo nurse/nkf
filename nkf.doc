@@ -233,6 +233,7 @@ OPTIONS
 
         UTF8-MAC
             UTF8-MAC。互換分解されたひらがな・カタカナ等を結合します。
+            入力のみの対応です。
 
         UTF-16 UTF-16BE-BOM
             BOM 有りで Big Endian の UTF-16。 -w16B, -W16B と同じ。
