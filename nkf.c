@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.191 2008/11/09 21:10:04 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.192 2008/11/09 23:09:22 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-11-10"
 #define COPY_RIGHT \
@@ -756,22 +756,15 @@ nkf_enc_find(const char *name)
 				nkf_enc_to_index(enc) == CP50222)
 
 #ifdef DEFAULT_CODE_LOCALE
-static char*
+static const char*
 nkf_locale_charmap()
 {
 #ifdef HAVE_LANGINFO_H
     return nl_langinfo(CODESET);
 #elif defined(__WIN32__)
-    char buf[16];
-    char *str;
-    int len = sprintf(buf, "CP%d", GetACP());
-    if (len > 0) {
-      str = nkf_malloc(len + 1);
-      strcpy(str, buf);
-      str[len] = '\0';
-      return str;
-    }
-    else return NULL;
+    static char buf[16];
+    sprintf(buf, "CP%d", GetACP());
+    return buf;
 #elif defined(__OS2__)
 # if defined(INT_IS_SHORT)
     /* OS/2 1.x */
@@ -787,16 +780,15 @@ nkf_locale_charmap()
         sprintf(buf, "CP%lu", ulCP[0]);
     return buf;
 # endif
-#else
-    return NULL;
 #endif
+    return NULL;
 }
 
 static nkf_encoding*
 nkf_locale_encoding()
 {
     nkf_encoding *enc = 0;
-    char *encname = nkf_locale_charmap();
+    const char *encname = nkf_locale_charmap();
     if (encname)
 	enc = nkf_enc_find(encname);
     return enc;
@@ -5885,8 +5877,7 @@ options(unsigned char *cp)
 		    overwrite_f = TRUE;
 		    preserve_time_f = TRUE;
 		    backup_f = TRUE;
-		    backup_suffix = nkf_malloc(strlen((char *) p) + 1);
-		    strcpy(backup_suffix, (char *) p);
+		    backup_suffix = (char *)p;
 		    continue;
 		}
 		if (strcmp(long_option[i].name, "in-place") == 0){
@@ -5900,8 +5891,7 @@ options(unsigned char *cp)
 		    overwrite_f = TRUE;
 		    preserve_time_f = FALSE;
 		    backup_f = TRUE;
-		    backup_suffix = nkf_malloc(strlen((char *) p) + 1);
-		    strcpy(backup_suffix, (char *) p);
+		    backup_suffix = (char *)p;
 		    continue;
 		}
 #endif
