@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.190 2008/11/09 20:34:04 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.191 2008/11/09 21:10:04 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-11-10"
 #define COPY_RIGHT \
@@ -664,6 +664,38 @@ static int             end_check;
 nkf_char std_gc_buf[STD_GC_BUFSIZE];
 nkf_char std_gc_ndx;
 
+static void *
+nkf_malloc(size_t size)
+{
+    void *ptr;
+
+    if (size == 0) size = 1;
+
+    ptr = malloc(size);
+    if (ptr == NULL) {
+	perror("can't malloc");
+	exit(EXIT_FAILURE);
+    }
+
+    return ptr;
+}
+
+static void *
+nkf_realloc(void *ptr, size_t size)
+{
+    if (size == 0) size = 1;
+
+    ptr = realloc(ptr, size);
+    if (ptr == NULL) {
+	perror("can't realloc");
+	exit(EXIT_FAILURE);
+    }
+
+    return ptr;
+}
+
+#define nkf_free(ptr) free(ptr)
+
 static int
 nkf_str_caseeql(const char *src, const char *target)
 {
@@ -734,7 +766,7 @@ nkf_locale_charmap()
     char *str;
     int len = sprintf(buf, "CP%d", GetACP());
     if (len > 0) {
-      str = malloc(len + 1);
+      str = nkf_malloc(len + 1);
       strcpy(str, buf);
       str[len] = '\0';
       return str;
@@ -938,12 +970,7 @@ get_backup_filename(const char *suffix, const char *filename)
     }
 
     if(asterisk_count){
-	backup_filename = malloc(strlen(suffix) + (asterisk_count * (filename_length - 1)) + 1);
-	if (!backup_filename){
-	    perror("Can't malloc backup filename.");
-	    return NULL;
-	}
-
+	backup_filename = nkf_malloc(strlen(suffix) + (asterisk_count * (filename_length - 1)) + 1);
 	for(i = 0, j = 0; suffix[i];){
 	    if(suffix[i] == '*'){
 		backup_filename[j] = '\0';
@@ -957,7 +984,7 @@ get_backup_filename(const char *suffix, const char *filename)
 	backup_filename[j] = '\0';
     }else{
 	j = filename_length + strlen(suffix);
-	backup_filename = malloc(j + 1);
+	backup_filename = nkf_malloc(j + 1);
 	strcpy(backup_filename, filename);
 	strcat(backup_filename, suffix);
 	backup_filename[j] = '\0';
@@ -4199,26 +4226,6 @@ numchar_ungetc(nkf_char c, FILE *f)
 
 #ifdef UNICODE_NORMALIZATION
 
-#define nkf_error(mes) nkf_error0(__FILE__, __LINE__, mes);
-
-static void
-nkf_error0(const char *file, int line, const char *mes)
-{
-    fprintf(stderr, "%s:%d: %s\n", file, line, mes);
-}
-
-static void *
-nkf_malloc(size_t n)
-{
-    void *ptr = malloc(n);
-    if (ptr == NULL) {
-	nkf_error("can't allocate memory");
-    }
-    return ptr;
-}
-
-#define nkf_free(ptr) free(ptr)
-
 typedef struct {
     unsigned char *ary;
     int max_length;
@@ -4398,11 +4405,7 @@ mime_getc(FILE *f)
 	    /* end Q encoding */
 	    input_mode = exit_mode;
 	    lwsp_count = 0;
-	    lwsp_buf = malloc((lwsp_size+5)*sizeof(char));
-	    if (lwsp_buf==NULL) {
-		perror("can't malloc");
-		return -1;
-	    }
+	    lwsp_buf = nkf_malloc((lwsp_size+5)*sizeof(char));
 	    while ((c1=(*i_getc)(f))!=EOF) {
 		switch (c1) {
 		case LF:
@@ -4435,12 +4438,7 @@ mime_getc(FILE *f)
 		    lwsp_buf[lwsp_count] = (unsigned char)c1;
 		    if (lwsp_count++>lwsp_size){
 			lwsp_size <<= 1;
-			lwsp_buf_new = realloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
-			if (lwsp_buf_new==NULL) {
-			    free(lwsp_buf);
-			    perror("can't realloc");
-			    return -1;
-			}
+			lwsp_buf_new = nkf_realloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
 			lwsp_buf = lwsp_buf_new;
 		    }
 		    continue;
@@ -4453,7 +4451,7 @@ mime_getc(FILE *f)
 		    i_ungetc(lwsp_buf[lwsp_count],f);
 		c1 = lwsp_buf[0];
 	    }
-	    free(lwsp_buf);
+	    nkf_free(lwsp_buf);
 	    return c1;
 	}
 	if (c1=='='&&c2<SP) { /* this is soft wrap */
@@ -4506,11 +4504,7 @@ mime_getc(FILE *f)
     if ((c1 == '?') && (c2 == '=')) {
 	input_mode = ASCII;
 	lwsp_count = 0;
-	lwsp_buf = malloc((lwsp_size+5)*sizeof(char));
-	if (lwsp_buf==NULL) {
-	    perror("can't malloc");
-	    return -1;
-	}
+	lwsp_buf = nkf_malloc((lwsp_size+5)*sizeof(char));
 	while ((c1=(*i_getc)(f))!=EOF) {
 	    switch (c1) {
 	    case LF:
@@ -4546,12 +4540,7 @@ mime_getc(FILE *f)
 		lwsp_buf[lwsp_count] = (unsigned char)c1;
 		if (lwsp_count++>lwsp_size){
 		    lwsp_size <<= 1;
-		    lwsp_buf_new = realloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
-		    if (lwsp_buf_new==NULL) {
-			free(lwsp_buf);
-			perror("can't realloc");
-			return -1;
-		    }
+		    lwsp_buf_new = nkf_realloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
 		    lwsp_buf = lwsp_buf_new;
 		}
 		continue;
@@ -4564,7 +4553,7 @@ mime_getc(FILE *f)
 		i_ungetc(lwsp_buf[lwsp_count],f);
 	    c1 = lwsp_buf[0];
 	}
-	free(lwsp_buf);
+	nkf_free(lwsp_buf);
 	return c1;
     }
   mime_c3_retry:
@@ -5049,15 +5038,9 @@ nkf_iconv_new(char *tocode, char *fromcode)
     nkf_iconv_t converter;
 
     converter->input_buffer_size = IOBUF_SIZE;
-    converter->input_buffer = malloc(converter->input_buffer_size);
-    if (converter->input_buffer == NULL)
-	perror("can't malloc");
-
+    converter->input_buffer = nkf_malloc(converter->input_buffer_size);
     converter->output_buffer_size = IOBUF_SIZE * 2;
-    converter->output_buffer = malloc(converter->output_buffer_size);
-    if (converter->output_buffer == NULL)
-	perror("can't malloc");
-
+    converter->output_buffer = nkf_malloc(converter->output_buffer_size);
     converter->cd = iconv_open(tocode, fromcode);
     if (converter->cd == (iconv_t)-1)
     {
@@ -5124,8 +5107,8 @@ nkf_iconv_convert(nkf_iconv_t *converter, FILE *input)
 static void
 nkf_iconv_close(nkf_iconv_t *convert)
 {
-    free(converter->inbuf);
-    free(converter->outbuf);
+    nkf_free(converter->inbuf);
+    nkf_free(converter->outbuf);
     iconv_close(converter->cd);
 }
 #endif
@@ -5902,7 +5885,7 @@ options(unsigned char *cp)
 		    overwrite_f = TRUE;
 		    preserve_time_f = TRUE;
 		    backup_f = TRUE;
-		    backup_suffix = malloc(strlen((char *) p) + 1);
+		    backup_suffix = nkf_malloc(strlen((char *) p) + 1);
 		    strcpy(backup_suffix, (char *) p);
 		    continue;
 		}
@@ -5917,7 +5900,7 @@ options(unsigned char *cp)
 		    overwrite_f = TRUE;
 		    preserve_time_f = FALSE;
 		    backup_f = TRUE;
-		    backup_suffix = malloc(strlen((char *) p) + 1);
+		    backup_suffix = nkf_malloc(strlen((char *) p) + 1);
 		    strcpy(backup_suffix, (char *) p);
 		    continue;
 		}
@@ -6506,13 +6489,9 @@ main(int argc, char **argv)
 		if (file_out_f == TRUE) {
 #ifdef OVERWRITE
 		    if (overwrite_f){
-			outfname = malloc(strlen(origfname)
+			outfname = nkf_malloc(strlen(origfname)
 					  + strlen(".nkftmpXXXXXX")
 					  + 1);
-			if (!outfname){
-			    perror(origfname);
-			    return -1;
-			}
 			strcpy(outfname, origfname);
 #ifdef MSDOS
 			{
@@ -6626,7 +6605,7 @@ main(int argc, char **argv)
 			    fprintf(stderr, "Can't rename %s to %s\n",
 				    origfname, backup_filename);
 			}
-			free(backup_filename);
+			nkf_free(backup_filename);
 		    }else{
 #ifdef MSDOS
 			if (unlink(origfname)){
@@ -6639,7 +6618,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Can't rename %s to %s\n",
 				outfname, origfname);
 		    }
-		    free(outfname);
+		    nkf_free(outfname);
 		}
 #endif
 	    }
