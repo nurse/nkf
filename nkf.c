@@ -31,7 +31,7 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.189 2008/11/09 18:28:52 naruse Exp $"
+#define NKF_IDENT "$Id: nkf.c,v 1.190 2008/11/09 20:34:04 naruse Exp $"
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2008-11-10"
 #define COPY_RIGHT \
@@ -4199,51 +4199,78 @@ numchar_ungetc(nkf_char c, FILE *f)
 
 #ifdef UNICODE_NORMALIZATION
 
+#define nkf_error(mes) nkf_error0(__FILE__, __LINE__, mes);
+
+static void
+nkf_error0(const char *file, int line, const char *mes)
+{
+    fprintf(stderr, "%s:%d: %s\n", file, line, mes);
+}
+
+static void *
+nkf_malloc(size_t n)
+{
+    void *ptr = malloc(n);
+    if (ptr == NULL) {
+	nkf_error("can't allocate memory");
+    }
+    return ptr;
+}
+
+#define nkf_free(ptr) free(ptr)
+
 typedef struct {
-    unsigned char *buf;
+    unsigned char *ary;
     int max_length;
     int count;
-} nkf_buffer;
+} nkf_ary;
 
-static nkf_buffer *
-nkf_buf_new(int length)
+static nkf_ary *
+nkf_ary_new(int length)
 {
-    nkf_buffer *buf = malloc(sizeof(nkf_buffer));
-    buf->buf = malloc(length);
-    buf->max_length = length;
-    buf->count = 0;
-    return buf;
+    nkf_ary *ary = nkf_malloc(sizeof(nkf_ary));
+    ary->ary = nkf_malloc(length);
+    ary->max_length = length;
+    ary->count = 0;
+    return ary;
 } 
 
-#define nkf_buf_count(buf) ((buf)->count)
-#define nkf_buf_empty_p(buf) ((buf)->count == 0)
-
-static unsigned char
-nkf_buf_push(nkf_buffer *buf, nkf_char c)
+static void
+nkf_ary_dispose(nkf_ary *ary)
 {
-    assert(buf->max_length > buf->count);
-    buf->buf[buf->count++] = c;
-    return buf->count;
+    nkf_free(ary->ary);
+    nkf_free(ary);
 }
 
-static unsigned char
-nkf_buf_pop(nkf_buffer *buf)
-{
-    assert(0 < buf->count);
-    return buf->buf[--buf->count];
-}
+#define nkf_ary_length(ary) ((ary)->count)
+#define nkf_ary_empty_p(ary) ((ary)->count == 0)
 
 static unsigned char
-nkf_buf_at(nkf_buffer *buf, int index)
+nkf_ary_at(nkf_ary *ary, int index)
 {
-    assert(index <= buf->count);
-    return buf->buf[index];
+    assert(index <= ary->count);
+    return ary->ary[index];
 }
 
 static void
-nkf_buf_clear(nkf_buffer *buf)
+nkf_ary_clear(nkf_ary *ary)
 {
-    buf->count = 0;
+    ary->count = 0;
+}
+
+static unsigned char
+nkf_ary_push(nkf_ary *ary, nkf_char c)
+{
+    assert(ary->max_length > ary->count);
+    ary->ary[ary->count++] = c;
+    return ary->count;
+}
+
+static unsigned char
+nkf_ary_pop(nkf_ary *ary)
+{
+    assert(0 < ary->count);
+    return ary->ary[--ary->count];
 }
 
 /* Normalization Form C */
@@ -4252,49 +4279,52 @@ nfc_getc(FILE *f)
 {
     nkf_char (*g)(FILE *f) = i_nfc_getc;
     nkf_char (*u)(nkf_char c ,FILE *f) = i_nfc_ungetc;
-    nkf_buffer *buf = nkf_buf_new(9);
+    nkf_ary *buf = nkf_ary_new(9);
     const unsigned char *array;
     int lower=0, upper=NORMALIZATION_TABLE_LENGTH-1;
-    int c = (*g)(f);
+    nkf_char c = (*g)(f);
 
-    if (c == EOF || c > 0xFF || (c & 0xc0) != 0x80) return c;
+    if (c == EOF || c > 0xFF || (c & 0xc0) == 0x80) return c;
 
-    nkf_buf_push(buf, (unsigned char)c);
+    nkf_ary_push(buf, (unsigned char)c);
     do {
 	while (lower <= upper) {
 	    int mid = (lower+upper) / 2;
 	    int len;
 	    array = normalization_table[mid].nfd;
 	    for (len=0; len < NORMALIZATION_TABLE_NFD_LENGTH && array[len]; len++) {
-		if (array[len] != nkf_buf_at(buf, len)) {
-		    if (array[len] < nkf_buf_at(buf, len)) lower = mid + 1;
-		    else  upper = mid - 1;
-		    len = 0;
-		    break;
-		} else if (len >= nkf_buf_count(buf)) {
+		if (len >= nkf_ary_length(buf)) {
 		    c = (*g)(f);
 		    if (c == EOF) {
 			len = 0;
 			lower = 1, upper = 0;
 			break;
 		    }
-		    nkf_buf_push(buf, c);
+		    nkf_ary_push(buf, c);
+		}
+		if (array[len] != nkf_ary_at(buf, len)) {
+		    if (array[len] < nkf_ary_at(buf, len)) lower = mid + 1;
+		    else  upper = mid - 1;
+		    len = 0;
+		    break;
 		}
 	    }
 	    if (len > 0) {
 		int i;
 		array = normalization_table[mid].nfc;
-		nkf_buf_clear(buf);
+		nkf_ary_clear(buf);
 		for (i=0; i < NORMALIZATION_TABLE_NFC_LENGTH && array[i]; i++)
-		    nkf_buf_push(buf, array[i]);
+		    nkf_ary_push(buf, array[i]);
 		break;
 	    }
 	}
     } while (lower <= upper);
 
-    while (nkf_buf_count(buf) > 1) (*u)(nkf_buf_pop(buf), f);
+    while (nkf_ary_length(buf) > 1) (*u)(nkf_ary_pop(buf), f);
+    c = nkf_ary_pop(buf);
+    nkf_ary_dispose(buf);
 
-    return nkf_buf_pop(buf);
+    return c;
 }
 
 static nkf_char
