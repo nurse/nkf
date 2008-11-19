@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.30 2008/11/18 21:40:32 naruse Exp $
+# $Id: nkf_test.pl,v 1.31 2008/11/18 21:43:19 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -264,7 +264,8 @@ printf "%-40s", "SJIS  Input assumption";
 $example{'utf8_str_of_jis_second_level_kanji'} = "\xe9\xa4\x83\xe5\xad\x90";
 
 printf "%-40s", "UTF8_STR_OF_JIS_SECOND_LEVEL_KANJI";
-    &test("$nkf -g",$example{'utf8_str_of_jis_second_level_kanji'},"UTF-8\n");
+    &test("$nkf -w",$example{'utf8_str_of_jis_second_level_kanji'},
+	    $example{'utf8_str_of_jis_second_level_kanji'});
 
 # Broken JIS
 
