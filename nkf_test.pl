@@ -2,7 +2,7 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.29 2008/02/07 19:25:29 naruse Exp $
+# $Id: nkf_test.pl,v 1.30 2008/11/18 21:40:32 naruse Exp $
 #
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
@@ -259,6 +259,12 @@ printf "%-40s", "Ambiguous Case.";
 
 printf "%-40s", "SJIS  Input assumption";
     &test("$nkf -jSx",$example{'amb'},$example{'amb.sjis'});
+
+# UTF8_STR_OF_JIS_SECOND_LEVEL_KANJI
+$example{'utf8_str_of_jis_second_level_kanji'} = "\xe9\xa4\x83\xe5\xad\x90";
+
+printf "%-40s", "UTF8_STR_OF_JIS_SECOND_LEVEL_KANJI";
+    &test("$nkf -g",$example{'utf8_str_of_jis_second_level_kanji'},"UTF-8\n");
 
 # Broken JIS
 
