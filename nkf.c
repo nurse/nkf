@@ -33,7 +33,7 @@
  ***********************************************************************/
 #define NKF_IDENT "$Id: nkf.c,v 1.192 2008/11/09 23:09:22 naruse Exp $"
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2008-11-10"
+#define NKF_RELEASE_DATE "2008-12-25"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2008 Kono, Furukawa, Naruse, mastodon"
@@ -51,6 +51,10 @@
 # include <os2.h>
 #endif
 #include <assert.h>
+
+#define nkf_debug(fmt, ...) \
+    fprintf(stderr, "%s(%s)%d: " fmt "\n", __FILE__, __func__, __LINE__, __VA_ARGS__)
+
 
 /* state of output_mode and input_mode
 
@@ -4592,7 +4596,7 @@ mime_getc(FILE *f)
 static const char basis_64[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-#define MIMEOUT_BUF_LENGTH (60)
+#define MIMEOUT_BUF_LENGTH 74
 static struct {
     char buf[MIMEOUT_BUF_LENGTH+1];
     int count;
@@ -4902,11 +4906,36 @@ mime_putc(nkf_char c)
 		if (base64_count > 1
 		    && base64_count + mimeout_state.count > 76
 		    && mimeout_state.buf[0] != CR && mimeout_state.buf[0] != LF){
-		    PUT_NEWLINE((*o_mputc));
-		    base64_count = 0;
-		    if (!nkf_isspace(mimeout_state.buf[0])){
-			(*o_mputc)(SP);
-			base64_count++;
+		    static const char *str = "boundary=\"";
+		    static int len = 10;
+		    i = 0;
+
+		    for (; i < mimeout_state.count - len; ++i) {
+			if (!strncmp(mimeout_state.buf+i, str, len)) {
+			    i += len - 2;
+			    break;
+			}
+		    }
+
+		    if (i == 0 || i == mimeout_state.count - len) {
+			PUT_NEWLINE((*o_mputc));
+			base64_count = 0;
+			if (!nkf_isspace(mimeout_state.buf[0])){
+			    (*o_mputc)(SP);
+			    base64_count++;
+			}
+		    }
+		    else {
+			int j;
+			for (j = 0; j <= i; ++j) {
+			    (*o_mputc)(mimeout_state.buf[j]);
+			}
+			PUT_NEWLINE((*o_mputc));
+			base64_count = 1;
+			for (; j <= mimeout_state.count; ++j) {
+			    mimeout_state.buf[j - i] = mimeout_state.buf[j];
+			}
+			mimeout_state.count -= i;
 		    }
 		}
 		mimeout_state.buf[mimeout_state.count++] = (char)c;
