@@ -1,0 +1,9 @@
+nkf.o
+nkf
+nkf.exe
+nkf.in
+nkf.out
+nkf-*
+*~
+*.bad
+utf8tbl.o
