@@ -521,7 +521,6 @@ a_kuroe@kuroe.aoba.yokohama.jp (Akihiko Kuroe)
 kono@ie.u-ryukyu.ac.jp (Shinji Kono)
 GHG00637@nifty-serve.or.jp (COW)
 
-/* end */
 =head2 nkf 1.9-
 
 =over

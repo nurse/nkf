@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2008-11-10" "nkf 2.0.8" " "
+.TH nkf 1 "2008-11-19" "nkf 2.0.8" " "
 .SH "NAME"
 nkf \- ネットワーク用漢字コード変換フィルタ
 .SH "SYNOPSIS"
@@ -544,9 +544,8 @@ Kimihiko Sato <sato@sail.t.u\-tokyo.ac.jp>
 a_kuroe@kuroe.aoba.yokohama.jp (Akihiko Kuroe)
 kono@ie.u\-ryukyu.ac.jp (Shinji Kono)
 GHG00637@nifty\-serve.or.jp (\s-1COW\s0)
-.PP
-/* end */
-=head2 nkf 1.9\-
+.Sh "nkf 1.9\-"
+.IX Subsection "nkf 1.9-"
 .IP "河野真治" 4
 .PD 0
 .IP "Akio Furukawa" 4
