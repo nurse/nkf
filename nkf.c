@@ -31,12 +31,11 @@
  * 現在、nkf は SorceForge にてメンテナンスが続けられています。
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
-#define NKF_IDENT "$Id: nkf.c,v 1.192 2008/11/09 23:09:22 naruse Exp $"
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2008-12-25"
+#define NKF_RELEASE_DATE "2009-01-04"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
-    "Copyright (C) 2002-2008 Kono, Furukawa, Naruse, mastodon"
+    "Copyright (C) 2002-2009 Kono, Furukawa, Naruse, mastodon"
 
 #include "config.h"
 #include "nkf.h"
@@ -51,9 +50,6 @@
 # include <os2.h>
 #endif
 #include <assert.h>
-
-#define nkf_debug(fmt, ...) \
-    fprintf(stderr, "%s(%s)%d: " fmt "\n", __FILE__, __func__, __LINE__, __VA_ARGS__)
 
 
 /* state of output_mode and input_mode
@@ -669,7 +665,7 @@ nkf_char std_gc_buf[STD_GC_BUFSIZE];
 nkf_char std_gc_ndx;
 
 static void *
-nkf_malloc(size_t size)
+nkf_xmalloc(size_t size)
 {
     void *ptr;
 
@@ -685,7 +681,7 @@ nkf_malloc(size_t size)
 }
 
 static void *
-nkf_realloc(void *ptr, size_t size)
+nkf_xrealloc(void *ptr, size_t size)
 {
     if (size == 0) size = 1;
 
@@ -698,7 +694,7 @@ nkf_realloc(void *ptr, size_t size)
     return ptr;
 }
 
-#define nkf_free(ptr) free(ptr)
+#define nkf_xfree(ptr) free(ptr)
 
 static int
 nkf_str_caseeql(const char *src, const char *target)
@@ -903,8 +899,6 @@ show_configuration(void)
 {
     fprintf(HELP_OUTPUT,
 	    "Summary of my nkf " NKF_VERSION " (" NKF_RELEASE_DATE ") configuration:\n"
-	    "  nkf identity:\n"
-	    "    " NKF_IDENT "\n"
 	    "  Compile-time options:\n"
 	    "    Compiled at:                 " __DATE__ " " __TIME__ "\n"
 	   );
@@ -966,7 +960,7 @@ get_backup_filename(const char *suffix, const char *filename)
     }
 
     if(asterisk_count){
-	backup_filename = nkf_malloc(strlen(suffix) + (asterisk_count * (filename_length - 1)) + 1);
+	backup_filename = nkf_xmalloc(strlen(suffix) + (asterisk_count * (filename_length - 1)) + 1);
 	for(i = 0, j = 0; suffix[i];){
 	    if(suffix[i] == '*'){
 		backup_filename[j] = '\0';
@@ -980,7 +974,7 @@ get_backup_filename(const char *suffix, const char *filename)
 	backup_filename[j] = '\0';
     }else{
 	j = filename_length + strlen(suffix);
-	backup_filename = nkf_malloc(j + 1);
+	backup_filename = nkf_xmalloc(j + 1);
 	strcpy(backup_filename, filename);
 	strcat(backup_filename, suffix);
 	backup_filename[j] = '\0';
@@ -4231,8 +4225,8 @@ typedef struct {
 static nkf_ary *
 nkf_ary_new(int length)
 {
-    nkf_ary *ary = nkf_malloc(sizeof(nkf_ary));
-    ary->ary = nkf_malloc(length);
+    nkf_ary *ary = nkf_xmalloc(sizeof(nkf_ary));
+    ary->ary = nkf_xmalloc(length);
     ary->max_length = length;
     ary->count = 0;
     return ary;
@@ -4241,8 +4235,8 @@ nkf_ary_new(int length)
 static void
 nkf_ary_dispose(nkf_ary *ary)
 {
-    nkf_free(ary->ary);
-    nkf_free(ary);
+    nkf_xfree(ary->ary);
+    nkf_xfree(ary);
 }
 
 #define nkf_ary_length(ary) ((ary)->count)
@@ -4401,7 +4395,7 @@ mime_getc(FILE *f)
 	    /* end Q encoding */
 	    input_mode = exit_mode;
 	    lwsp_count = 0;
-	    lwsp_buf = nkf_malloc((lwsp_size+5)*sizeof(char));
+	    lwsp_buf = nkf_xmalloc((lwsp_size+5)*sizeof(char));
 	    while ((c1=(*i_getc)(f))!=EOF) {
 		switch (c1) {
 		case LF:
@@ -4434,7 +4428,7 @@ mime_getc(FILE *f)
 		    lwsp_buf[lwsp_count] = (unsigned char)c1;
 		    if (lwsp_count++>lwsp_size){
 			lwsp_size <<= 1;
-			lwsp_buf_new = nkf_realloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
+			lwsp_buf_new = nkf_xrealloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
 			lwsp_buf = lwsp_buf_new;
 		    }
 		    continue;
@@ -4447,7 +4441,7 @@ mime_getc(FILE *f)
 		    i_ungetc(lwsp_buf[lwsp_count],f);
 		c1 = lwsp_buf[0];
 	    }
-	    nkf_free(lwsp_buf);
+	    nkf_xfree(lwsp_buf);
 	    return c1;
 	}
 	if (c1=='='&&c2<SP) { /* this is soft wrap */
@@ -4500,7 +4494,7 @@ mime_getc(FILE *f)
     if ((c1 == '?') && (c2 == '=')) {
 	input_mode = ASCII;
 	lwsp_count = 0;
-	lwsp_buf = nkf_malloc((lwsp_size+5)*sizeof(char));
+	lwsp_buf = nkf_xmalloc((lwsp_size+5)*sizeof(char));
 	while ((c1=(*i_getc)(f))!=EOF) {
 	    switch (c1) {
 	    case LF:
@@ -4536,7 +4530,7 @@ mime_getc(FILE *f)
 		lwsp_buf[lwsp_count] = (unsigned char)c1;
 		if (lwsp_count++>lwsp_size){
 		    lwsp_size <<= 1;
-		    lwsp_buf_new = nkf_realloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
+		    lwsp_buf_new = nkf_xrealloc(lwsp_buf, (lwsp_size+5)*sizeof(char));
 		    lwsp_buf = lwsp_buf_new;
 		}
 		continue;
@@ -4549,7 +4543,7 @@ mime_getc(FILE *f)
 		i_ungetc(lwsp_buf[lwsp_count],f);
 	    c1 = lwsp_buf[0];
 	}
-	nkf_free(lwsp_buf);
+	nkf_xfree(lwsp_buf);
 	return c1;
     }
   mime_c3_retry:
@@ -5059,9 +5053,9 @@ nkf_iconv_new(char *tocode, char *fromcode)
     nkf_iconv_t converter;
 
     converter->input_buffer_size = IOBUF_SIZE;
-    converter->input_buffer = nkf_malloc(converter->input_buffer_size);
+    converter->input_buffer = nkf_xmalloc(converter->input_buffer_size);
     converter->output_buffer_size = IOBUF_SIZE * 2;
-    converter->output_buffer = nkf_malloc(converter->output_buffer_size);
+    converter->output_buffer = nkf_xmalloc(converter->output_buffer_size);
     converter->cd = iconv_open(tocode, fromcode);
     if (converter->cd == (iconv_t)-1)
     {
@@ -5128,8 +5122,8 @@ nkf_iconv_convert(nkf_iconv_t *converter, FILE *input)
 static void
 nkf_iconv_close(nkf_iconv_t *convert)
 {
-    nkf_free(converter->inbuf);
-    nkf_free(converter->outbuf);
+    nkf_xfree(converter->inbuf);
+    nkf_xfree(converter->outbuf);
     iconv_close(converter->cd);
 }
 #endif
@@ -6508,7 +6502,7 @@ main(int argc, char **argv)
 		if (file_out_f == TRUE) {
 #ifdef OVERWRITE
 		    if (overwrite_f){
-			outfname = nkf_malloc(strlen(origfname)
+			outfname = nkf_xmalloc(strlen(origfname)
 					  + strlen(".nkftmpXXXXXX")
 					  + 1);
 			strcpy(outfname, origfname);
@@ -6624,7 +6618,7 @@ main(int argc, char **argv)
 			    fprintf(stderr, "Can't rename %s to %s\n",
 				    origfname, backup_filename);
 			}
-			nkf_free(backup_filename);
+			nkf_xfree(backup_filename);
 		    }else{
 #ifdef MSDOS
 			if (unlink(origfname)){
@@ -6637,7 +6631,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Can't rename %s to %s\n",
 				outfname, origfname);
 		    }
-		    nkf_free(outfname);
+		    nkf_xfree(outfname);
 		}
 #endif
 	    }
