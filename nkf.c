@@ -1,41 +1,30 @@
-/** Network Kanji Filter. (PDS Version)
- ** -*- coding: ISO-2022-JP -*-
- ************************************************************************
- ** Copyright (C) 1987, Fujitsu LTD. (Itaru ICHIKAWA)
- ** 連絡先： （株）富士通研究所　ソフト３研　市川　至
- ** （E-Mail Address: ichikawa@flab.fujitsu.co.jp）
- ** Copyright (C) 1996,1998
- ** Copyright (C) 2002
- ** 連絡先： 琉球大学情報工学科 河野 真治  mime/X0208 support
- ** （E-Mail Address: kono@ie.u-ryukyu.ac.jp）
- ** 連絡先： COW for DOS & Win16 & Win32 & OS/2
- ** （E-Mail Address: GHG00637@niftyserve.or.p）
- **
- **    このソースのいかなる複写，改変，修正も許諾します。ただし、
- **    その際には、誰が貢献したを示すこの部分を残すこと。
- **    再配布や雑誌の付録などの問い合わせも必要ありません。
- **    営利利用も上記に反しない範囲で許可します。
- **    バイナリの配布の際にはversion messageを保存することを条件とします。
- **    このプログラムについては特に何の保証もしない、悪しからず。
- **
- **    Everyone is permitted to do anything on this program
- **    including copying, modifying, improving,
- **    as long as you don't try to pretend that you wrote it.
- **    i.e., the above copyright notice has to appear in all copies.
- **    Binary distribution requires original version messages.
- **    You don't have to ask before copying, redistribution or publishing.
- **    THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
- ***********************************************************************/
-
-/***********************************************************************
- * 現在、nkf は SorceForge にてメンテナンスが続けられています。
- * http://sourceforge.jp/projects/nkf/
- ***********************************************************************/
+/*
+ * Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
+ * Copyright (c) 1996-2009, The nkf Project.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 #define NKF_VERSION "2.0.8"
 #define NKF_RELEASE_DATE "2009-01-05"
 #define COPY_RIGHT \
-    "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
-    "Copyright (C) 2002-2009 Kono, Furukawa, Naruse, mastodon"
+    "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
+    "Copyright (C) 1996-2009, The nkf Project."
 
 #include "config.h"
 #include "nkf.h"
@@ -2681,14 +2670,14 @@ w_oconv32(nkf_char c2, nkf_char c1)
 }
 #endif
 
-#define SCORE_L2       (1)                   /* 第2水準漢字 */
-#define SCORE_KANA     (SCORE_L2 << 1)       /* いわゆる半角カナ */
-#define SCORE_DEPEND   (SCORE_KANA << 1)     /* 機種依存文字 */
-#define SCORE_CP932    (SCORE_DEPEND << 1)   /* CP932 による読み換え (IBM extended characters) */
+#define SCORE_L2       (1)                   /* Kanji Level 2 */
+#define SCORE_KANA     (SCORE_L2 << 1)       /* Halfwidth Katakana */
+#define SCORE_DEPEND   (SCORE_KANA << 1)     /* MD Characters */
+#define SCORE_CP932    (SCORE_DEPEND << 1)   /* IBM extended characters */
 #define SCORE_X0212    (SCORE_CP932 << 1)    /* JIS X 0212 */
-#define SCORE_NO_EXIST (SCORE_X0212 << 1)    /* 存在しない文字 */
-#define SCORE_iMIME    (SCORE_NO_EXIST << 1) /* MIME による指定 */
-#define SCORE_ERROR    (SCORE_iMIME << 1) /* エラー */
+#define SCORE_NO_EXIST (SCORE_X0212 << 1)    /* Undefined Characters */
+#define SCORE_iMIME    (SCORE_NO_EXIST << 1) /* MIME selected */
+#define SCORE_ERROR    (SCORE_iMIME << 1) /* Error */
 
 #define SCORE_INIT (SCORE_iMIME)
 

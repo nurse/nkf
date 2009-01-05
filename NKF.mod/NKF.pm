@@ -461,8 +461,13 @@ Ignore rest of -option.
 
 =head1 AUTHOR
 
-Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW
-Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon
+Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),
+
+Copyright (C) 2000 S. Kono, COW.
+
+Copyright (C) 2002-2009 Kono, Furukawa, Naruse, mastodon.
+
+The nkf Project https://sourceforge.jp/projects/nkf
 
 =begin
 
