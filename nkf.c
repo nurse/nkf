@@ -32,7 +32,7 @@
  * http://sourceforge.jp/projects/nkf/
  ***********************************************************************/
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2009-01-04"
+#define NKF_RELEASE_DATE "2009-01-05"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW\n" \
     "Copyright (C) 2002-2009 Kono, Furukawa, Naruse, mastodon"
@@ -140,7 +140,7 @@ enum nkf_encodings {
     JIS_X_0212        = 0x1159, /* D */
     /* JIS_X_0213_2000_1 = 0x1228, */ /* O */
     JIS_X_0213_2 = 0x1229, /* P */
-    JIS_X_0213_1 = 0x1233, /* Q */
+    JIS_X_0213_1 = 0x1233 /* Q */
 };
 
 static nkf_char s_iconv(nkf_char c2, nkf_char c1, nkf_char c0);
@@ -814,6 +814,60 @@ nkf_default_encoding()
     return enc;
 }
 
+typedef struct {
+    long capa;
+    long len;
+    unsigned char *ptr;
+} nkf_buf_t;
+
+static nkf_buf_t *
+nkf_buf_new(int length)
+{
+    nkf_buf_t *buf = nkf_xmalloc(sizeof(nkf_buf_t));
+    buf->ptr = nkf_xmalloc(length);
+    buf->capa = length;
+    buf->len = 0;
+    return buf;
+} 
+
+static void
+nkf_buf_dispose(nkf_buf_t *buf)
+{
+    nkf_xfree(buf->ptr);
+    nkf_xfree(buf);
+}
+
+#define nkf_buf_length(buf) ((buf)->len)
+#define nkf_buf_empty_p(buf) ((buf)->len == 0)
+
+static unsigned char
+nkf_buf_at(nkf_buf_t *buf, int index)
+{
+    assert(index <= buf->len);
+    return buf->ptr[index];
+}
+
+static void
+nkf_buf_clear(nkf_buf_t *buf)
+{
+    buf->ptr = 0;
+}
+
+static void
+nkf_buf_push(nkf_buf_t *buf, unsigned char c)
+{
+    assert(buf->capa > buf->len);
+    buf->ptr[buf->len++] = c;
+}
+
+static unsigned char
+nkf_buf_pop(nkf_buf_t *buf)
+{
+    assert(!nkf_buf_empty_p(buf));
+    return buf->ptr[--buf->len];
+}
+
+/* Normalization Form C */
 #ifndef PERL_XS
 #ifdef WIN32DLL
 #define fprintf dllprintf
@@ -841,6 +895,8 @@ usage(void)
 	    "         After 'W' you can add more options. -W[ 8, 16 [BL] ] \n"
 #endif
 	    "t        no conversion\n"
+	    );
+    fprintf(HELP_OUTPUT,
 	    "i[@B]    Specify the Esc Seq for JIS X 0208-1978/83 (DEFAULT B)\n"
 	    "o[BJH]   Specify the Esc Seq for ASCII/Roman        (DEFAULT B)\n"
 	    "r        {de/en}crypt ROT13/47\n"
@@ -849,11 +905,15 @@ usage(void)
 	    "M[BQ]    MIME encode [B:base64 Q:quoted]\n"
 	    "l        ISO8859-1 (Latin-1) support\n"
 	    "f/F      Folding: -f60 or -f or -f60-10 (fold margin 10) F preserve nl\n"
+	    );
+    fprintf(HELP_OUTPUT,
 	    "Z[0-4]   Default/0: Convert JISX0208 Alphabet to ASCII\n"
 	    "         1: Kankaku to one space  2: to two spaces  3: HTML Entity\n"
 	    "         4: JISX0208 Katakana to JISX0201 Katakana\n"
 	    "X,x      Assume X0201 kana in MS-Kanji, -x preserves X0201\n"
 	    "B[0-2]   Broken input  0: missing ESC,1: any X on ESC-[($]-X,2: ASCII on NL\n"
+	    );
+    fprintf(HELP_OUTPUT,
 #ifdef MSDOS
 	    "T        Text mode output\n"
 #endif
@@ -862,7 +922,8 @@ usage(void)
 	    "d,c      Convert line breaks  -d: LF  -c: CRLF\n"
 	    "-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n"
 	    "v, V     Show this usage. V: show configuration\n"
-	    "\n"
+	    "\n");
+    fprintf(HELP_OUTPUT,
 	    "Long name options\n"
 	    " --ic=<input codeset>  --oc=<output codeset>\n"
 	    "                   Specify the input or output codeset\n"
@@ -872,6 +933,8 @@ usage(void)
 	    " --hiragana  --katakana  --katakana-hiragana\n"
 	    "                   To Hiragana/Katakana Conversion\n"
 	    " --prefix=         Insert escape before troublesome characters of Shift_JIS\n"
+	    );
+    fprintf(HELP_OUTPUT,
 #ifdef INPUT_OPTION
 	    " --cap-input, --url-input  Convert hex after ':' or '%%'\n"
 #endif
@@ -882,6 +945,8 @@ usage(void)
 	    " --fb-{skip, html, xml, perl, java, subchar}\n"
 	    "                   Specify how nkf handles unassigned characters\n"
 #endif
+	    );
+    fprintf(HELP_OUTPUT,
 #ifdef OVERWRITE
 	    " --in-place[=SUFFIX]  --overwrite[=SUFFIX]\n"
 	    "                   Overwrite original listed files by filtered result\n"
@@ -2627,14 +2692,14 @@ w_oconv32(nkf_char c2, nkf_char c1)
 
 #define SCORE_INIT (SCORE_iMIME)
 
-static const char score_table_A0[] = {
+static const nkf_char score_table_A0[] = {
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND,
     SCORE_DEPEND, SCORE_DEPEND, SCORE_DEPEND, SCORE_NO_EXIST,
 };
 
-static const char score_table_F0[] = {
+static const nkf_char score_table_F0[] = {
     SCORE_L2, SCORE_L2, SCORE_L2, SCORE_L2,
     SCORE_L2, SCORE_DEPEND, SCORE_NO_EXIST, SCORE_NO_EXIST,
     SCORE_DEPEND, SCORE_DEPEND, SCORE_CP932, SCORE_CP932,
@@ -3576,7 +3641,7 @@ z_conv(nkf_char c2, nkf_char c1)
     if (alpha_f & 16) {
 	/* JIS X 0208 Katakana to JIS X 0201 Katakana */
 	if (c2 == 0x21) {
-	    char c = 0;
+	    nkf_char c = 0;
 	    switch (c1) {
 	    case 0x23:
 		/* U+3002 (0x8142) Ideographic Full Stop -> U+FF61 (0xA1) Halfwidth Ideographic Full Stop */
@@ -4216,91 +4281,36 @@ numchar_ungetc(nkf_char c, FILE *f)
 
 #ifdef UNICODE_NORMALIZATION
 
-typedef struct {
-    unsigned char *ary;
-    int max_length;
-    int count;
-} nkf_ary;
-
-static nkf_ary *
-nkf_ary_new(int length)
-{
-    nkf_ary *ary = nkf_xmalloc(sizeof(nkf_ary));
-    ary->ary = nkf_xmalloc(length);
-    ary->max_length = length;
-    ary->count = 0;
-    return ary;
-} 
-
-static void
-nkf_ary_dispose(nkf_ary *ary)
-{
-    nkf_xfree(ary->ary);
-    nkf_xfree(ary);
-}
-
-#define nkf_ary_length(ary) ((ary)->count)
-#define nkf_ary_empty_p(ary) ((ary)->count == 0)
-
-static unsigned char
-nkf_ary_at(nkf_ary *ary, int index)
-{
-    assert(index <= ary->count);
-    return ary->ary[index];
-}
-
-static void
-nkf_ary_clear(nkf_ary *ary)
-{
-    ary->count = 0;
-}
-
-static unsigned char
-nkf_ary_push(nkf_ary *ary, nkf_char c)
-{
-    assert(ary->max_length > ary->count);
-    ary->ary[ary->count++] = c;
-    return ary->count;
-}
-
-static unsigned char
-nkf_ary_pop(nkf_ary *ary)
-{
-    assert(0 < ary->count);
-    return ary->ary[--ary->count];
-}
-
-/* Normalization Form C */
 static nkf_char
 nfc_getc(FILE *f)
 {
     nkf_char (*g)(FILE *f) = i_nfc_getc;
     nkf_char (*u)(nkf_char c ,FILE *f) = i_nfc_ungetc;
-    nkf_ary *buf = nkf_ary_new(9);
+    nkf_buf_t *buf = nkf_buf_new(9);
     const unsigned char *array;
     int lower=0, upper=NORMALIZATION_TABLE_LENGTH-1;
     nkf_char c = (*g)(f);
 
     if (c == EOF || c > 0xFF || (c & 0xc0) == 0x80) return c;
 
-    nkf_ary_push(buf, (unsigned char)c);
+    nkf_buf_push(buf, (unsigned char)c);
     do {
 	while (lower <= upper) {
 	    int mid = (lower+upper) / 2;
 	    int len;
 	    array = normalization_table[mid].nfd;
 	    for (len=0; len < NORMALIZATION_TABLE_NFD_LENGTH && array[len]; len++) {
-		if (len >= nkf_ary_length(buf)) {
+		if (len >= nkf_buf_length(buf)) {
 		    c = (*g)(f);
 		    if (c == EOF) {
 			len = 0;
 			lower = 1, upper = 0;
 			break;
 		    }
-		    nkf_ary_push(buf, c);
+		    nkf_buf_push(buf, c);
 		}
-		if (array[len] != nkf_ary_at(buf, len)) {
-		    if (array[len] < nkf_ary_at(buf, len)) lower = mid + 1;
+		if (array[len] != nkf_buf_at(buf, len)) {
+		    if (array[len] < nkf_buf_at(buf, len)) lower = mid + 1;
 		    else  upper = mid - 1;
 		    len = 0;
 		    break;
@@ -4309,17 +4319,17 @@ nfc_getc(FILE *f)
 	    if (len > 0) {
 		int i;
 		array = normalization_table[mid].nfc;
-		nkf_ary_clear(buf);
+		nkf_buf_clear(buf);
 		for (i=0; i < NORMALIZATION_TABLE_NFC_LENGTH && array[i]; i++)
-		    nkf_ary_push(buf, array[i]);
+		    nkf_buf_push(buf, array[i]);
 		break;
 	    }
 	}
     } while (lower <= upper);
 
-    while (nkf_ary_length(buf) > 1) (*u)(nkf_ary_pop(buf), f);
-    c = nkf_ary_pop(buf);
-    nkf_ary_dispose(buf);
+    while (nkf_buf_length(buf) > 1) (*u)(nkf_buf_pop(buf), f);
+    c = nkf_buf_pop(buf);
+    nkf_buf_dispose(buf);
 
     return c;
 }
