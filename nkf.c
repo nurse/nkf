@@ -649,10 +649,6 @@ static nkf_char prev_cr = 0; /* CR or 0 */
 static int             end_check;
 #endif /*Easy Win */
 
-#define STD_GC_BUFSIZE (256)
-nkf_char std_gc_buf[STD_GC_BUFSIZE];
-nkf_char std_gc_ndx;
-
 static void *
 nkf_xmalloc(size_t size)
 {
@@ -839,13 +835,15 @@ nkf_buf_at(nkf_buf_t *buf, int index)
 static void
 nkf_buf_clear(nkf_buf_t *buf)
 {
-    buf->ptr = 0;
+    buf->len = 0;
 }
 
 static void
 nkf_buf_push(nkf_buf_t *buf, unsigned char c)
 {
-    assert(buf->capa > buf->len);
+    if (buf->capa <= buf->len) {
+	exit(EXIT_FAILURE);
+    }
     buf->ptr[buf->len++] = c;
 }
 
@@ -2997,12 +2995,38 @@ code_status(nkf_char c)
     }
 }
 
+typedef struct {
+    nkf_buf_t *std_gc_buf;
+    nkf_char broken_state;
+    nkf_buf_t *broken_buf;
+} nkf_state_t;
+
+static nkf_state_t *nkf_state = NULL;
+
+#define STD_GC_BUFSIZE (256)
+
+static void
+nkf_state_init(void)
+{
+    if (nkf_state) {
+	nkf_buf_clear(nkf_state->std_gc_buf);
+	nkf_state->broken_state = 0;
+	nkf_buf_clear(nkf_state->broken_buf);
+    }
+    else {
+	nkf_state = nkf_xmalloc(sizeof(nkf_state_t));
+	nkf_state->std_gc_buf = nkf_buf_new(STD_GC_BUFSIZE);
+	nkf_state->broken_state = 0;
+	nkf_state->broken_buf = nkf_buf_new(3);
+    }
+}
+
 #ifndef WIN32DLL
 static nkf_char
 std_getc(FILE *f)
 {
-    if (std_gc_ndx){
-	return std_gc_buf[--std_gc_ndx];
+    if (!nkf_buf_empty_p(nkf_state->std_gc_buf)){
+	return nkf_buf_pop(nkf_state->std_gc_buf);
     }
     return getc(f);
 }
@@ -3011,10 +3035,7 @@ std_getc(FILE *f)
 static nkf_char
 std_ungetc(nkf_char c, FILE *f)
 {
-    if (std_gc_ndx == STD_GC_BUFSIZE){
-	return EOF;
-    }
-    std_gc_buf[std_gc_ndx++] = c;
+    nkf_buf_push(nkf_state->std_gc_buf, c);
     return c;
 }
 
@@ -3262,65 +3283,41 @@ check_bom(FILE *f)
     }
 }
 
-static struct {
-    int count;
-    nkf_char status;
-    nkf_char buf[3];
-} broken_state;
-
-static void
-init_broken_state(void)
-{
-    memset(&broken_state, 0, sizeof(broken_state));
-}
-
-static void
-push_broken_buf(c)
-{
-    broken_state.buf[broken_state.count++] = c;
-}
-
-static nkf_char
-pop_broken_buf(void)
-{
-    return broken_state.buf[--broken_state.count];
-}
-
 static nkf_char
 broken_getc(FILE *f)
 {
     nkf_char c, c1;
 
-    if (broken_state.count > 0) {
-	return pop_broken_buf();
+    if (!nkf_buf_empty_p(nkf_state->broken_buf)) {
+	return nkf_buf_pop(nkf_state->broken_buf);
     }
     c = (*i_bgetc)(f);
-    if (c=='$' && broken_state.status != ESC
+    if (c=='$' && nkf_state->broken_state != ESC
 	&& (input_mode == ASCII || input_mode == JIS_X_0201_1976_K)) {
 	c1= (*i_bgetc)(f);
-	broken_state.status = 0;
+	nkf_state->broken_state = 0;
 	if (c1=='@'|| c1=='B') {
-	    push_broken_buf(c1);
-	    push_broken_buf(c);
+	    nkf_buf_push(nkf_state->broken_buf, c1);
+	    nkf_buf_push(nkf_state->broken_buf, c);
 	    return ESC;
 	} else {
 	    (*i_bungetc)(c1,f);
 	    return c;
 	}
-    } else if (c=='(' && broken_state.status != ESC
+    } else if (c=='(' && nkf_state->broken_state != ESC
 	       && (input_mode == JIS_X_0208 || input_mode == JIS_X_0201_1976_K)) {
 	c1= (*i_bgetc)(f);
-	broken_state.status = 0;
+	nkf_state->broken_state = 0;
 	if (c1=='J'|| c1=='B') {
-	    push_broken_buf(c1);
-	    push_broken_buf(c);
+	    nkf_buf_push(nkf_state->broken_buf, c1);
+	    nkf_buf_push(nkf_state->broken_buf, c);
 	    return ESC;
 	} else {
 	    (*i_bungetc)(c1,f);
 	    return c;
 	}
     } else {
-	broken_state.status = c;
+	nkf_state->broken_state = c;
 	return c;
     }
 }
@@ -3328,8 +3325,8 @@ broken_getc(FILE *f)
 static nkf_char
 broken_ungetc(nkf_char c, FILE *f)
 {
-    if (broken_state.count < 2)
-	push_broken_buf(c);
+    if (nkf_buf_length(nkf_state->broken_buf) < 2)
+	nkf_buf_push(nkf_state->broken_buf, c);
     return c;
 }
 
@@ -5233,7 +5230,6 @@ reinit(void)
     input_eol = 0;
     prev_cr = 0;
     option_mode = 0;
-    init_broken_state();
     z_prev2=0,z_prev1=0;
 #ifdef CHECK_OPTION
     iconv_for_check = 0;
@@ -5241,6 +5237,7 @@ reinit(void)
     input_codename = NULL;
     input_encoding = NULL;
     output_encoding = NULL;
+    nkf_state_init();
 #ifdef WIN32DLL
     reinitdll();
 #endif /*WIN32DLL*/
@@ -6394,6 +6391,8 @@ main(int argc, char **argv)
 #ifdef DEFAULT_CODE_LOCALE
     setlocale(LC_CTYPE, "");
 #endif
+    nkf_state_init();
+
     for (argc--,argv++; (argc > 0) && **argv == '-'; argc--, argv++) {
 	cp = (unsigned char *)*argv;
 	options(cp);
