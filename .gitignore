@@ -1,9 +1,9 @@
-nkf.o
 nkf
 nkf.exe
 nkf.in
 nkf.out
 nkf-*
 *~
+*.o
 *.bad
-utf8tbl.o
+*.swp
