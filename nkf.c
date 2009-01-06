@@ -21,7 +21,7 @@
  * THE SOFTWARE.
  */
 #define NKF_VERSION "2.0.8"
-#define NKF_RELEASE_DATE "2009-01-05"
+#define NKF_RELEASE_DATE "2009-01-06"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2009, The nkf Project."
@@ -815,12 +815,14 @@ nkf_buf_new(int length)
     return buf;
 } 
 
+#if 0
 static void
 nkf_buf_dispose(nkf_buf_t *buf)
 {
     nkf_xfree(buf->ptr);
     nkf_xfree(buf);
 }
+#endif
 
 #define nkf_buf_length(buf) ((buf)->len)
 #define nkf_buf_empty_p(buf) ((buf)->len == 0)
@@ -3000,6 +3002,7 @@ typedef struct {
     nkf_char broken_state;
     nkf_buf_t *broken_buf;
     nkf_char mimeout_state;
+    nkf_buf_t *nfc_buf;
 } nkf_state_t;
 
 static nkf_state_t *nkf_state = NULL;
@@ -3012,11 +3015,13 @@ nkf_state_init(void)
     if (nkf_state) {
 	nkf_buf_clear(nkf_state->std_gc_buf);
 	nkf_buf_clear(nkf_state->broken_buf);
+	nkf_buf_clear(nkf_state->nfc_buf);
     }
     else {
 	nkf_state = nkf_xmalloc(sizeof(nkf_state_t));
 	nkf_state->std_gc_buf = nkf_buf_new(STD_GC_BUFSIZE);
 	nkf_state->broken_buf = nkf_buf_new(3);
+	nkf_state->nfc_buf = nkf_buf_new(9);
     }
     nkf_state->broken_state = 0;
     nkf_state->mimeout_state = 0;
@@ -4271,7 +4276,7 @@ nfc_getc(FILE *f)
 {
     nkf_char (*g)(FILE *f) = i_nfc_getc;
     nkf_char (*u)(nkf_char c ,FILE *f) = i_nfc_ungetc;
-    nkf_buf_t *buf = nkf_buf_new(9);
+    nkf_buf_t *buf = nkf_state->nfc_buf;
     const unsigned char *array;
     int lower=0, upper=NORMALIZATION_TABLE_LENGTH-1;
     nkf_char c = (*g)(f);
@@ -4314,7 +4319,6 @@ nfc_getc(FILE *f)
 
     while (nkf_buf_length(buf) > 1) (*u)(nkf_buf_pop(buf), f);
     c = nkf_buf_pop(buf);
-    nkf_buf_dispose(buf);
 
     return c;
 }
