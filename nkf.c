@@ -3428,9 +3428,7 @@ fold_conv(nkf_char c2, nkf_char c1)
 	f_prev = LF;
 	f_line = 0;
 	fold_state =  LF;            /* output newline and clear */
-    } else if ( (c2==0  && c1==SP)||
-	       (c2==0  && c1==TAB)||
-	       (c2=='!'&& c1=='!')) {
+    } else if ((c2==0 && nkf_isblank(c1)) || (c2 == '!' && c1 == '!')) {
 	/* X0208 kankaku or ascii space */
 	if (f_prev == SP) {
 	    fold_state = 0;         /* remove duplicate spaces */
@@ -4398,7 +4396,7 @@ mime_getc(FILE *f)
 		case LF:
 		case CR:
 		    if (c1==LF) {
-			if ((c1=(*i_getc)(f))!=EOF && (c1==SP||c1==TAB)) {
+			if ((c1=(*i_getc)(f))!=EOF && nkf_isblank(c1)) {
 			    i_ungetc(SP,f);
 			    continue;
 			} else {
@@ -4407,7 +4405,7 @@ mime_getc(FILE *f)
 			c1 = LF;
 		    } else {
 			if ((c1=(*i_getc)(f))!=EOF && c1 == LF) {
-			    if ((c1=(*i_getc)(f))!=EOF && (c1==SP||c1==TAB)) {
+			    if ((c1=(*i_getc)(f))!=EOF && nkf_isblank(c1)) {
 				i_ungetc(SP,f);
 				continue;
 			    } else {
@@ -4497,7 +4495,7 @@ mime_getc(FILE *f)
 	    case LF:
 	    case CR:
 		if (c1==LF) {
-		    if ((c1=(*i_getc)(f))!=EOF && (c1==SP||c1==TAB)) {
+		    if ((c1=(*i_getc)(f))!=EOF && nkf_isblank(c1)) {
 			i_ungetc(SP,f);
 			continue;
 		    } else {
@@ -4509,7 +4507,7 @@ mime_getc(FILE *f)
 			if (c1==SP) {
 			    i_ungetc(SP,f);
 			    continue;
-			} else if ((c1=(*i_getc)(f))!=EOF && (c1==SP||c1==TAB)) {
+			} else if ((c1=(*i_getc)(f))!=EOF && nkf_isblank(c1)) {
 			    i_ungetc(SP,f);
 			    continue;
 			} else {
@@ -4618,15 +4616,12 @@ open_mime(nkf_char mode)
 	PUT_NEWLINE((*o_mputc));
 	(*o_mputc)(SP);
 	base64_count = 1;
-	if (mimeout_state.count>0
-	    && (mimeout_state.buf[i]==SP || mimeout_state.buf[i]==TAB
-		|| mimeout_state.buf[i]==CR || mimeout_state.buf[i]==LF)) {
+	if (mimeout_state.count>0 && nkf_isspace(mimeout_state.buf[i])) {
 	    i++;
 	}
     }
     for (;i<mimeout_state.count;i++) {
-	if (mimeout_state.buf[i]==SP || mimeout_state.buf[i]==TAB
-	    || mimeout_state.buf[i]==CR || mimeout_state.buf[i]==LF) {
+	if (nkf_isspace(mimeout_state.buf[i])) {
 	    (*o_mputc)(mimeout_state.buf[i]);
 	    base64_count ++;
 	} else {
@@ -4972,7 +4967,7 @@ mime_putc(nkf_char c)
 		mimeout_state.buf[mimeout_state.count++] = (char)c;
 		return;
 	    }
-	    if (c==SP || c==TAB || c==CR || c==LF) {
+	    if (nkf_isspace(c)) {
 		for (i=0;i<mimeout_state.count;i++) {
 		    if (SP<mimeout_state.buf[i] && mimeout_state.buf[i]<DEL) {
 			eof_mime();
