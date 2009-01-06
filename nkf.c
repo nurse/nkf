@@ -2999,6 +2999,7 @@ typedef struct {
     nkf_buf_t *std_gc_buf;
     nkf_char broken_state;
     nkf_buf_t *broken_buf;
+    nkf_char mimeout_state;
 } nkf_state_t;
 
 static nkf_state_t *nkf_state = NULL;
@@ -3010,15 +3011,15 @@ nkf_state_init(void)
 {
     if (nkf_state) {
 	nkf_buf_clear(nkf_state->std_gc_buf);
-	nkf_state->broken_state = 0;
 	nkf_buf_clear(nkf_state->broken_buf);
     }
     else {
 	nkf_state = nkf_xmalloc(sizeof(nkf_state_t));
 	nkf_state->std_gc_buf = nkf_buf_new(STD_GC_BUFSIZE);
-	nkf_state->broken_state = 0;
 	nkf_state->broken_buf = nkf_buf_new(3);
     }
+    nkf_state->broken_state = 0;
+    nkf_state->mimeout_state = 0;
 }
 
 #ifndef WIN32DLL
@@ -4590,7 +4591,6 @@ static const char basis_64[] =
 static struct {
     char buf[MIMEOUT_BUF_LENGTH+1];
     int count;
-    nkf_char state;
 } mimeout_state;
 
 /*nkf_char mime_lastchar2, mime_lastchar1;*/
@@ -4694,13 +4694,13 @@ eof_mime(void)
     case 'B':
 	break;
     case 2:
-	(*o_mputc)(basis_64[((mimeout_state.state & 0x3)<< 4)]);
+	(*o_mputc)(basis_64[((nkf_state->mimeout_state & 0x3)<< 4)]);
 	(*o_mputc)('=');
 	(*o_mputc)('=');
 	base64_count += 3;
 	break;
     case 1:
-	(*o_mputc)(basis_64[((mimeout_state.state & 0xF) << 2)]);
+	(*o_mputc)(basis_64[((nkf_state->mimeout_state & 0xF) << 2)]);
 	(*o_mputc)('=');
 	base64_count += 2;
 	break;
@@ -4732,19 +4732,19 @@ mimeout_addchar(nkf_char c)
 	}
 	break;
     case 'B':
-	mimeout_state.state=c;
+	nkf_state->mimeout_state=c;
 	(*o_mputc)(basis_64[c>>2]);
 	mimeout_mode=2;
 	base64_count ++;
 	break;
     case 2:
-	(*o_mputc)(basis_64[((mimeout_state.state & 0x3)<< 4) | ((c & 0xF0) >> 4)]);
-	mimeout_state.state=c;
+	(*o_mputc)(basis_64[((nkf_state->mimeout_state & 0x3)<< 4) | ((c & 0xF0) >> 4)]);
+	nkf_state->mimeout_state=c;
 	mimeout_mode=1;
 	base64_count ++;
 	break;
     case 1:
-	(*o_mputc)(basis_64[((mimeout_state.state & 0xF) << 2) | ((c & 0xC0) >>6)]);
+	(*o_mputc)(basis_64[((nkf_state->mimeout_state & 0xF) << 2) | ((c & 0xC0) >>6)]);
 	(*o_mputc)(basis_64[c & 0x3F]);
 	mimeout_mode='B';
 	base64_count += 2;
