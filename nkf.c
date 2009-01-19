@@ -6100,7 +6100,7 @@ options(unsigned char *cp)
 	    output_encoding = nkf_enc_from_index(EUCJP_NKF);
 	    continue;
 	case 's':           /* SJIS output */
-	    output_encoding = nkf_enc_from_index(WINDOWS_31J);
+	    output_encoding = nkf_enc_from_index(SHIFT_JIS);
 	    continue;
 	case 'l':           /* ISO8859 Latin-1 support, no conversion */
 	    iso8859_f = TRUE;  /* Only compatible with ISO-2022-JP */
@@ -6229,8 +6229,8 @@ options(unsigned char *cp)
 	case 'E':   /* EUC-JP input */
 	    input_encoding = nkf_enc_from_index(EUCJP_NKF);
 	    continue;
-	case 'S':   /* Windows-31J input */
-	    input_encoding = nkf_enc_from_index(WINDOWS_31J);
+	case 'S':   /* Shift_JIS input */
+	    input_encoding = nkf_enc_from_index(SHIFT_JIS);
 	    continue;
 	case 'Z':   /* Convert X0208 alphabet to asii */
 	    /* alpha_f
