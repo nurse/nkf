@@ -103,39 +103,49 @@ To accept X0201 in Shift_JIS, use B<-X>, B<-x> or B<-S>.
 
 =over
 
-=item B<-b -u>
+=item B<-J -S -E -W -W16 -W32 -j -s -e -w -w16 -w32>
 
-Output is buffered (DEFAULT), Output is unbuffered.
-
-=item B<-j -s -e -w -w16>
-
-Output code is ISO-2022-JP (7bit JIS), Shift_JIS, EUC-JP,
-UTF-8N, UTF-16BE.
-Without this option and compile option, ISO-2022-JP is assumed.
-
-=item B<-J -S -E -W -W16>
-
-Input assumption is JIS 7 bit, Shift_JIS, EUC-JP,
-UTF-8, UTF-16LE.
+Specify input and output encodings. Upper case is input.
+cf. --ic and --oc.
 
 =over
 
 =item B<-J>
 
-Assume  JIS input.
-This is the default.
+ISO-2022-JP (JIS code).
 
 =item B<-S>
 
-Assume Shift_JIS and JIS X 0201 kana input.
+Shift_JIS and JIS X 0201 kana.
 EUC-JP is recognized as X0201 kana. Without B<-x> flag,
 JIS X 0201 Katakana (a.k.a.halfwidth kana) is converted into JIS X 0208.
+If you use Windows, see Windows-31J (CP932).
 
 =item B<-E>
 
-Assume EUC-JP input.
+EUC-JP.
+
+=item B<-W>
+
+UTF-8N.
+
+=item B<-W16[BL][0]>
+
+UTF-16.
+B or L gives whether Big Endian or Little Endian.
+0 gives whther put BOM or not.
+
+=item B<-W32[BL][0]>
+
+UTF-32.
+B or L gives whether Big Endian or Little Endian.
+0 gives whther put BOM or not.
 
 =back
+
+=item B<-b -u>
+
+Output is buffered (DEFAULT), Output is unbuffered.
 
 =item B<-t>
 
@@ -154,6 +164,8 @@ Use ESC ( @. (JIS X 0208-1978)
 =item B<-iB>
 
 Use ESC ( B. (JIS X 0208-1983/1990 DEFAULT)
+
+=back
 
 =item B<-o[BJ]>
 
@@ -400,6 +412,26 @@ UTF-16 Little Endian without BOM
 =item UTF-16LE-BOM
 
 UTF-16 Little Endian with BOM
+
+=item UTF-32
+
+same as UTF-32BE
+
+=item UTF-32BE
+
+UTF-32 Big Endian without BOM
+
+=item UTF-32BE-BOM
+
+UTF-32 Big Endian with BOM
+
+=item UTF-32LE
+
+UTF-32 Little Endian without BOM
+
+=item UTF-32LE-BOM
+
+UTF-32 Little Endian with BOM
 
 =back
 

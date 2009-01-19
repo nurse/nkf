@@ -32,7 +32,7 @@ B<-mu> のように続けることができる。
 
 =item B<-j>
 
-JIS コードを出力する。(デフォルト)
+JIS コードを出力する。
 
 =item B<-e>
 
@@ -249,12 +249,38 @@ ISO-2022-JP 以外の漢字コードを〓に変換。
 =item B<-i[@B]>
 
 JIS 漢字を指示するシーケンスを指定する。
-(デフォルトは、ESC-$-B)
+
+=over
+
+=item B<-i@>
+
+JIS X 0208-1978 を用いる。
+
+=item B<-iB>
+
+JIS X 0208-1983/1990 を用いる。
+
+=back
 
 =item B<-o[BJH]>
 
 1 バイト英数文字セットを指示するシーケンスを指定する。
-(デフォルトは、ESC-(-B)
+
+=over
+
+=item B<-oB>
+
+1 バイト英数文字セットとして US-ASCII を用いる。
+
+=item B<-oJ>
+
+1 バイト英数文字セットとして JIS X 0201 Roman を用いる。
+
+=item B<-oH>
+
+ESC ( H は初期の JUNET コードでのみ用いられたもので、現在は使ってはならない。
+
+=back
 
 =item B<-r>
 
@@ -263,10 +289,6 @@ ROT13/47 の変換をする。
 =item B<-g>
 
 自動判別の結果を出力します。
-
-=item B<-v>
-
-バージョンを表示する。
 
 =item B<-T>
 
@@ -469,7 +491,11 @@ Unicode から Unicode の変換の際に -x と共に指定すると、nkf を UTF 形式の変換に用
 
 コマンドの簡単な説明を表示する。
 
-=item B<--version>
+=item B<-V>
+
+nkf の設定を表示する。
+
+=item B<-v> B<--version>
 
 nkf のバージョンを表示する。
 
@@ -699,7 +725,8 @@ GHG00637@nifty-serve.or.jp (COW)
 
 http://sourceforge.jp/projects/nkf/
 
-Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW
-Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon
+Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).
+
+Copyright (C) 1996-2009, The nkf Project.
 
 =cut
