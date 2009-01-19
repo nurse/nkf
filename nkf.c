@@ -872,7 +872,7 @@ static void
 usage(void)
 {
     fprintf(HELP_OUTPUT,
-	    "Usage:  nkf(nkf32,wnkf,nkf2) -[flags] [in file] .. [out file for -O flag]\n"
+	    "Usage:  nkf -[flags] [--] [in file] .. [out file for -O flag]\n"
 	    " j,s,e,w  Output code is ISO-2022-JP, Shift JIS, EUC-JP, UTF-8N\n"
 #ifdef UTF8_OUTPUT_ENABLE
 	    "          After 'w' you can add more options. -w[ 8 [0], 16 [[BL] [0]] ]\n"
@@ -896,7 +896,6 @@ usage(void)
     fprintf(HELP_OUTPUT,
 	    " O        Output to File (DEFAULT 'nkf.out')\n"
 	    " L[uwm]   Line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n"
-	    " v/V      Show version / show configuration\n"
 	    );
     fprintf(HELP_OUTPUT,
 	    "Long name options\n"
@@ -923,7 +922,8 @@ usage(void)
 	    " --overwrite[=SUF] in-place and preserve timestamp of original files\n"
 #endif
 	    " -g --guess        Guess the input code\n"
-	    " --help/--version  Show this help / version\n"
+	    " -v --version      print the version\n"
+	    " --help/-V         print this help / configuration\n"
 	    );
     version();
 }
@@ -1132,7 +1132,7 @@ static const struct {
     {"sjis","s"},
     {"sjis-input","S"},
     {"unix","eLu"},
-    {"version","V"},
+    {"version","v"},
     {"windows","sLw"},
     {"hiragana","h1"},
     {"katakana","h2"},
