@@ -501,7 +501,7 @@ static nkf_char
 no_connection2(nkf_char c2, nkf_char c1, nkf_char c0)
 {
     fprintf(stderr,"nkf internal module connection failure.\n");
-    exit(1);
+    exit(EXIT_FAILURE);
     return 0; /* LINT */
 }
 
@@ -872,56 +872,38 @@ static void
 usage(void)
 {
     fprintf(HELP_OUTPUT,
-	    "USAGE:  nkf(nkf32,wnkf,nkf2) -[flags] [in file] .. [out file for -O flag]\n"
-	    "Flags:\n"
-	    "b,u      Output is buffered (DEFAULT),Output is unbuffered\n"
-	    "j,s,e,w  Output code is ISO-2022-JP, Shift JIS, EUC-JP, UTF-8N\n"
+	    "Usage:  nkf(nkf32,wnkf,nkf2) -[flags] [in file] .. [out file for -O flag]\n"
+	    " j,s,e,w  Output code is ISO-2022-JP, Shift JIS, EUC-JP, UTF-8N\n"
 #ifdef UTF8_OUTPUT_ENABLE
-	    "         After 'w' you can add more options. -w[ 8 [0], 16 [[BL] [0]] ]\n"
+	    "          After 'w' you can add more options. -w[ 8 [0], 16 [[BL] [0]] ]\n"
 #endif
-	    "J,S,E,W  Input assumption is JIS 7 bit , Shift JIS, EUC-JP, UTF-8\n"
+	    " J,S,E,W  Input assumption is JIS 7 bit , Shift JIS, EUC-JP, UTF-8\n"
 #ifdef UTF8_INPUT_ENABLE
-	    "         After 'W' you can add more options. -W[ 8, 16 [BL] ] \n"
+	    "          After 'W' you can add more options. -W[ 8, 16 [BL] ] \n"
 #endif
-	    "t        no conversion\n"
 	    );
     fprintf(HELP_OUTPUT,
-	    "i[@B]    Specify the Esc Seq for JIS X 0208-1978/83 (DEFAULT B)\n"
-	    "o[BJH]   Specify the Esc Seq for ASCII/Roman        (DEFAULT B)\n"
-	    "r        {de/en}crypt ROT13/47\n"
-	    "h        1 katakana->hiragana, 2 hiragana->katakana, 3 both\n"
-	    "m[BQSN0] MIME decode [B:base64,Q:quoted,S:strict,N:non-strict,0:no decode]\n"
-	    "M[BQ]    MIME encode [B:base64 Q:quoted]\n"
-	    "l        ISO8859-1 (Latin-1) support\n"
-	    "f/F      Folding: -f60 or -f or -f60-10 (fold margin 10) F preserve nl\n"
+	    " m[BQSN0] MIME decode [B:base64,Q:quoted,S:strict,N:non-strict,0:no decode]\n"
+	    " M[BQ]    MIME encode [B:base64 Q:quoted]\n"
+	    " f/F      Folding: -f60 or -f or -f60-10 (fold margin 10) F preserve nl\n"
 	    );
     fprintf(HELP_OUTPUT,
-	    "Z[0-4]   Default/0: Convert JISX0208 Alphabet to ASCII\n"
-	    "         1: Kankaku to one space  2: to two spaces  3: HTML Entity\n"
-	    "         4: JISX0208 Katakana to JISX0201 Katakana\n"
-	    "X,x      Assume X0201 kana in MS-Kanji, -x preserves X0201\n"
-	    "B[0-2]   Broken input  0: missing ESC,1: any X on ESC-[($]-X,2: ASCII on NL\n"
+	    " Z[0-4]   Default/0: Convert JISX0208 Alphabet to ASCII\n"
+	    "          1: Kankaku to one space  2: to two spaces  3: HTML Entity\n"
+	    "          4: JISX0208 Katakana to JISX0201 Katakana\n"
+	    " X,x      Assume X0201 kana in MS-Kanji, -x preserves X0201\n"
 	    );
     fprintf(HELP_OUTPUT,
-#ifdef MSDOS
-	    "T        Text mode output\n"
-#endif
-	    "O        Output to File (DEFAULT 'nkf.out')\n"
-	    "I        Convert non ISO-2022-JP charactor to GETA\n"
-	    "d,c      Convert line breaks  -d: LF  -c: CRLF\n"
-	    "-L[uwm]  line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n"
-	    "v, V     Show this usage. V: show configuration\n"
-	    "\n");
+	    " O        Output to File (DEFAULT 'nkf.out')\n"
+	    " L[uwm]   Line mode u:LF w:CRLF m:CR (DEFAULT noconversion)\n"
+	    " v/V      Show version / show configuration\n"
+	    );
     fprintf(HELP_OUTPUT,
 	    "Long name options\n"
 	    " --ic=<input codeset>  --oc=<output codeset>\n"
 	    "                   Specify the input or output codeset\n"
-	    " --fj  --unix --mac  --windows\n"
-	    " --jis  --euc  --sjis  --utf8  --utf16  --mime  --base64\n"
-	    "                   Convert for the system or code\n"
 	    " --hiragana  --katakana  --katakana-hiragana\n"
 	    "                   To Hiragana/Katakana Conversion\n"
-	    " --prefix=         Insert escape before troublesome characters of Shift_JIS\n"
 	    );
     fprintf(HELP_OUTPUT,
 #ifdef INPUT_OPTION
@@ -937,14 +919,12 @@ usage(void)
 	    );
     fprintf(HELP_OUTPUT,
 #ifdef OVERWRITE
-	    " --in-place[=SUFFIX]  --overwrite[=SUFFIX]\n"
-	    "                   Overwrite original listed files by filtered result\n"
-	    "                   --overwrite preserves timestamp of original files\n"
+	    " --in-place[=SUF]  Overwrite original listed files by filtered result\n"
+	    " --overwrite[=SUF] in-place and preserve timestamp of original files\n"
 #endif
-	    " -g  --guess       Guess the input code\n"
-	    " --help  --version Show this help/the version\n"
-	    "                   For more information, see also man nkf\n"
-	    "\n");
+	    " -g --guess        Guess the input code\n"
+	    " --help/--version  Show this help / version\n"
+	    );
     version();
 }
 
@@ -1142,7 +1122,7 @@ static const struct {
     {"euc","e"},
     {"euc-input","E"},
     {"fj","jm"},
-    {"help","v"},
+    {"help",""},
     {"jis","j"},
     {"jis-input","J"},
     {"mac","sLm"},
@@ -5862,6 +5842,10 @@ options(unsigned char *cp)
 		cp_back = cp;
 		cp = (unsigned char *)long_option[i].alias;
 	    }else{
+		if (strcmp(long_option[i].name, "help") == 0){
+		    usage();
+		    exit(EXIT_SUCCESS);
+		}
 		if (strcmp(long_option[i].name, "ic=") == 0){
 		    enc = nkf_enc_find((char *)p);
 		    if (!enc) continue;
@@ -6110,7 +6094,8 @@ options(unsigned char *cp)
 	    if (*cp=='@'||*cp=='B')
 		kanji_intro = *cp++;
 	    continue;
-	case 'o':           /* ASCII IN ESC-(-J/B */
+	case 'o':           /* ASCII IN ESC-(-J/B/H */
+	    /* ESC ( H was used in initial JUNET messages */
 	    if (*cp=='J'||*cp=='B'||*cp=='H')
 		ascii_intro = *cp++;
 	    continue;
@@ -6135,11 +6120,11 @@ options(unsigned char *cp)
 #ifndef PERL_XS
 	case 'V':
 	    show_configuration();
-	    exit(1);
+	    exit(EXIT_SUCCESS);
 	    break;
 	case 'v':
-	    usage();
-	    exit(1);
+	    version();
+	    exit(EXIT_SUCCESS);
 	    break;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE

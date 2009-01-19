@@ -1,25 +1,24 @@
-## Copyright (C) 1996,1998
-## Copyright (C) 2002
-## 連絡先： 琉球大学情報工学科 河野 真治  mime/X0208 support
-## （E-Mail Address: kono@ie.u-ryukyu.ac.jp）
-## 連絡先： COW for DOS & Win16 & Win32 & OS/2
-## （E-Mail Address: GHG00637@niftyserve.or.p）
-##    
-##    このソースのいかなる複写，改変，修正も許諾します。ただし、
-##    その際には、誰が貢献したを示すこの部分を残すこと。
-##    再配布や雑誌の付録などの問い合わせも必要ありません。
-##    営利利用も上記に反しない範囲で許可します。
-##    バイナリの配布の際にはversion messageを保存することを条件とします。
-##    このプログラムについては特に何の保証もしない、悪しからず。
-##    
-##    Everyone is permitted to do anything on this program
-##    including copying, modifying, improving, 
-##    as long as you don't try to pretend that you wrote it.
-##    i.e., the above copyright notice has to appear in all copies.  
-##    Binar y distribution requires original version messages.
-##    You don't have to ask before copying, redistribution or publishing.
-##    THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
-
+# Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
+# Copyright (c) 1996-2009, The nkf Project.
+# All rights reserved.
+#
+# This software is provided 'as-is', without any express or implied
+# warranty. In no event will the authors be held liable for any damages
+# arising from the use of this software.
+#
+# Permission is granted to anyone to use this software for any purpose,
+# including commercial applications, and to alter it and redistribute it
+# freely, subject to the following restrictions:
+#
+# 1. The origin of this software must not be misrepresented; you must not
+# claim that you wrote the original software. If you use this software
+# in a product, an acknowledgment in the product documentation would be
+# appreciated but is not required.
+#
+# 2. Altered source versions must be plainly marked as such, and must not be
+# misrepresented as being the original software.
+#
+# 3. This notice may not be removed or altered from any source distribution.
 
 package NKF;
 
@@ -128,9 +127,9 @@ This is the default.
 
 =item B<-S>
 
-Assume Shift_JIS and X0201 kana input.
+Assume Shift_JIS and JIS X 0201 kana input.
 EUC-JP is recognized as X0201 kana. Without B<-x> flag,
-X0201 kana (halfwidth kana) is converted into X0208.
+JIS X 0201 Katakana (a.k.a.halfwidth kana) is converted into JIS X 0208.
 
 =item B<-E>
 
@@ -144,11 +143,21 @@ No conversion.
 
 =item B<-i[@B]>
 
-Specify the Esc Seq for JIS X 0208-1978/83. (DEFAULT B)
+Specify the escape sequence for JIS X 0208.
 
-=item B<-o[BJH]>
+=over
 
-Specify the Esc Seq for ASCII/Roman. (DEFAULT B)
+=item B<-i@>
+
+Use ESC ( @. (JIS X 0208-1978)
+
+=item B<-iB>
+
+Use ESC ( B. (JIS X 0208-1983/1990 DEFAULT)
+
+=item B<-o[BJ]>
+
+Specify the escape sequence for US-ASCII/JIS X 0201 Roman. (DEFAULT B)
 
 =item B<-r>
 
@@ -461,13 +470,9 @@ Ignore rest of -option.
 
 =head1 AUTHOR
 
-Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),
+Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
 
-Copyright (C) 2000 S. Kono, COW.
-
-Copyright (C) 2002-2009 Kono, Furukawa, Naruse, mastodon.
-
-The nkf Project https://sourceforge.jp/projects/nkf
+Copyright (c) 1996-2009, The nkf Project.  http://sourceforge.jp/projects/nkf
 
 =begin
 
