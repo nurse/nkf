@@ -802,7 +802,7 @@ nkf_default_encoding()
 typedef struct {
     long capa;
     long len;
-    unsigned char *ptr;
+    nkf_char *ptr;
 } nkf_buf_t;
 
 static nkf_buf_t *
@@ -841,7 +841,7 @@ nkf_buf_clear(nkf_buf_t *buf)
 }
 
 static void
-nkf_buf_push(nkf_buf_t *buf, unsigned char c)
+nkf_buf_push(nkf_buf_t *buf, nkf_char c)
 {
     if (buf->capa <= buf->len) {
 	exit(EXIT_FAILURE);
@@ -4263,7 +4263,7 @@ nfc_getc(FILE *f)
 
     if (c == EOF || c > 0xFF || (c & 0xc0) == 0x80) return c;
 
-    nkf_buf_push(buf, (unsigned char)c);
+    nkf_buf_push(buf, c);
     do {
 	while (lower <= upper) {
 	    int mid = (lower+upper) / 2;
@@ -5842,10 +5842,12 @@ options(unsigned char *cp)
 		cp_back = cp;
 		cp = (unsigned char *)long_option[i].alias;
 	    }else{
+#ifndef PERL_XS
 		if (strcmp(long_option[i].name, "help") == 0){
 		    usage();
 		    exit(EXIT_SUCCESS);
 		}
+#endif
 		if (strcmp(long_option[i].name, "ic=") == 0){
 		    enc = nkf_enc_find((char *)p);
 		    if (!enc) continue;
