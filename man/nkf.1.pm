@@ -1,25 +1,24 @@
-## Copyright (C) 1996,1998
-## Copyright (C) 2002
-## 連絡先： 琉球大学情報工学科 河野 真治  mime/X0208 support
-## （E-Mail Address: kono@ie.u-ryukyu.ac.jp）
-## 連絡先： COW for DOS & Win16 & Win32 & OS/2
-## （E-Mail Address: GHG00637@niftyserve.or.p）
-##    
-##    このソースのいかなる複写，改変，修正も許諾します。ただし、
-##    その際には、誰が貢献したを示すこの部分を残すこと。
-##    再配布や雑誌の付録などの問い合わせも必要ありません。
-##    営利利用も上記に反しない範囲で許可します。
-##    バイナリの配布の際にはversion messageを保存することを条件とします。
-##    このプログラムについては特に何の保証もしない、悪しからず。
-##    
-##    Everyone is permitted to do anything on this program
-##    including copying, modifying, improving, 
-##    as long as you don't try to pretend that you wrote it.
-##    i.e., the above copyright notice has to appear in all copies.  
-##    Binar y distribution requires original version messages.
-##    You don't have to ask before copying, redistribution or publishing.
-##    THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
-
+# Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
+# Copyright (c) 1996-2009, The nkf Project.
+# All rights reserved.
+#
+# This software is provided 'as-is', without any express or implied
+# warranty. In no event will the authors be held liable for any damages
+# arising from the use of this software.
+#
+# Permission is granted to anyone to use this software for any purpose,
+# including commercial applications, and to alter it and redistribute it
+# freely, subject to the following restrictions:
+#
+# 1. The origin of this software must not be misrepresented; you must not
+# claim that you wrote the original software. If you use this software
+# in a product, an acknowledgment in the product documentation would be
+# appreciated but is not required.
+#
+# 2. Altered source versions must be plainly marked as such, and must not be
+# misrepresented as being the original software.
+#
+# 3. This notice may not be removed or altered from any source distribution.
 
 package NKF;
 
@@ -36,7 +35,7 @@ require DynaLoader;
 @EXPORT = qw(
 	nkf	nkf_continue	inputcode
 );
-$VERSION = '2.08';
+$VERSION = '2.09';
 
 bootstrap NKF $VERSION;
 
@@ -67,10 +66,10 @@ nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
 
 B<Nkf> is a yet another kanji code converter among networks, hosts and terminals.
 It converts input kanji code to designated kanji code
-such as ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8 or UTF-16.
+such as ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8, UTF-16 or UTF-32.
 
 One of the most unique faculty of B<nkf> is the guess of the input kanji encodings.
-It currently recognizes ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8 and UTF-16.
+It currently recognizes ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8, UTF-16 and UTF-32.
 So users needn't set the input kanji code explicitly.
 
 By default, X0201 kana is converted into X0208 kana.
@@ -82,39 +81,49 @@ To accept X0201 in Shift_JIS, use B<-X>, B<-x> or B<-S>.
 
 =over
 
-=item B<-b -u>
+=item B<-J -S -E -W -W16 -W32 -j -s -e -w -w16 -w32>
 
-Output is buffered (DEFAULT), Output is unbuffered.
-
-=item B<-j -s -e -w -w16>
-
-Output code is ISO-2022-JP (7bit JIS), Shift_JIS, EUC-JP,
-UTF-8N, UTF-16BE.
-Without this option and compile option, ISO-2022-JP is assumed.
-
-=item B<-J -S -E -W -W16>
-
-Input assumption is JIS 7 bit, Shift_JIS, EUC-JP,
-UTF-8, UTF-16LE.
+Specify input and output encodings. Upper case is input.
+cf. --ic and --oc.
 
 =over
 
 =item B<-J>
 
-Assume  JIS input.
-This is the default.
+ISO-2022-JP (JIS code).
 
 =item B<-S>
 
-Assume Shift_JIS and X0201 kana input.
+Shift_JIS and JIS X 0201 kana.
 EUC-JP is recognized as X0201 kana. Without B<-x> flag,
-X0201 kana (halfwidth kana) is converted into X0208.
+JIS X 0201 Katakana (a.k.a.halfwidth kana) is converted into JIS X 0208.
+If you use Windows, see Windows-31J (CP932).
 
 =item B<-E>
 
-Assume EUC-JP input.
+EUC-JP.
+
+=item B<-W>
+
+UTF-8N.
+
+=item B<-W16[BL][0]>
+
+UTF-16.
+B or L gives whether Big Endian or Little Endian.
+0 gives whther put BOM or not.
+
+=item B<-W32[BL][0]>
+
+UTF-32.
+B or L gives whether Big Endian or Little Endian.
+0 gives whther put BOM or not.
 
 =back
+
+=item B<-b -u>
+
+Output is buffered (DEFAULT), Output is unbuffered.
 
 =item B<-t>
 
@@ -122,11 +131,23 @@ No conversion.
 
 =item B<-i[@B]>
 
-Specify the Esc Seq for JIS X 0208-1978/83. (DEFAULT B)
+Specify the escape sequence for JIS X 0208.
 
-=item B<-o[BJH]>
+=over
 
-Specify the Esc Seq for ASCII/Roman. (DEFAULT B)
+=item B<-i@>
+
+Use ESC ( @. (JIS X 0208-1978)
+
+=item B<-iB>
+
+Use ESC ( B. (JIS X 0208-1983/1990 DEFAULT)
+
+=back
+
+=item B<-o[BJ]>
+
+Specify the escape sequence for US-ASCII/JIS X 0201 Roman. (DEFAULT B)
 
 =item B<-r>
 
@@ -370,6 +391,26 @@ UTF-16 Little Endian without BOM
 
 UTF-16 Little Endian with BOM
 
+=item UTF-32
+
+same as UTF-32BE
+
+=item UTF-32BE
+
+UTF-32 Big Endian without BOM
+
+=item UTF-32BE-BOM
+
+UTF-32 Big Endian with BOM
+
+=item UTF-32LE
+
+UTF-32 Little Endian without BOM
+
+=item UTF-32LE-BOM
+
+UTF-32 Little Endian with BOM
+
 =back
 
 =item B<--fb-{skip, html, xml, perl, java, subchar}>
@@ -437,8 +478,9 @@ Ignore rest of -option.
 
 =head1 AUTHOR
 
-Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW
-Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon
+Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
+
+Copyright (c) 1996-2009, The nkf Project.
 
 
 =cut

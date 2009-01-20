@@ -25,7 +25,7 @@ DESCRIPTION
 OPTIONS
     指定できるオプションは、以下の通り。 -mu のように続けることができる。
 
-    -j  JIS コードを出力する。(デフォルト)
+    -j  JIS コードを出力する。
 
     -e  EUC コードを出力する。
 
@@ -146,17 +146,25 @@ OPTIONS
     -I  ISO-2022-JP 以外の漢字コードを〓に変換。
 
     -i[@B]
-        JIS 漢字を指示するシーケンスを指定する。 (デフォルトは、ESC-$-B)
+        JIS 漢字を指示するシーケンスを指定する。
+
+        -i@ JIS X 0208-1978 を用いる。
+
+        -iB JIS X 0208-1983/1990 を用いる。
 
     -o[BJH]
         1 バイト英数文字セットを指示するシーケンスを指定する。
-        (デフォルトは、ESC-(-B)
+
+        -oB 1 バイト英数文字セットとして US-ASCII を用いる。
+
+        -oJ 1 バイト英数文字セットとして JIS X 0201 Roman を用いる。
+
+        -oH ESC ( H は初期の JUNET
+            コードでのみ用いられたもので、現在は使ってはならない。
 
     -r  ROT13/47 の変換をする。
 
     -g  自動判別の結果を出力します。
-
-    -v  バージョンを表示する。
 
     -T  テキストモードで出力する。(MS-DOS 上でのみ効力を持つ)
 
@@ -305,7 +313,9 @@ OPTIONS
     --help
         コマンドの簡単な説明を表示する。
 
-    --version
+    -V  nkf の設定を表示する。
+
+    -v --version
         nkf のバージョンを表示する。
 
     --  これ以降のオプションを無視する
@@ -437,6 +447,7 @@ AUTHOR
 
     http://sourceforge.jp/projects/nkf/
 
-    Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa),2000 S. Kono, COW
-    Copyright (C) 2002-2007 Kono, Furukawa, Naruse, mastodon
+    Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).
+
+    Copyright (C) 1996-2009, The nkf Project.
 

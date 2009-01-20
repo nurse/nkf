@@ -35,7 +35,7 @@ require DynaLoader;
 @EXPORT = qw(
 	nkf	nkf_continue	inputcode
 );
-$VERSION = '2.08';
+$VERSION = '2.09';
 
 bootstrap NKF $VERSION;
 
@@ -88,10 +88,10 @@ details are specified by flags before the last argument.
 
 B<Nkf> is a yet another kanji code converter among networks, hosts and terminals.
 It converts input kanji code to designated kanji code
-such as ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8 or UTF-16.
+such as ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8, UTF-16 or UTF-32.
 
 One of the most unique faculty of B<nkf> is the guess of the input kanji encodings.
-It currently recognizes ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8 and UTF-16.
+It currently recognizes ISO-2022-JP, Shift_JIS, EUC-JP, UTF-8, UTF-16 and UTF-32.
 So users needn't set the input kanji code explicitly.
 
 By default, X0201 kana is converted into X0208 kana.
@@ -504,7 +504,7 @@ Ignore rest of -option.
 
 Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
 
-Copyright (c) 1996-2009, The nkf Project.  http://sourceforge.jp/projects/nkf
+Copyright (c) 1996-2009, The nkf Project.
 
 =begin
 

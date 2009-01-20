@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2008-11-19" "nkf 2.0.8" " "
+.TH nkf 1 "2009-01-19" "nkf 2.0.9" " "
 .SH "NAME"
 nkf \- $B%M%C%H%o!<%/MQ4A;z%3!<%IJQ49%U%#%k%?(B
 .SH "SYNOPSIS"
@@ -154,7 +154,7 @@ nkf \fB[\-butjnesliohrTVvwWJESZxXFfmMBOcdILg]\fR \fB[\fR\fIfile ...\fR\fB]\fR
 \&\fB\-mu\fR $B$N$h$&$KB3$1$k$3$H$,$G$-$k!#(B
 .IP "\fB\-j\fR" 4
 .IX Item "-j"
-\&\s-1JIS\s0 $B%3!<%I$r=PNO$9$k!#(B($B%G%U%)%k%H(B)
+\&\s-1JIS\s0 $B%3!<%I$r=PNO$9$k!#(B
 .IP "\fB\-e\fR" 4
 .IX Item "-e"
 \&\s-1EUC\s0 $B%3!<%I$r=PNO$9$k!#(B
@@ -327,20 +327,38 @@ ssh localhost | nkf \-u $B$H$$$&$h$&$K;H$&!#(B
 .IP "\fB\-i[@B]\fR" 4
 .IX Item "-i[@B]"
 \&\s-1JIS\s0 $B4A;z$r;X<($9$k%7!<%1%s%9$r;XDj$9$k!#(B
-($B%G%U%)%k%H$O!"(BESC\-$\-B)
+.RS 4
+.IP "\fB\-i@\fR" 4
+.IX Item "-i@"
+\&\s-1JIS\s0 X 0208\-1978 $B$rMQ$$$k!#(B
+.IP "\fB\-iB\fR" 4
+.IX Item "-iB"
+\&\s-1JIS\s0 X 0208\-1983/1990 $B$rMQ$$$k!#(B
+.RE
+.RS 4
+.RE
 .IP "\fB\-o[\s-1BJH\s0]\fR" 4
 .IX Item "-o[BJH]"
 1 $B%P%$%H1Q?tJ8;z%;%C%H$r;X<($9$k%7!<%1%s%9$r;XDj$9$k!#(B
-($B%G%U%)%k%H$O!"(BESC\-(\-B)
+.RS 4
+.IP "\fB\-oB\fR" 4
+.IX Item "-oB"
+1 $B%P%$%H1Q?tJ8;z%;%C%H$H$7$F(B US-ASCII $B$rMQ$$$k!#(B
+.IP "\fB\-oJ\fR" 4
+.IX Item "-oJ"
+1 $B%P%$%H1Q?tJ8;z%;%C%H$H$7$F(B \s-1JIS\s0 X 0201 Roman $B$rMQ$$$k!#(B
+.IP "\fB\-oH\fR" 4
+.IX Item "-oH"
+\&\s-1ESC\s0 ( H $B$O=i4|$N(B \s-1JUNET\s0 $B%3!<%I$G$N$_MQ$$$i$l$?$b$N$G!"8=:_$O;H$C$F$O$J$i$J$$!#(B
+.RE
+.RS 4
+.RE
 .IP "\fB\-r\fR" 4
 .IX Item "-r"
 \&\s-1ROT13/47\s0 $B$NJQ49$r$9$k!#(B
 .IP "\fB\-g\fR" 4
 .IX Item "-g"
 $B<+F0H=JL$N7k2L$r=PNO$7$^$9!#(B
-.IP "\fB\-v\fR" 4
-.IX Item "-v"
-$B%P!<%8%g%s$rI=<($9$k!#(B
 .IP "\fB\-T\fR" 4
 .IX Item "-T"
 $B%F%-%9%H%b!<%I$G=PNO$9$k!#(B(\s-1MS\-DOS\s0 $B>e$G$N$_8zNO$r;}$D(B)
@@ -501,8 +519,11 @@ Unicode $B$+$i(B Unicode $B$NJQ49$N:]$K(B \-x $B$H6&$K;XDj$9$k$H!"(Bnkf $
 .IP "\fB\-\-help\fR" 4
 .IX Item "--help"
 $B%3%^%s%I$N4JC1$J@bL@$rI=<($9$k!#(B
-.IP "\fB\-\-version\fR" 4
-.IX Item "--version"
+.IP "\fB\-V\fR" 4
+.IX Item "-V"
+nkf $B$N@_Dj$rI=<($9$k!#(B
+.IP "\fB\-v\fR \fB\-\-version\fR" 4
+.IX Item "-v --version"
 nkf $B$N%P!<%8%g%s$rI=<($9$k!#(B
 .IP "\fB\-\-\fR" 4
 .IX Item "--"
@@ -678,5 +699,6 @@ GHG00637@nifty\-serve.or.jp (\s-1COW\s0)
 .PP
 http://sourceforge.jp/projects/nkf/
 .PP
-Copyright (C) 1987, \s-1FUJITSU\s0 \s-1LTD\s0. (I.Ichikawa),2000 S. Kono, \s-1COW\s0
-Copyright (C) 2002\-2007 Kono, Furukawa, Naruse, mastodon
+Copyright (C) 1987, \s-1FUJITSU\s0 \s-1LTD\s0. (I.Ichikawa).
+.PP
+Copyright (C) 1996\-2009, The nkf Project.

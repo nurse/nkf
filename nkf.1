@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2008-11-19" "nkf 2.0.8" " "
+.TH nkf 1 "2009-01-20" "nkf 2.0.9" " "
 .SH "NAME"
 nkf \- Network Kanji Filter
 .SH "SYNOPSIS"
@@ -139,10 +139,10 @@ nkf \fB[\-butjnesliohrTVvwWJESZxXFfmMBOcdILg]\fR \fB[\fR\fIfile ...\fR\fB]\fR
 .IX Header "DESCRIPTION"
 \&\fBNkf\fR is a yet another kanji code converter among networks, hosts and terminals.
 It converts input kanji code to designated kanji code
-such as \s-1ISO\-2022\-JP\s0, Shift_JIS, \s-1EUC\-JP\s0, \s-1UTF\-8\s0 or \s-1UTF\-16\s0.
+such as \s-1ISO\-2022\-JP\s0, Shift_JIS, \s-1EUC\-JP\s0, \s-1UTF\-8\s0, \s-1UTF\-16\s0 or \s-1UTF\-32\s0.
 .PP
 One of the most unique faculty of \fBnkf\fR is the guess of the input kanji encodings.
-It currently recognizes \s-1ISO\-2022\-JP\s0, Shift_JIS, \s-1EUC\-JP\s0, \s-1UTF\-8\s0 and \s-1UTF\-16\s0.
+It currently recognizes \s-1ISO\-2022\-JP\s0, Shift_JIS, \s-1EUC\-JP\s0, \s-1UTF\-8\s0, \s-1UTF\-16\s0 and \s-1UTF\-32\s0.
 So users needn't set the input kanji code explicitly.
 .PP
 By default, X0201 kana is converted into X0208 kana.
@@ -151,43 +151,61 @@ For automatic code detection, nkf assumes no X0201 kana in Shift_JIS.
 To accept X0201 in Shift_JIS, use \fB\-X\fR, \fB\-x\fR or \fB\-S\fR.
 .SH "OPTIONS"
 .IX Header "OPTIONS"
-.IP "\fB\-b \-u\fR" 4
-.IX Item "-b -u"
-Output is buffered (\s-1DEFAULT\s0), Output is unbuffered.
-.IP "\fB\-j \-s \-e \-w \-w16\fR" 4
-.IX Item "-j -s -e -w -w16"
-Output code is \s-1ISO\-2022\-JP\s0 (7bit \s-1JIS\s0), Shift_JIS, \s-1EUC\-JP\s0,
-\&\s-1UTF\-8N\s0, \s-1UTF\-16BE\s0.
-Without this option and compile option, \s-1ISO\-2022\-JP\s0 is assumed.
-.IP "\fB\-J \-S \-E \-W \-W16\fR" 4
-.IX Item "-J -S -E -W -W16"
-Input assumption is \s-1JIS\s0 7 bit, Shift_JIS, \s-1EUC\-JP\s0,
-\&\s-1UTF\-8\s0, \s-1UTF\-16LE\s0.
+.IP "\fB\-J \-S \-E \-W \-W16 \-W32 \-j \-s \-e \-w \-w16 \-w32\fR" 4
+.IX Item "-J -S -E -W -W16 -W32 -j -s -e -w -w16 -w32"
+Specify input and output encodings. Upper case is input.
+cf. \-\-ic and \-\-oc.
 .RS 4
 .IP "\fB\-J\fR" 4
 .IX Item "-J"
-Assume  \s-1JIS\s0 input.
-This is the default.
+\&\s-1ISO\-2022\-JP\s0 (\s-1JIS\s0 code).
 .IP "\fB\-S\fR" 4
 .IX Item "-S"
-Assume Shift_JIS and X0201 kana input.
+Shift_JIS and \s-1JIS\s0 X 0201 kana.
 EUC-JP is recognized as X0201 kana. Without \fB\-x\fR flag,
-X0201 kana (halfwidth kana) is converted into X0208.
+\&\s-1JIS\s0 X 0201 Katakana (a.k.a.halfwidth kana) is converted into \s-1JIS\s0 X 0208.
+If you use Windows, see Windows\-31J (\s-1CP932\s0).
 .IP "\fB\-E\fR" 4
 .IX Item "-E"
-Assume EUC-JP input.
+\&\s-1EUC\-JP\s0.
+.IP "\fB\-W\fR" 4
+.IX Item "-W"
+\&\s-1UTF\-8N\s0.
+.IP "\fB\-W16[\s-1BL\s0][0]\fR" 4
+.IX Item "-W16[BL][0]"
+\&\s-1UTF\-16\s0.
+B or L gives whether Big Endian or Little Endian.
+0 gives whther put \s-1BOM\s0 or not.
+.IP "\fB\-W32[\s-1BL\s0][0]\fR" 4
+.IX Item "-W32[BL][0]"
+\&\s-1UTF\-32\s0.
+B or L gives whether Big Endian or Little Endian.
+0 gives whther put \s-1BOM\s0 or not.
 .RE
 .RS 4
 .RE
+.IP "\fB\-b \-u\fR" 4
+.IX Item "-b -u"
+Output is buffered (\s-1DEFAULT\s0), Output is unbuffered.
 .IP "\fB\-t\fR" 4
 .IX Item "-t"
 No conversion.
 .IP "\fB\-i[@B]\fR" 4
 .IX Item "-i[@B]"
-Specify the Esc Seq for \s-1JIS\s0 X 0208\-1978/83. (\s-1DEFAULT\s0 B)
-.IP "\fB\-o[\s-1BJH\s0]\fR" 4
-.IX Item "-o[BJH]"
-Specify the Esc Seq for ASCII/Roman. (\s-1DEFAULT\s0 B)
+Specify the escape sequence for \s-1JIS\s0 X 0208.
+.RS 4
+.IP "\fB\-i@\fR" 4
+.IX Item "-i@"
+Use \s-1ESC\s0 ( @. (\s-1JIS\s0 X 0208\-1978)
+.IP "\fB\-iB\fR" 4
+.IX Item "-iB"
+Use \s-1ESC\s0 ( B. (\s-1JIS\s0 X 0208\-1983/1990 \s-1DEFAULT\s0)
+.RE
+.RS 4
+.RE
+.IP "\fB\-o[\s-1BJ\s0]\fR" 4
+.IX Item "-o[BJ]"
+Specify the escape sequence for \s-1US\-ASCII/JIS\s0 X 0201 Roman. (\s-1DEFAULT\s0 B)
 .IP "\fB\-r\fR" 4
 .IX Item "-r"
 {de/en}crypt \s-1ROT13/47\s0
@@ -384,6 +402,21 @@ same as \s-1UTF\-16BE\s0
 .IP "\s-1UTF\-16LE\-BOM\s0" 4
 .IX Item "UTF-16LE-BOM"
 \&\s-1UTF\-16\s0 Little Endian with \s-1BOM\s0
+.IP "\s-1UTF\-32\s0" 4
+.IX Item "UTF-32"
+same as \s-1UTF\-32BE\s0
+.IP "\s-1UTF\-32BE\s0" 4
+.IX Item "UTF-32BE"
+\&\s-1UTF\-32\s0 Big Endian without \s-1BOM\s0
+.IP "\s-1UTF\-32BE\-BOM\s0" 4
+.IX Item "UTF-32BE-BOM"
+\&\s-1UTF\-32\s0 Big Endian with \s-1BOM\s0
+.IP "\s-1UTF\-32LE\s0" 4
+.IX Item "UTF-32LE"
+\&\s-1UTF\-32\s0 Little Endian without \s-1BOM\s0
+.IP "\s-1UTF\-32LE\-BOM\s0" 4
+.IX Item "UTF-32LE-BOM"
+\&\s-1UTF\-32\s0 Little Endian with \s-1BOM\s0
 .RE
 .RS 4
 .RE
@@ -436,5 +469,6 @@ Print nkf's version.
 Ignore rest of \-option.
 .SH "AUTHOR"
 .IX Header "AUTHOR"
-Copyright (C) 1987, \s-1FUJITSU\s0 \s-1LTD\s0. (I.Ichikawa),2000 S. Kono, \s-1COW\s0
-Copyright (C) 2002\-2007 Kono, Furukawa, Naruse, mastodon
+Copyright (c) 1987, Fujitsu \s-1LTD\s0. (Itaru \s-1ICHIKAWA\s0).
+.PP
+Copyright (c) 1996\-2009, The nkf Project.
