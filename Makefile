@@ -5,7 +5,8 @@ SHAR = shar
 # SHAR = shar -T
 PERL = perl
 RM = rm -rf
-VERSION = 2.0.8
+VERSION = 2.0.9
+prefix = /usr/local
 
 nkf : nkf.o utf8tbl.o
 	$(CC) $(CFLAGS) -o nkf nkf.o utf8tbl.o
@@ -28,6 +29,11 @@ perl:
 	$(PERL) Makefile.PL  ; \
 	make ; \
 	make test )
+
+install:
+	cp nkf $(prefix)/bin/
+	cp nkf.1 $(prefix)/man/man1/
+	cp nkf.1j $(prefix)/man/ja/man1/nkf.1
 
 shar:
 	-mkdir nkf-$(VERSION)
