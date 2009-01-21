@@ -957,6 +957,7 @@ eofeof
 printf "%-40s", "test_data/bugs10904";
     &test("$nkf -Mj",$example{'test_data/bugs10904'},$example{'test_data/bugs10904.ans'});
 
+    if (!NKF) {
 printf "%-40s", "Guess NL";
 &command_tests(
 	"$nkf --guess","none",      "ASCII\n",
@@ -980,6 +981,7 @@ printf "%-40s", "Guess NL";
 	"$nkf --guess","\r\n.\n",   "ASCII (MIXED NL)\n",
 	"$nkf --guess","\r\n.\r",   "ASCII (MIXED NL)\n",
 	"$nkf --guess","\r\n.\r\n", "ASCII (CRLF)\n");
+    }
 
 printf "%-40s", "Convert NL to LF";
 &command_tests(

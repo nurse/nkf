@@ -114,8 +114,35 @@ END {print "not ok 1\n" unless $loaded;}
     } else {
 	print "no 5\n";
     }
+}
 
+sub command_tests {
+    my @tests = @_;
+    my ($in, $out, $ans);
 
+    for (my $i = 0; $i <= $#tests; $i += 3){
+	local (@nkf) = split(/ /,$tests[$i]);
+	shift(@nkf);
+	$in = $tests[$i+1];
+	$ans = $tests[$i+2];
+        $out = NKF::nkf(@nkf,$in);
+	$out =~ s/ //g if $nkf =~ /-\w+m[NS]/o;
+	$ans =~ s/ //g if $nkf =~ /-\w+m[NS]/o;
+        if ($out ne $ans) {
+	    last;
+	}
+    }
+    if ($out eq $ans) {
+	print "Ok\n";
+	return;
+    }
+    print "Fail\n";
+    if ($diff) {
+	open(R,"|od -c >tmp.result.bad"); binmode R; print R $out; close(R);
+	open(R,"|od -c >tmp.expect.bad"); binmode R; print R $ans; close(R);
+	system "diff -c tmp.result.bad tmp.expect.bad";
+    }
+    return;
 }
 
 do "../nkf_test.pl";
