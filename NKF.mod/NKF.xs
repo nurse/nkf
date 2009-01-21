@@ -134,9 +134,6 @@ nkf(...)
     data = SvPV(ST(argc),i_len);
     input_ctr = 0;
 
-    if(x0201_f == WISH_TRUE)
-         x0201_f = ((!iso2022jp_f)? TRUE : NO_X0201);
-
     /* allocate the result buffer */
 
     /* During conversion, stirngs length may grow. This is the unit */
@@ -177,9 +174,6 @@ nkf_continue(...)
     /* Get input data pointer from the last variable. */
     data = SvPV(ST(0),i_len);
     input_ctr = 0;
-
-    if(x0201_f == WISH_TRUE)
-         x0201_f = ((!iso2022jp_f)? TRUE : NO_X0201);
 
     /* allocate the result buffer */
 
