@@ -95,7 +95,10 @@ nkf_putchar_grow(unsigned int c)
 
 #define PERL_XS 1
 #include "../utf8tbl.c"
+#undef SP
 #include "../nkf.c"
+#undef SP
+#define SP sp /* perl's CORE/pp.h */
 
 /* package defenition  */
 
