@@ -7,3 +7,8 @@ nkf-*
 *.o
 *.bad
 *.swp
+NKF.mod/Makefile
+NKF.mod/NKF.bs
+NKF.mod/NKF.c
+NKF.mod/blib/
+NKF.mod/pm_to_blib
