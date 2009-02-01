@@ -128,7 +128,7 @@ std_getc(f)
 FILE *f;
 {
     if (!nkf_buf_empty_p(nkf_state->std_gc_buf)) {
-	>        return nkf_buf_pop(nkf_state->std_gc_buf);
+        return nkf_buf_pop(nkf_state->std_gc_buf);
     } else {
         if ( std_getc_mode == 1 ) {
             return getc(f);
