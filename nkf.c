@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.0.9"
-#define NKF_RELEASE_DATE "2009-01-20"
+#define NKF_RELEASE_DATE "2009-02-20"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2009, The nkf Project."
@@ -6232,6 +6232,7 @@ options(unsigned char *cp)
 	    while ('0'<= *cp && *cp <='9') {
 		alpha_f |= 1 << (*cp++ - '0');
 	    }
+	    if (alpha_f & ((1 << 2) | (1 << 3))) alpha_f |= 1;
 	    if (!alpha_f) alpha_f = 1;
 	    continue;
 	case 'x':   /* Convert X0201 kana to X0208 or X0201 Conversion */
