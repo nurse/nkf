@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.0.9"
-#define NKF_RELEASE_DATE "2009-02-20"
+#define NKF_RELEASE_DATE "2009-02-21"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2009, The nkf Project."
@@ -1428,6 +1428,7 @@ set_output_encoding(nkf_encoding *enc)
 	output_endian = ENDIAN_LITTLE;
 	output_bom_f = TRUE;
 	break;
+    case UTF_32:
     case UTF_32BE_BOM:
 	output_bom_f = TRUE;
 	break;
@@ -6161,9 +6162,6 @@ options(unsigned char *cp)
 		    output_endian = ENDIAN_LITTLE;
 		} else if (cp[0] == 'B') {
 		    cp++;
-		} else {
-		    output_encoding = nkf_enc_from_index(enc_idx);
-		    continue;
 		}
 		if (cp[0] == '0'){
 		    cp++;
