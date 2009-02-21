@@ -216,8 +216,37 @@ print "UTF8 to SJIS...";&test("$nkf -s",$example{'utf1'},$example{'sjis1'});
 print "UTF8 to EUC ...";&test("$nkf -e",$example{'utf1'},$example{'euc1'});
 print "UTF8 to UTF8...";&test("$nkf -w",$example{'utf1'},$example{'utf1'});
 
-print "\nOther Features\n\n";
+# UTF
+sub h {pack("H*",shift)}
+print "SJIS to -w...          ";&test("$nkf -w",h("82A0"),h("E38182"));
+print "SJIS to -w8...         ";&test("$nkf -w8",h("82A0"),h("EFBBBFE38182"));
+print "SJIS to -w80...        ";&test("$nkf -w80",h("82A0"),h("E38182"));
+print "SJIS to UTF-8...       ";&test("$nkf --oc=UTF-8",h("82A0"),h("E38182"));
+print "SJIS to UTF-8N...      ";&test("$nkf --oc=UTF-8N",h("82A0"),h("E38182"));
+print "SJIS to UTF-8-BOM...   ";&test("$nkf --oc=UTF-8-BOM",h("82A0"),h("EFBBBFE38182"));
+print "SJIS to -w16...        ";&test("$nkf -w16",h("82A0"),h("FEFF3042"));
+print "SJIS to UTF-16...      ";&test("$nkf --oc=UTF-16",h("82A0"),h("FEFF3042"));
+print "SJIS to -w16B...       ";&test("$nkf -w16B",h("82A0"),h("FEFF3042"));
+print "SJIS to -w16B0...      ";&test("$nkf -w16B0",h("82A0"),h("3042"));
+print "SJIS to UTF-16BE...    ";&test("$nkf --oc=UTF-16BE",h("82A0"),h("3042"));
+print "SJIS to UTF-16BE-BOM...";&test("$nkf --oc=UTF-16BE-BOM",h("82A0"),h("FEFF3042"));
+print "SJIS to -w16L...       ";&test("$nkf -w16L",h("82A0"),h("FFFE4230"));
+print "SJIS to -w16L0...      ";&test("$nkf -w16L0",h("82A0"),h("4230"));
+print "SJIS to UTF-16LE...    ";&test("$nkf --oc=UTF-16LE",h("82A0"),h("4230"));
+print "SJIS to UTF-16LE-BOM...";&test("$nkf --oc=UTF-16LE-BOM",h("82A0"),h("FFFE4230"));
+print "SJIS to -w32...        ";&test("$nkf -w32",h("82A0"),h("0000FEFF00003042"));
+print "SJIS to UTF-32...      ";&test("$nkf --oc=UTF-32",h("82A0"),h("0000FEFF00003042"));
+print "SJIS to -w32B...       ";&test("$nkf -w32B",h("82A0"),h("0000FEFF00003042"));
+print "SJIS to -w32B0...      ";&test("$nkf -w32B0",h("82A0"),h("00003042"));
+print "SJIS to UTF-32BE...    ";&test("$nkf --oc=UTF-32BE",h("82A0"),h("00003042"));
+print "SJIS to UTF-32BE-BOM...";&test("$nkf --oc=UTF-32BE-BOM",h("82A0"),h("0000FEFF00003042"));
+print "SJIS to -w32L...       ";&test("$nkf -w32L",h("82A0"),h("FFFE000042300000"));
+print "SJIS to -w32L0...      ";&test("$nkf -w32L0",h("82A0"),h("42300000"));
+print "SJIS to UTF-32LE...    ";&test("$nkf --oc=UTF-32LE",h("82A0"),h("42300000"));
+print "SJIS to UTF-32LE-BOM...";&test("$nkf --oc=UTF-32LE-BOM",h("82A0"),h("FFFE000042300000"));
 
+
+print "\nOther Features\n\n";
 # Ambigous Case
 
 $example{'amb'} = unpack('u',<<'eofeof');
