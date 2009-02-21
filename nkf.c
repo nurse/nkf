@@ -468,6 +468,8 @@ struct input_code input_code_list[] = {
     {"Shift_JIS", 0, 0, 0, {0, 0, 0}, s_status, s_iconv, 0},
 #ifdef UTF8_INPUT_ENABLE
     {"UTF-8",     0, 0, 0, {0, 0, 0}, w_status, w_iconv, 0},
+    {"UTF-16",     0, 0, 0, {0, 0, 0}, NULL, w_iconv16, 0},
+    {"UTF-32",     0, 0, 0, {0, 0, 0}, NULL, w_iconv32, 0},
 #endif
     {0}
 };
