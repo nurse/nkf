@@ -80,7 +80,7 @@ nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
 
 =begin
 
-This is a Perl Extension version of nkf (Netowrk Kanji Filter).
+This is a Perl Extension version of nkf (Network Kanji Filter).
 It converts the last argument and return converted result. Conversion
 details are specified by flags before the last argument.
 
