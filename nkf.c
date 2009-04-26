@@ -3131,18 +3131,16 @@ h_conv(FILE *f, int c1, int c2)
 	    } else if ((c3 = (*i_getc)(f)) == EOF) {
 		ret = EOF;
 		break;
-	    } else {
-		code_status(c3);
-		if (hold_index < hold_count){
-		    c4 = hold_buf[hold_index++];
-		} else if ((c4 = (*i_getc)(f)) == EOF) {
-		    c3 = ret = EOF;
-		    break;
-		} else {
-		    code_status(c4);
-		    (*iconv)(c1, c2, (c3<<8)|c4);
-		}
 	    }
+	    code_status(c3);
+	    if (hold_index < hold_count){
+		c4 = hold_buf[hold_index++];
+	    } else if ((c4 = (*i_getc)(f)) == EOF) {
+		c3 = ret = EOF;
+		break;
+	    }
+	    code_status(c4);
+	    (*iconv)(c1, c2, (c3<<8)|c4);
 	    break;
 	case -1:
 	    /* 3 bytes EUC or UTF-8 */
