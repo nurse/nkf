@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.0.9"
-#define NKF_RELEASE_DATE "2009-02-21"
+#define NKF_RELEASE_DATE "2009-04-26"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2009, The nkf Project."
@@ -1655,7 +1655,7 @@ nkf_unicode_to_utf8(nkf_char val, nkf_char *p1, nkf_char *p2, nkf_char *p3, nkf_
 	*p3 = 0x80 | ( val        & 0x3f);
 	*p4 = 0;
     } else if (nkf_char_unicode_value_p(val)) {
-	*p1 = 0xe0 |  (val >> 16);
+	*p1 = 0xf0 |  (val >> 18);
 	*p2 = 0x80 | ((val >> 12) & 0x3f);
 	*p3 = 0x80 | ((val >>  6) & 0x3f);
 	*p4 = 0x80 | ( val        & 0x3f);
