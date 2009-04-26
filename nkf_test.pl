@@ -186,7 +186,7 @@ print "UTF8 to U16L0..";&test("$nkf --ic=utf-8 --oc=utf-16le",		$example{'utf8N'
 print "UTF8 to U16B...";&test("$nkf --ic=utf-8 --oc=utf-16be-bom",	$example{'utf8N'},$example{'u16B'});
 print "UTF8 to U16B0..";&test("$nkf --ic=utf-8 --oc=utf-16be",		$example{'utf8N'},$example{'u16B0'});
 
-
+print "UTF8 to UTF8...";&test("$nkf -w","\xf0\xa0\x80\x8b","\xf0\xa0\x80\x8b");
 
 # From JIS
 
