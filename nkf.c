@@ -295,7 +295,7 @@ struct {
 			       && (c != '(') && (c != ')') && (c != '.') && (c != 0x22)))
 
 #define is_ibmext_in_sjis(c2) (CP932_TABLE_BEGIN <= c2 && c2 <= CP932_TABLE_END)
-#define nkf_byte_jisx0201_katakana_p(c) (SP <= c && c < (0xE0&0x7F))
+#define nkf_byte_jisx0201_katakana_p(c) (SP <= c && c <= 0x5F)
 
 #define         HOLD_SIZE       1024
 #if defined(INT_IS_SHORT)
@@ -5445,6 +5445,12 @@ kanji_convert(FILE *f)
 	    if (input_mode == JIS_X_0208 && DEL <= c1 && c1 < 0x92) {
 		/* CP5022x */
 		MORE;
+	    }else if (input_codename && input_codename[0] == 'I' &&
+		    0xA1 <= c1 && c1 <= 0xDF) {
+		/* JIS X 0201 Katakana in 8bit JIS */
+		c2 = JIS_X_0201_1976_K;
+		c1 &= 0x7f;
+		SEND;
 	    } else if (c1 > DEL) {
 		/* 8 bit code */
 		if (!estab_f && !iso8859_f) {
