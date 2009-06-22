@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.0.9"
-#define NKF_RELEASE_DATE "2009-04-26"
+#define NKF_RELEASE_DATE "2009-06-23"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2009, The nkf Project."
@@ -1332,6 +1332,11 @@ set_output_encoding(nkf_encoding *enc)
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_CP932;
+#endif
+	break;
+    case ISO_2022_JP:
+#ifdef SHIFTJIS_CP932
+	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
 	break;
     case ISO_2022_JP_1:
