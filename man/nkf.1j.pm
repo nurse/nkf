@@ -437,7 +437,7 @@ B<-w16L0, -W16L> と同じ。
 
 対応する変換をします。
 
-=item B<--hirakana --katakana>
+=item B<--hiragana --katakana>
 
 平仮名、片仮名変換
 

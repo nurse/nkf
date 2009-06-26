@@ -261,7 +261,7 @@ OPTIONS
     --jis --euc --sjis --mime --base64
         対応する変換をします。
 
-    --hirakana --katakana
+    --hiragana --katakana
         平仮名、片仮名変換
 
     --fb-{skip, html, xml, perl, java, subchar}
