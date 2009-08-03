@@ -6238,11 +6238,10 @@ options(unsigned char *cp)
 	       bit:3   Convert HTML Entity
 	       bit:4   Convert JIS X 0208 Katakana to JIS X 0201 Katakana
 	     */
-	    while ('0'<= *cp && *cp <='9') {
+	    while ('0'<= *cp && *cp <='4') {
 		alpha_f |= 1 << (*cp++ - '0');
 	    }
-	    if (alpha_f & ((1 << 2) | (1 << 3))) alpha_f |= 1;
-	    if (!alpha_f) alpha_f = 1;
+	    alpha_f |= 1;
 	    continue;
 	case 'x':   /* Convert X0201 kana to X0208 or X0201 Conversion */
 	    x0201_f = FALSE;    /* No X0201->X0208 conversion */

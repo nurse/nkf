@@ -502,6 +502,24 @@ printf "%-40s", "X0201 conversion: EUC";
     &test("$nkf -jZ",$example{'x0201.euc'},$example{'x0201.x0208'});
 printf "%-40s", "X0201 conversion: UTF8";
     &test("$nkf -jZ",$example{'x0201.utf'},$example{'x0201.x0208'});
+printf "%-40s", "-wZ"; &test("$nkf -wZ",
+	"\xE3\x80\x80\xEF\xBD\x81\xEF\xBC\xA1&\xE3\x82\xA2",
+	"\xE3\x80\x80aA&\xE3\x82\xA2");
+printf "%-40s", "-wZ0"; &test("$nkf -wZ0",
+	"\xE3\x80\x80\xEF\xBD\x81\xEF\xBC\xA1&\xE3\x82\xA2",
+	"\xE3\x80\x80aA&\xE3\x82\xA2");
+printf "%-40s", "-wZ1"; &test("$nkf -wZ1",
+	"\xE3\x80\x80\xEF\xBD\x81\xEF\xBC\xA1&\xE3\x82\xA2",
+	" aA&\xE3\x82\xA2");
+printf "%-40s", "-wZ2"; &test("$nkf -wZ2",
+	"\xE3\x80\x80\xEF\xBD\x81\xEF\xBC\xA1&\xE3\x82\xA2",
+	"  aA&\xE3\x82\xA2");
+printf "%-40s", "-wZ3"; &test("$nkf -wZ3",
+	"\xE3\x80\x80\xEF\xBD\x81\xEF\xBC\xA1&\xE3\x82\xA2",
+	"\xE3\x80\x80aA&amp;\xE3\x82\xA2");
+printf "%-40s", "-wZ4"; &test("$nkf -wZ4",
+	"\xE3\x80\x80\xEF\xBD\x81\xEF\xBC\xA1&\xE3\x82\xA2",
+	"\xE3\x80\x80aA&\xEF\xBD\xB1");
 # -x means X0201 output
 printf "%-40s", "X0201 output: SJIS";
     &test("$nkf -xs",$example{'x0201.euc'},$example{'x0201.sjis'});
