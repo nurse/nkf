@@ -5530,7 +5530,7 @@ kanji_convert(FILE *f)
 		SKIP;
 	    } else if (c1 == ESC && (!is_8bit || mime_decode_mode)) {
 		if ((c1 = (*i_getc)(f)) == EOF) {
-		    /*  (*oconv)(0, ESC); don't send bogus code */
+		    (*oconv)(0, ESC);
 		    LAST;
 		}
 		else if (c1 == '&') {
@@ -5660,7 +5660,7 @@ kanji_convert(FILE *f)
 	    } else if (c1 == ESC && iconv == s_iconv) {
 		/* ESC in Shift_JIS */
 		if ((c1 = (*i_getc)(f)) == EOF) {
-		    /*  (*oconv)(0, ESC); don't send bogus code */
+		    (*oconv)(0, ESC);
 		    LAST;
 		} else if (c1 == '$') {
 		    /* J-PHONE emoji */
