@@ -6,7 +6,10 @@ SHAR = shar
 PERL = perl
 RM = rm -rf
 VERSION = 2.0.9
+MKDIR = mkdir
 prefix = /usr/local
+
+.PHONY: clean install test tar shar
 
 nkf : nkf.o utf8tbl.o
 	$(CC) $(CFLAGS) -o nkf nkf.o utf8tbl.o
@@ -31,6 +34,11 @@ perl:
 	make test )
 
 install:
+	-$(MKDIR) $(prefix)/bin
+	-$(MKDIR) $(prefix)/man
+	-$(MKDIR) $(prefix)/man/man1
+	-$(MKDIR) $(prefix)/man/ja
+	-$(MKDIR) $(prefix)/man/ja/man1
 	cp nkf $(prefix)/bin/
 	cp nkf.1 $(prefix)/man/man1/
 	cp nkf.1j $(prefix)/man/ja/man1/nkf.1
