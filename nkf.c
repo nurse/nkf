@@ -1206,6 +1206,7 @@ set_input_encoding(nkf_encoding *enc)
     case CP50220:
     case CP50221:
     case CP50222:
+	x0201_f = TRUE;
 #ifdef SHIFTJIS_CP932
 	cp51932_f = TRUE;
 #endif
@@ -1227,6 +1228,7 @@ set_input_encoding(nkf_encoding *enc)
     case SHIFT_JIS:
 	break;
     case WINDOWS_31J:
+	x0201_f = TRUE;
 #ifdef SHIFTJIS_CP932
 	cp51932_f = TRUE;
 #endif
@@ -1248,6 +1250,7 @@ set_input_encoding(nkf_encoding *enc)
     case EUCJP_NKF:
 	break;
     case CP51932:
+	x0201_f = TRUE;
 #ifdef SHIFTJIS_CP932
 	cp51932_f = TRUE;
 #endif
@@ -1327,6 +1330,7 @@ set_output_encoding(nkf_encoding *enc)
 #endif
 	break;
     case CP50221:
+	x0201_f = TRUE;
 #ifdef SHIFTJIS_CP932
 	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
@@ -1355,6 +1359,7 @@ set_output_encoding(nkf_encoding *enc)
     case SHIFT_JIS:
 	break;
     case WINDOWS_31J:
+	x0201_f = TRUE;
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_CP932;
 #endif
@@ -1383,6 +1388,7 @@ set_output_encoding(nkf_encoding *enc)
 #endif
 	break;
     case CP51932:
+	x0201_f = TRUE;
 #ifdef SHIFTJIS_CP932
 	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
