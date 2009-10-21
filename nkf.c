@@ -4439,7 +4439,7 @@ mime_getc(FILE *f)
 	}
 	if (c1=='='&&c2<SP) { /* this is soft wrap */
 	    while((c1 =  (*i_mgetc)(f)) <=SP) {
-		if ((c1 = (*i_mgetc)(f)) == EOF) return (EOF);
+		if (c1 == EOF) return (EOF);
 	    }
 	    mime_decode_mode = 'Q'; /* still in MIME */
 	    goto restart_mime_q;
