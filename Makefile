@@ -5,7 +5,7 @@ SHAR = shar
 # SHAR = shar -T
 PERL = perl
 RM = rm -rf
-VERSION = 2.0.9
+VERSION = 2.1.0
 MKDIR = mkdir
 prefix = /usr/local
 

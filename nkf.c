@@ -20,8 +20,8 @@
  *
  * 3. This notice may not be removed or altered from any source distribution.
  */
-#define NKF_VERSION "2.0.9"
-#define NKF_RELEASE_DATE "2009-06-23"
+#define NKF_VERSION "2.1.0"
+#define NKF_RELEASE_DATE "2009-11-17"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2009, The nkf Project."
