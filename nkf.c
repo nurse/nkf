@@ -4855,7 +4855,6 @@ mime_putc(nkf_char c)
 		return;
 	    }
 	}
-	else return;
     }
 
     if (mimeout_mode <= 0) {
@@ -5253,6 +5252,8 @@ module_connection(void)
     set_output_encoding(output_encoding);
     oconv = nkf_enc_to_oconv(output_encoding);
     o_putc = std_putc;
+    if (nkf_enc_unicode_p(output_encoding))
+	output_mode = UTF_8;
 
     /* replace continucation module, from output side */
 
