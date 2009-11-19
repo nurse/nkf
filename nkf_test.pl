@@ -428,10 +428,10 @@ printf "%-40s", "Microsoft UCS Mapping :";
 printf "%-40s", "CP932 to UTF-16BE :";
     &test("$nkf --ic=cp932 --oc=utf-16be",$example{'ms_ucs_map_1_sjis'},$example{'ms_ucs_map_1_utf16_ms'});
 
-# X0201 $B2>L>(B
+# X0201 仮名
 # X0201->X0208 conversion
 # X0208 aphabet -> ASCII
-# X0201 $BAj8_JQ49(B
+# X0201 相互変換
 
 print "\nX0201 test\n\n";
 
@@ -1003,6 +1003,14 @@ eofeof
 
 printf "%-40s", "test_data/bugs10904";
     &test("$nkf -Mj",$example{'test_data/bugs10904'},$example{'test_data/bugs10904.ans'});
+
+printf "%-40s", "test_data/ruby-dev:39722";
+    &test("$nkf -Mj",<<eom,<<eom);
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaあ
+eom
+=?US-ASCII?Q?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?=
+ =?US-ASCII?Q?aaaaaaaaaaaaaaaaa?= =?ISO-2022-JP?B?GyRCJCIbKEI=?=
+eom
 
     if (!NKF) {
 printf "%-40s", "Guess NL";

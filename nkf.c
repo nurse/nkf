@@ -4849,10 +4849,13 @@ mime_putc(nkf_char c)
 		    return;
 		}
 	    }
-	    (*o_mputc)(c);
-	    base64_count++;
+	    if (c != 0x1B) {
+		(*o_mputc)(c);
+		base64_count++;
+		return;
+	    }
 	}
-	return;
+	else return;
     }
 
     if (mimeout_mode <= 0) {
