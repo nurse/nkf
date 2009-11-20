@@ -4858,7 +4858,8 @@ mime_putc(nkf_char c)
     }
 
     if (mimeout_mode <= 0) {
-	if (c <= DEL && (output_mode==ASCII ||output_mode == ISO_8859_1)) {
+	if (c <= DEL && (output_mode==ASCII || output_mode == ISO_8859_1 ||
+		    output_mode == UTF_8)) {
 	    if (nkf_isspace(c)) {
 		int flag = 0;
 		if (mimeout_mode == -1) {
@@ -4949,7 +4950,8 @@ mime_putc(nkf_char c)
 	}
     }else{
 	/* mimeout_mode == 'B', 1, 2 */
-	if ( c<=DEL && (output_mode==ASCII ||output_mode == ISO_8859_1)) {
+	if (c <= DEL && (output_mode==ASCII || output_mode == ISO_8859_1 ||
+		    output_mode == UTF_8)) {
 	    if (lastchar == CR || lastchar == LF){
 		if (nkf_isblank(c)) {
 		    for (i=0;i<mimeout_state.count;i++) {
