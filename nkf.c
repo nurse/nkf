@@ -4649,7 +4649,8 @@ mime_prechar(nkf_char c2, nkf_char c1)
 		base64_count = 1;
 	    }
 	} else {
-	    if (base64_count + mimeout_state.count/3*4> 66) {
+	    if (!(c2 == 0 && (c1 == CR || c1 == LF)) &&
+		    base64_count + mimeout_state.count/3*4> 66) {
 		(*o_base64conv)(EOF,0);
 		OCONV_NEWLINE((*o_base64conv));
 		(*o_base64conv)(0,SP);
