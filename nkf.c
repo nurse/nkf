@@ -4959,7 +4959,7 @@ mime_putc(nkf_char c)
 			mimeout_addchar(mimeout_state.buf[i]);
 		    }
 		    mimeout_state.count = 0;
-		} else if (SP<c && c<DEL) {
+		} else {
 		    eof_mime();
 		    for (i=0;i<mimeout_state.count;i++) {
 			(*o_mputc)(mimeout_state.buf[i]);

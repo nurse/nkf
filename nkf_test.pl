@@ -1011,6 +1011,19 @@ eom
 =?US-ASCII?Q?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?=
  =?US-ASCII?Q?aaaaaaaaaaaaaaaaa?= =?ISO-2022-JP?B?GyRCJCIbKEI=?=
 eom
+# test_data/bug19779
+
+$example{'test_data/bug19779'} = unpack('u',<<'eofeof');
+2&R1","$;*$(*&R1"7V8;*$(*
+eofeof
+
+$example{'test_data/bug19779.ans'} = unpack('u',<<'eofeof');
+M/3])4T\M,C`R,BU*4#]"/T=Y4D--0T5B2T5)/3\]"CT_25-/+3(P,C(M2E`_
+10C]'>5)#6#)98DM%23T_/0H`
+eofeof
+
+printf "%-40s",  "test_data/bug19779    ";
+    &test("$nkf -jM",$example{'test_data/bug19779'},$example{'test_data/bug19779.ans'});
 
     if (!NKF) {
 printf "%-40s", "Guess NL";
