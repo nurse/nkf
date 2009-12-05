@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.1.0"
-#define NKF_RELEASE_DATE "2009-11-17"
+#define NKF_RELEASE_DATE "2009-12-05"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2009, The nkf Project."
@@ -1028,7 +1028,7 @@ nkf_each_char_to_hex(void (*f)(nkf_char c2,nkf_char c1), nkf_char c)
     int shift = 20;
     c &= VALUE_MASK;
     while(shift >= 0){
-	if(c >= 1<<shift){
+	if(c >= NKF_INT32_C(1)<<shift){
 	    while(shift >= 0){
 		(*f)(0, bin2hex(c>>shift));
 		shift -= 4;
@@ -3062,11 +3062,11 @@ push_hold_buf(nkf_char c2)
 }
 
 static int
-h_conv(FILE *f, int c1, int c2)
+h_conv(FILE *f, nkf_char c1, nkf_char c2)
 {
-    int ret, c4, c3;
+    int ret;
     int hold_index;
-
+    nkf_char c3, c4;
 
     /** it must NOT be in the kanji shifte sequence      */
     /** it must NOT be written in JIS7                   */
