@@ -2233,13 +2233,13 @@ nkf_iconv_utf_16(nkf_char c1, nkf_char c2, nkf_char c3, nkf_char c4)
 static nkf_char
 w_iconv16(nkf_char c2, nkf_char c1, nkf_char c0)
 {
-    return 0;
+    return 16;
 }
 
 static nkf_char
 w_iconv32(nkf_char c2, nkf_char c1, nkf_char c0)
 {
-    return 0;
+    return 32;
 }
 
 static size_t
