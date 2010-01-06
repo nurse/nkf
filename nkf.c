@@ -20,11 +20,11 @@
  *
  * 3. This notice may not be removed or altered from any source distribution.
  */
-#define NKF_VERSION "2.1.0"
-#define NKF_RELEASE_DATE "2009-12-05"
+#define NKF_VERSION "2.1.1"
+#define NKF_RELEASE_DATE "2010-01-05"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
-    "Copyright (C) 1996-2009, The nkf Project."
+    "Copyright (C) 1996-2010, The nkf Project."
 
 #include "config.h"
 #include "nkf.h"
@@ -210,6 +210,8 @@ struct {
 } encoding_name_to_id_table[] = {
     {"US-ASCII",		ASCII},
     {"ASCII",			ASCII},
+    {"646",			ASCII},
+    {"ROMAN8",			ASCII},
     {"ISO-2022-JP",		ISO_2022_JP},
     {"ISO2022JP-CP932",		CP50220},
     {"CP50220",			CP50220},
@@ -221,6 +223,7 @@ struct {
     {"ISO-2022-JP-2004",	ISO_2022_JP_2004},
     {"SHIFT_JIS",		SHIFT_JIS},
     {"SJIS",			SHIFT_JIS},
+    {"PCK",			SHIFT_JIS},
     {"WINDOWS-31J",		WINDOWS_31J},
     {"CSWINDOWS31J",		WINDOWS_31J},
     {"CP932",			WINDOWS_31J},
