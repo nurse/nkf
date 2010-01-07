@@ -1031,6 +1031,9 @@ printf "%-40s",  "[nkf-forum:47327]    ";
 printf "%-40s",  "[nkf-forum:47334]    ";
     &test("$nkf -w",pack('H*','feff006100620063000a'),"abc\n");
 
+printf "%-40s",  "[nkf-bug:20079]    ";
+    &test("$nkf -jSxM","\xBB \xBB","=?ISO-2022-JP?B?GyhJOxsoQiAbKEk7GyhC?=");
+
     if (!NKF) {
 printf "%-40s", "Guess NL";
 &command_tests(
