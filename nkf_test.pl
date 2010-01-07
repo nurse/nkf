@@ -1028,6 +1028,9 @@ printf "%-40s",  "test_data/bug19779    ";
 printf "%-40s",  "[nkf-forum:47327]    ";
     &test("$nkf -wM",pack('H*','feffd852de76d814dc45000a'),"=?UTF-8?B?8KSptvCVgYU=?=\n");
 
+printf "%-40s",  "[nkf-forum:47334]    ";
+    &test("$nkf -w",pack('H*','feff006100620063000a'),"abc\n");
+
     if (!NKF) {
 printf "%-40s", "Guess NL";
 &command_tests(
