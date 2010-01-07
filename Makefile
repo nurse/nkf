@@ -39,9 +39,9 @@ install:
 	-$(MKDIR) $(prefix)/man/man1
 	-$(MKDIR) $(prefix)/man/ja
 	-$(MKDIR) $(prefix)/man/ja/man1
-	cp nkf $(prefix)/bin/
-	cp nkf.1 $(prefix)/man/man1/
-	cp nkf.1j $(prefix)/man/ja/man1/nkf.1
+	cp -f nkf $(prefix)/bin/
+	cp -f nkf.1 $(prefix)/man/man1/
+	cp -f nkf.1j $(prefix)/man/ja/man1/nkf.1
 
 shar:
 	-mkdir nkf-$(VERSION)
