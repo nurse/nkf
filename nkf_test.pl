@@ -1025,6 +1025,9 @@ eofeof
 printf "%-40s",  "test_data/bug19779    ";
     &test("$nkf -jM",$example{'test_data/bug19779'},$example{'test_data/bug19779.ans'});
 
+printf "%-40s",  "[nkf-forum:47327]    ";
+    &test("$nkf -wM",pack('H*','feffd852de76d814dc45000a'),"=?UTF-8?B?8KSptvCVgYU=?=\n");
+
     if (!NKF) {
 printf "%-40s", "Guess NL";
 &command_tests(
