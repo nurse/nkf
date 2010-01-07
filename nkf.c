@@ -2233,13 +2233,15 @@ nkf_iconv_utf_16(nkf_char c1, nkf_char c2, nkf_char c3, nkf_char c4)
 static nkf_char
 w_iconv16(nkf_char c2, nkf_char c1, nkf_char c0)
 {
-    return 16;
+    (*oconv)(c2, c1);
+    return 16; /* different from w_iconv32 */
 }
 
 static nkf_char
 w_iconv32(nkf_char c2, nkf_char c1, nkf_char c0)
 {
-    return 32;
+    (*oconv)(c2, c1);
+    return 32; /* different from w_iconv16 */
 }
 
 static size_t
@@ -5408,7 +5410,7 @@ kanji_convert(FILE *f)
 	       (c4 = (*i_getc)(f)) != EOF) {
 	    nkf_iconv_utf_32(c1, c2, c3, c4);
 	}
-	(*i_ungetc)(EOF, f);
+	goto finished;
     }
     else if (iconv == w_iconv16) {
 	while ((c1 = (*i_getc)(f)) != EOF &&
@@ -5419,7 +5421,7 @@ kanji_convert(FILE *f)
 		nkf_iconv_utf_16(c1, c2, c3, c4);
 	    }
 	}
-	(*i_ungetc)(EOF, f);
+	goto finished;
     }
 #endif
 
@@ -5801,6 +5803,7 @@ kanji_convert(FILE *f)
 	/* goto next_word */
     }
 
+finished:
     /* epilogue */
     (*iconv)(EOF, 0, 0);
     if (!input_codename)
