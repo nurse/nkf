@@ -17,21 +17,9 @@
 #endif
 
 #if DEFAULT_NEWLINE == 0x0D0A
-#define PUT_NEWLINE(func) do {\
-    func(0x0D);\
-    func(0x0A);\
-} while (0)
-#define OCONV_NEWLINE(func) do {\
-    func(0, 0x0D);\
-    func(0, 0x0A);\
-} while (0)
 #elif DEFAULT_NEWLINE == 0x0D
-#define PUT_NEWLINE(func) func(0x0D)
-#define OCONV_NEWLINE(func) func(0, 0x0D)
 #else
 #define DEFAULT_NEWLINE 0x0A
-#define PUT_NEWLINE(func) func(0x0A)
-#define OCONV_NEWLINE(func) func(0, 0x0A)
 #endif
 #ifdef HELP_OUTPUT_STDERR
 #define HELP_OUTPUT stderr

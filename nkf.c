@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.1.1"
-#define NKF_RELEASE_DATE "2010-01-05"
+#define NKF_RELEASE_DATE "2010-01-15"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2010, The nkf Project."
@@ -3356,6 +3356,40 @@ eol_conv(nkf_char c2, nkf_char c1)
     else if (c2 != 0 || c1 != LF) (*o_eol_conv)(c2, c1);
 }
 
+static void
+put_newline(void (*func)(nkf_char))
+{
+    switch (eolmode_f ? eolmode_f : DEFAULT_NEWLINE) {
+      case CRLF:
+	(*func)(0x0D);
+	(*func)(0x0A);
+	break;
+      case CR:
+	(*func)(0x0D);
+	break;
+      case LF:
+	(*func)(0x0A);
+	break;
+    }
+}
+
+static void
+oconv_newline(void (*func)(nkf_char, nkf_char))
+{
+    switch (eolmode_f ? eolmode_f : DEFAULT_NEWLINE) {
+      case CRLF:
+	(*func)(0, 0x0D);
+	(*func)(0, 0x0A);
+	break;
+      case CR:
+	(*func)(0, 0x0D);
+	break;
+      case LF:
+	(*func)(0, 0x0A);
+	break;
+    }
+}
+
 /*
    Return value of fold_conv()
 
@@ -3528,13 +3562,13 @@ fold_conv(nkf_char c2, nkf_char c1)
     /* terminator process */
     switch(fold_state) {
     case LF:
-	OCONV_NEWLINE((*o_fconv));
+	oconv_newline(o_fconv);
 	(*o_fconv)(c2,c1);
 	break;
     case 0:
 	return;
     case CR:
-	OCONV_NEWLINE((*o_fconv));
+	oconv_newline(o_fconv);
 	break;
     case TAB:
     case SP:
@@ -4617,7 +4651,7 @@ open_mime(nkf_char mode)
 	    (*o_mputc)(mimeout_state.buf[i]);
 	    i++;
 	}
-	PUT_NEWLINE((*o_mputc));
+	put_newline(o_mputc);
 	(*o_mputc)(SP);
 	base64_count = 1;
 	if (mimeout_state.count>0 && nkf_isspace(mimeout_state.buf[i])) {
@@ -4650,7 +4684,7 @@ mime_prechar(nkf_char c2, nkf_char c1)
 	if (c2 == EOF){
 	    if (base64_count + mimeout_state.count/3*4> 73){
 		(*o_base64conv)(EOF,0);
-		OCONV_NEWLINE((*o_base64conv));
+		oconv_newline(o_base64conv);
 		(*o_base64conv)(0,SP);
 		base64_count = 1;
 	    }
@@ -4658,7 +4692,7 @@ mime_prechar(nkf_char c2, nkf_char c1)
 	    if (!(c2 == 0 && (c1 == CR || c1 == LF)) &&
 		    base64_count + mimeout_state.count/3*4> 66) {
 		(*o_base64conv)(EOF,0);
-		OCONV_NEWLINE((*o_base64conv));
+		oconv_newline(o_base64conv);
 		(*o_base64conv)(0,SP);
 		base64_count = 1;
 		mimeout_mode = -1;
@@ -4669,7 +4703,7 @@ mime_prechar(nkf_char c2, nkf_char c1)
 	    mimeout_mode =  (output_mode==ASCII ||output_mode == ISO_8859_1) ? 'Q' : 'B';
 	    open_mime(output_mode);
 	    (*o_base64conv)(EOF,0);
-	    OCONV_NEWLINE((*o_base64conv));
+	    oconv_newline(o_base64conv);
 	    (*o_base64conv)(0,SP);
 	    base64_count = 1;
 	    mimeout_mode = -1;
@@ -4767,14 +4801,14 @@ mime_putc(nkf_char c)
 	    if (base64_count > 71){
 		if (c!=CR && c!=LF) {
 		    (*o_mputc)('=');
-		    PUT_NEWLINE((*o_mputc));
+		    put_newline(o_mputc);
 		}
 		base64_count = 0;
 	    }
 	}else{
 	    if (base64_count > 71){
 		eof_mime();
-		PUT_NEWLINE((*o_mputc));
+		put_newline(o_mputc);
 		base64_count = 0;
 	    }
 	    if (c == EOF) { /* c==EOF */
@@ -4836,7 +4870,7 @@ mime_putc(nkf_char c)
 	    } else if (c <= SP) {
 		close_mime();
 		if (base64_count > 70) {
-		    PUT_NEWLINE((*o_mputc));
+		    put_newline(o_mputc);
 		    base64_count = 0;
 		}
 		if (!nkf_isblank(c)) {
@@ -4846,7 +4880,7 @@ mime_putc(nkf_char c)
 	    } else {
 		if (base64_count > 70) {
 		    close_mime();
-		    PUT_NEWLINE((*o_mputc));
+		    put_newline(o_mputc);
 		    (*o_mputc)(SP);
 		    base64_count = 1;
 		    open_mime(output_mode);
@@ -4911,7 +4945,7 @@ mime_putc(nkf_char c)
 		    }
 
 		    if (i == 0 || i == mimeout_state.count - len) {
-			PUT_NEWLINE((*o_mputc));
+			put_newline(o_mputc);
 			base64_count = 0;
 			if (!nkf_isspace(mimeout_state.buf[0])){
 			    (*o_mputc)(SP);
@@ -4923,7 +4957,7 @@ mime_putc(nkf_char c)
 			for (j = 0; j <= i; ++j) {
 			    (*o_mputc)(mimeout_state.buf[j]);
 			}
-			PUT_NEWLINE((*o_mputc));
+			put_newline(o_mputc);
 			base64_count = 1;
 			for (; j <= mimeout_state.count; ++j) {
 			    mimeout_state.buf[j - i] = mimeout_state.buf[j];
