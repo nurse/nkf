@@ -6,6 +6,7 @@
  */
 
 #ifndef NKF_H
+#define NKF_H
 
 /* Wrapper of configurations */
 
