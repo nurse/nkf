@@ -3055,14 +3055,14 @@ std_putc(nkf_char c)
 }
 #endif /*WIN32DLL*/
 
-static unsigned char   hold_buf[HOLD_SIZE*2];
+static nkf_char   hold_buf[HOLD_SIZE*2];
 static int             hold_count = 0;
 static nkf_char
 push_hold_buf(nkf_char c2)
 {
     if (hold_count >= HOLD_SIZE*2)
 	return (EOF);
-    hold_buf[hold_count++] = (unsigned char)c2;
+    hold_buf[hold_count++] = c2;
     return ((hold_count >= HOLD_SIZE*2) ? EOF : hold_count);
 }
 
@@ -3121,7 +3121,11 @@ h_conv(FILE *f, nkf_char c1, nkf_char c2)
     hold_index = 0;
     while (hold_index < hold_count){
 	c1 = hold_buf[hold_index++];
-	if (c1 <= DEL){
+	if (nkf_char_unicode_p(c1)) {
+	    (*oconv)(0, c1);
+	    continue;
+	}
+	else if (c1 <= DEL){
 	    (*iconv)(0, c1, 0);
 	    continue;
 	}else if (iconv == s_iconv && 0xa1 <= c1 && c1 <= 0xdf){
