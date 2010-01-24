@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.1.1"
-#define NKF_RELEASE_DATE "2010-01-15"
+#define NKF_RELEASE_DATE "2010-01-25"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2010, The nkf Project."
@@ -832,7 +832,7 @@ nkf_buf_dispose(nkf_buf_t *buf)
 #define nkf_buf_length(buf) ((buf)->len)
 #define nkf_buf_empty_p(buf) ((buf)->len == 0)
 
-static unsigned char
+static nkf_char
 nkf_buf_at(nkf_buf_t *buf, int index)
 {
     assert(index <= buf->len);
@@ -854,7 +854,7 @@ nkf_buf_push(nkf_buf_t *buf, nkf_char c)
     buf->ptr[buf->len++] = c;
 }
 
-static unsigned char
+static nkf_char
 nkf_buf_pop(nkf_buf_t *buf)
 {
     assert(!nkf_buf_empty_p(buf));
