@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.1.1"
-#define NKF_RELEASE_DATE "2010-01-25"
+#define NKF_RELEASE_DATE "2010-01-29"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2010, The nkf Project."
@@ -814,7 +814,7 @@ static nkf_buf_t *
 nkf_buf_new(int length)
 {
     nkf_buf_t *buf = nkf_xmalloc(sizeof(nkf_buf_t));
-    buf->ptr = nkf_xmalloc(length);
+    buf->ptr = nkf_xmalloc(sizeof(nkf_char) * length);
     buf->capa = length;
     buf->len = 0;
     return buf;
