@@ -6202,7 +6202,7 @@ options(unsigned char *cp)
 	    break;
 #endif
 #ifdef UTF8_OUTPUT_ENABLE
-	case 'w':           /* UTF-8 output */
+	case 'w':           /* UTF-{8,16,32} output */
 	    if (cp[0] == '8') {
 		cp++;
 		if (cp[0] == '0'){
@@ -6227,16 +6227,18 @@ options(unsigned char *cp)
 		if (cp[0]=='L') {
 		    cp++;
 		    output_endian = ENDIAN_LITTLE;
+		    output_bom_f = TRUE;
 		} else if (cp[0] == 'B') {
 		    cp++;
+		    output_bom_f = TRUE;
 		}
 		if (cp[0] == '0'){
+		    output_bom_f = FALSE;
 		    cp++;
 		    enc_idx = enc_idx == UTF_16
 			? (output_endian == ENDIAN_LITTLE ? UTF_16LE : UTF_16BE)
 			: (output_endian == ENDIAN_LITTLE ? UTF_32LE : UTF_32BE);
 		} else {
-		    output_bom_f = TRUE;
 		    enc_idx = enc_idx == UTF_16
 			? (output_endian == ENDIAN_LITTLE ? UTF_16LE_BOM : UTF_16BE_BOM)
 			: (output_endian == ENDIAN_LITTLE ? UTF_32LE_BOM : UTF_32BE_BOM);
