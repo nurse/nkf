@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.1.1"
-#define NKF_RELEASE_DATE "2010-01-29"
+#define NKF_RELEASE_DATE "2010-03-15"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2010, The nkf Project."
@@ -4693,8 +4693,7 @@ mime_prechar(nkf_char c2, nkf_char c1)
 		base64_count = 1;
 	    }
 	} else {
-	    if (!(c2 == 0 && (c1 == CR || c1 == LF)) &&
-		    base64_count + mimeout_state.count/3*4> 66) {
+	    if ((c2 != 0 || c1 > DEL) && base64_count + mimeout_state.count/3*4> 66) {
 		(*o_base64conv)(EOF,0);
 		oconv_newline(o_base64conv);
 		(*o_base64conv)(0,SP);

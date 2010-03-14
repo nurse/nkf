@@ -1034,6 +1034,13 @@ printf "%-40s",  "[nkf-forum:47334]    ";
 printf "%-40s",  "[nkf-bug:20079]    ";
     &test("$nkf -jSxM","\xBB \xBB","=?ISO-2022-JP?B?GyhJOxsoQiAbKEk7GyhC?=");
 
+printf "%-40s",  "[nkf-forum:48850]    ";
+    &test("$nkf -jSM",
+	"From: \x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0" .
+	" <x-xxxx@xxxxxxxxxxxx.co.jp>\n",
+	"From: =?ISO-2022-JP?B?GyRCJCIkIiQiJCIkIiQiJCIkIiQiGyhC?=" .
+	" <x-xxxx@xxxxxxxxxxxx.co.jp>\n");
+
     if (!NKF) {
 printf "%-40s", "Guess NL";
 &command_tests(
