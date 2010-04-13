@@ -1041,6 +1041,11 @@ printf "%-40s",  "[nkf-forum:48850]    ";
 	"From: =?ISO-2022-JP?B?GyRCJCIkIiQiJCIkIiQiJCIkIiQiGyhC?=" .
 	" <x-xxxx@xxxxxxxxxxxx.co.jp>\n");
 
+printf "%-40s",  "[nkf-bug:21393]    ";
+    &test("$nkf --ic=UTF-8 --oc=CP932",
+    "\xEF\xBD\xBC\xEF\xBE\x9E\xEF\xBD\xAC\xEF\xBD\xB0\xEF\xBE\x8F\xEF\xBE\x9D\xEF\xBD\xA5\xEF\xBE\x8E\xEF\xBE\x9F\xEF\xBE\x83\xEF\xBE\x84\xEF\xBD\xA1",
+    "\xBC\xDE\xAC\xB0\xCF\xDD\xA5\xCE\xDF\xC3\xC4\xA1");
+
     if (!NKF) {
 printf "%-40s", "Guess NL";
 &command_tests(
