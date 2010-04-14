@@ -2,8 +2,6 @@
 #
 # nkf test program for nkf-2
 #
-# $Id: nkf_test.pl,v 1.31 2008/11/18 21:43:19 naruse Exp $
-#
 #    Shinji KONO <kono@ie.u-ryukyu.ac.jp>
 # Sun Aug 18 12:25:40 JST 1996
 # Sun Nov  8 00:16:06 JST 1998
@@ -1041,10 +1039,15 @@ printf "%-40s",  "[nkf-forum:48850]    ";
 	"From: =?ISO-2022-JP?B?GyRCJCIkIiQiJCIkIiQiJCIkIiQiGyhC?=" .
 	" <x-xxxx@xxxxxxxxxxxx.co.jp>\n");
 
-printf "%-40s",  "[nkf-bug:21393]    ";
+printf "%-40s",  "[nkf-bug:21393]-x  ";
     &test("$nkf --ic=UTF-8 --oc=CP932",
     "\xEF\xBD\xBC\xEF\xBE\x9E\xEF\xBD\xAC\xEF\xBD\xB0\xEF\xBE\x8F\xEF\xBE\x9D\xEF\xBD\xA5\xEF\xBE\x8E\xEF\xBE\x9F\xEF\xBE\x83\xEF\xBE\x84\xEF\xBD\xA1",
     "\xBC\xDE\xAC\xB0\xCF\xDD\xA5\xCE\xDF\xC3\xC4\xA1");
+
+printf "%-40s",  "[nkf-bug:21393]-X  ";
+    &test("$nkf --ic=UTF-8 --oc=CP932 -X",
+    "\xEF\xBD\xBC\xEF\xBE\x9E\xEF\xBD\xAC\xEF\xBD\xB0\xEF\xBE\x8F\xEF\xBE\x9D\xEF\xBD\xA5\xEF\xBE\x8E\xEF\xBE\x9F\xEF\xBE\x83\xEF\xBE\x84\xEF\xBD\xA1",
+    "\x83W\x83\x83\x81[\x83}\x83\x93\x81E\x83|\x83e\x83g\x81B");
 
     if (!NKF) {
 printf "%-40s", "Guess NL";
