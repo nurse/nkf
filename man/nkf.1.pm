@@ -214,10 +214,9 @@ Replacing fullwidth >, <, ", & into '&gt;', '&lt;', '&quot;', '&amp;' as in HTML
 
 =item B<-X -x>
 
-Assume X0201 kana in MS-Kanji.
 With B<-X> or without this option, X0201 is converted into X0208 Kana.
 With B<-x>, try to preserve X0208 kana and do not convert X0201 kana to X0208.
-In JIS output, ESC-(-I is used. In EUC output, SSO is used.
+In JIS output, ESC-(-I is used. In EUC output, SS2 is used.
 
 =item B<-B[0-2]>
 
@@ -349,7 +348,7 @@ Microsoft Version of EUC-JP.
 
 =item Shift_JIS
 
-a.k.a. SJIS, MS-Kanji
+a.k.a. SJIS
 
 =item Windows-31J
 

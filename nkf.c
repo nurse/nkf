@@ -901,7 +901,7 @@ usage(void)
 	    " Z[0-4]   Default/0: Convert JISX0208 Alphabet to ASCII\n"
 	    "          1: Kankaku to one space  2: to two spaces  3: HTML Entity\n"
 	    "          4: JISX0208 Katakana to JISX0201 Katakana\n"
-	    " X,x      Assume X0201 kana in MS-Kanji, -x preserves X0201\n"
+	    " X,x      Convert Halfwidth Katakana to Fullwidth or preserve it\n"
 	    );
     fprintf(HELP_OUTPUT,
 	    " O        Output to File (DEFAULT 'nkf.out')\n"

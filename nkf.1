@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "nkf 1"
-.TH nkf 1 "2009-11-17" "nkf 2.1.0" " "
+.TH nkf 1 "2010-04-19" "nkf 2.1.0" " "
 .SH "NAME"
 nkf \- Network Kanji Filter
 .SH "SYNOPSIS"
@@ -260,10 +260,9 @@ Replacing fullwidth >, <, ", & into '&gt;', '&lt;', '&quot;', '&amp;' as in \s-1
 .RE
 .IP "\fB\-X \-x\fR" 4
 .IX Item "-X -x"
-Assume X0201 kana in MS\-Kanji.
 With \fB\-X\fR or without this option, X0201 is converted into X0208 Kana.
 With \fB\-x\fR, try to preserve X0208 kana and do not convert X0201 kana to X0208.
-In \s-1JIS\s0 output, \s-1ESC\-\s0(\-I is used. In \s-1EUC\s0 output, \s-1SSO\s0 is used.
+In \s-1JIS\s0 output, \s-1ESC\-\s0(\-I is used. In \s-1EUC\s0 output, \s-1SS2\s0 is used.
 .IP "\fB\-B[0\-2]\fR" 4
 .IX Item "-B[0-2]"
 Assume broken JIS-Kanji input, which lost \s-1ESC\s0.
@@ -371,7 +370,7 @@ a.k.a. \s-1AT&T\s0 \s-1JIS\s0, Japanese \s-1EUC\s0, \s-1UJIS\s0
 Microsoft Version of \s-1EUC\-JP\s0.
 .IP "Shift_JIS" 4
 .IX Item "Shift_JIS"
-a.k.a. \s-1SJIS\s0, MS-Kanji
+a.k.a. \s-1SJIS\s0
 .IP "Windows\-31J" 4
 .IX Item "Windows-31J"
 a.k.a. \s-1CP932\s0
