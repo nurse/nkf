@@ -1,5 +1,5 @@
 # Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
-# Copyright (c) 1996-2009, The nkf Project.
+# Copyright (c) 1996-2010, The nkf Project.
 # All rights reserved.
 #
 # This software is provided 'as-is', without any express or implied
@@ -35,7 +35,7 @@ require DynaLoader;
 @EXPORT = qw(
 	nkf	nkf_continue	inputcode
 );
-$VERSION = '2.10';
+$VERSION = '2.11';
 
 bootstrap NKF $VERSION;
 
@@ -348,7 +348,7 @@ Microsoft Version of EUC-JP.
 
 =item Shift_JIS
 
-a.k.a. SJIS
+a.k.a. SJIS, MS_Kanji
 
 =item Windows-31J
 
@@ -479,7 +479,7 @@ Ignore rest of -option.
 
 Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
 
-Copyright (c) 1996-2009, The nkf Project.
+Copyright (c) 1996-2010, The nkf Project.
 
 
 =cut

@@ -223,6 +223,7 @@ struct {
     {"ISO-2022-JP-2004",	ISO_2022_JP_2004},
     {"SHIFT_JIS",		SHIFT_JIS},
     {"SJIS",			SHIFT_JIS},
+    {"MS_Kanji",		SHIFT_JIS},
     {"PCK",			SHIFT_JIS},
     {"WINDOWS-31J",		WINDOWS_31J},
     {"CSWINDOWS31J",		WINDOWS_31J},
