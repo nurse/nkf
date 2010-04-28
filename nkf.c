@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.1.1"
-#define NKF_RELEASE_DATE "2010-04-14"
+#define NKF_RELEASE_DATE "2010-04-28"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2010, The nkf Project."
@@ -1209,10 +1209,10 @@ set_input_encoding(nkf_encoding *enc)
     case ISO_8859_1:
 	iso8859_f = TRUE;
 	break;
-    case CP50220:
     case CP50221:
     case CP50222:
 	if (x0201_f == NKF_UNSPECIFIED) x0201_f = FALSE;	/* -x specified implicitly */
+    case CP50220:
 #ifdef SHIFTJIS_CP932
 	cp51932_f = TRUE;
 #endif
@@ -1265,6 +1265,7 @@ set_input_encoding(nkf_encoding *enc)
 #endif
 	break;
     case EUCJP_MS:
+	if (x0201_f == NKF_UNSPECIFIED) x0201_f = FALSE;	/* -x specified implicitly */
 #ifdef SHIFTJIS_CP932
 	cp51932_f = FALSE;
 #endif
@@ -1273,6 +1274,7 @@ set_input_encoding(nkf_encoding *enc)
 #endif
 	break;
     case EUCJP_ASCII:
+	if (x0201_f == NKF_UNSPECIFIED) x0201_f = FALSE;	/* -x specified implicitly */
 #ifdef SHIFTJIS_CP932
 	cp51932_f = FALSE;
 #endif
@@ -1327,7 +1329,6 @@ set_output_encoding(nkf_encoding *enc)
 {
     switch (nkf_enc_to_index(enc)) {
     case CP50220:
-	if (x0201_f == NKF_UNSPECIFIED) x0201_f = FALSE;	/* -x specified implicitly */
 #ifdef SHIFTJIS_CP932
 	if (cp932inv_f == TRUE) cp932inv_f = FALSE;
 #endif
@@ -1403,12 +1404,14 @@ set_output_encoding(nkf_encoding *enc)
 #endif
 	break;
     case EUCJP_MS:
+	if (x0201_f == NKF_UNSPECIFIED) x0201_f = FALSE;	/* -x specified implicitly */
 	x0212_f = TRUE;
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_MS;
 #endif
 	break;
     case EUCJP_ASCII:
+	if (x0201_f == NKF_UNSPECIFIED) x0201_f = FALSE;	/* -x specified implicitly */
 	x0212_f = TRUE;
 #ifdef UTF8_OUTPUT_ENABLE
 	ms_ucs_map_f = UCS_MAP_ASCII;
