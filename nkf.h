@@ -83,7 +83,7 @@ void  setbinmode(FILE *fp)
 #define setbinmode(fp) setmode(fileno(fp), O_BINARY)
 #endif
 #else /* UNIX */
-#define setbinmode(fp)
+#define setbinmode(fp) (void)(fp)
 #endif
 
 #ifdef _IOFBF /* SysV and MSDOS, Windows */
