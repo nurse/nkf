@@ -4,11 +4,11 @@
 
 /*WIN32DLL*/
 /* こちらのバージョンも更新してください。 */
-#define NKF_VERSIONW L"2.1.0"
+#define NKF_VERSIONW L"2.1.1"
 /* NKF_VERSION のワイド文字 */
-#define DLL_VERSION   "2.1.0.0 0"
+#define DLL_VERSION   "2.1.1.0 2"
 /* DLLが返す */
-#define DLL_VERSIONW L"2.1.0.0 0"
+#define DLL_VERSIONW L"2.1.1.0 2"
 /* DLLが返す DLL_VERSION のワイド文字 */
 
 /* nkf32.dll main */
@@ -458,6 +458,7 @@ void CALLBACK NkfFileConvert1(LPCSTR fName)
     DWORD len;
     BOOL sts;
 
+    options0();
     len = GetTempPath(sizeof d,d);
     tempdname = malloc(len + 1);
     if ( tempdname == NULL ) return;
@@ -499,6 +500,7 @@ BOOL WINAPI NkfFileConvert1SafeA(LPCSTR fName,DWORD nBufferLength /*in TCHARs*/)
     BOOL ret;
     LPCSTR p;
 
+    options0();
     ret = FALSE;
     p = fName;
     for ( ;; ) {
@@ -551,6 +553,7 @@ BOOL WINAPI NkfFileConvert1SafeW(LPCWSTR fName,DWORD nBufferLength /*in TCHARs*/
     BOOL ret;
     LPCWSTR p;
 
+    options0();
     ret = FALSE;
     p = fName;
     for ( ;; ) {
@@ -599,6 +602,7 @@ void CALLBACK NkfFileConvert2(LPCSTR fInName,LPCSTR fOutName)
 {
     FILE *fin;
 
+    options0();
     if ((fin = fopen(fInName, "rb")) == NULL) return;
     if((fout=fopen(fOutName, "wb")) == NULL) {
         fclose(fin);
@@ -625,6 +629,7 @@ BOOL WINAPI NkfFileConvert2SafeA(LPCSTR fInName,DWORD fInBufferLength /*in TCHAR
     BOOL ret;
     LPCSTR p;
 
+    options0();
     ret = FALSE;
     p = fInName;
     for ( ;; ) {
@@ -667,6 +672,7 @@ BOOL WINAPI NkfFileConvert2SafeW(LPCWSTR fInName,DWORD fInBufferLength /*in TCHA
     BOOL ret;
     LPCWSTR p;
 
+    options0();
     ret = FALSE;
     p = fInName;
     for ( ;; ) {
