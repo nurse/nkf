@@ -1032,6 +1032,9 @@ printf "%-40s",  "[nkf-forum:47334]    ";
 printf "%-40s",  "[nkf-bug:20079]    ";
     &test("$nkf -jSxM","\xBB \xBB","=?ISO-2022-JP?B?GyhJOxsoQiAbKEk7GyhC?=");
 
+printf "%-40s",  "[nkf-bug:20079]    ";
+    &test("$nkf -SxMw8","\xBB \xBB","=?UTF-8?B?77u/7727IO+9uw==?=");
+
 printf "%-40s",  "[nkf-forum:48850]    ";
     &test("$nkf -jSM",
 	"From: \x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0\x82\xA0" .
