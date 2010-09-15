@@ -62,7 +62,7 @@ tar:
 	-mkdir nkf-$(VERSION)/NKF.mod
 	for file in  `cat MANIFEST`;  \
 	do  \
-	    nkf -j -m0 $$file > nkf-$(VERSION)/$$file ; \
+	    cp $$file nkf-$(VERSION)/$$file ; \
 	done 
 	tar cf nkf-$(VERSION).tar nkf-$(VERSION)
 	-$(RM) nkf-$(VERSION)
