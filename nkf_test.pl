@@ -1003,8 +1003,8 @@ printf "%-40s", "test_data/bugs10904";
     &test("$nkf -Mj",$example{'test_data/bugs10904'},$example{'test_data/bugs10904.ans'});
 
 printf "%-40s", "test_data/ruby-dev:39722";
-    &test("$nkf -Mj",<<eom,<<eom);
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaあ
+    &test("$nkf -MjW",<<eom,<<eom);
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\xE3\x81\x82
 eom
 =?US-ASCII?Q?aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?=
  =?US-ASCII?Q?aaaaaaaaaaaaaaaaa?= =?ISO-2022-JP?B?GyRCJCIbKEI=?=
