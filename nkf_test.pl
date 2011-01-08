@@ -886,6 +886,20 @@ eofeof
 
 printf "%-40s", "test_data/q-encode-softrap";
     &test("$nkf -jmQ",$example{'test_data/q-encode-softrap'},$example{'test_data/q-encode-softrap.ans'});
+# test_data/q-encode-utf-8
+
+$example{'test_data/q-encode-utf-8'} = <<'eofeof';
+=?utf-8?Q?=E3=81=82=E3=81=84=E3=81=86=E3=81=88=E3=81=8A?=
+=?utf-8?Q?=E3=81=8B=E3=81=8D=E3=81=8F=E3=81=91=E3=81=93?=
+eofeof
+
+$example{'test_data/q-encode-utf-8.ans'} = <<"eofeof";
+\xE3\x81\x82\xE3\x81\x84\xE3\x81\x86\xE3\x81\x88\xE3\x81\x8A
+\xE3\x81\x8B\xE3\x81\x8D\xE3\x81\x8F\xE3\x81\x91\xE3\x81\x93
+eofeof
+
+printf "%-40s", "test_data/q-encode-utf-8";
+    &test("$nkf",$example{'test_data/q-encode-utf-8'},$example{'test_data/q-encode-utf-8.ans'});
 # test_data/rot13
 
 $example{'test_data/rot13'} = unpack('u',<<'eofeof');
