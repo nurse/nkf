@@ -3878,7 +3878,7 @@ static const unsigned char *mime_pattern[] = {
 
 /* 該当するコードの優先度を上げるための目印 */
 nkf_char (*mime_priority_func[])(nkf_char c2, nkf_char c1, nkf_char c0) = {
-    e_iconv, s_iconv, 0, 0, 0, 0,
+    e_iconv, s_iconv, 0, 0, 0, 0, 0,
 #if defined(UTF8_INPUT_ENABLE)
     w_iconv, w_iconv,
 #endif
