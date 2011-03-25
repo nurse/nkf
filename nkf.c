@@ -21,7 +21,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 #define NKF_VERSION "2.1.1"
-#define NKF_RELEASE_DATE "2010-08-08"
+#define NKF_RELEASE_DATE "2011-03-25"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
     "Copyright (C) 1996-2010, The nkf Project."
@@ -4259,7 +4259,7 @@ numchar_getc(FILE *f)
     nkf_char (*u)(nkf_char c ,FILE *f) = i_nungetc;
     int i = 0, j;
     nkf_char buf[12];
-    long c = -1;
+    nkf_char c = -1;
 
     buf[i] = (*g)(f);
     if (buf[i] == '&'){
