@@ -197,10 +197,6 @@ Katakana to Hiragana and Hiragana to Katakana conversion.
 
 Text mode output (MS-DOS)
 
-=item B<-l>
-
-ISO8859-1 (Latin-1) support
-
 =item B<-f[I<m> [- I<n>]]>
 
 Folding on I<m> length with I<n> margin in a line.
