@@ -35,7 +35,7 @@ require DynaLoader;
 @EXPORT = qw(
 	nkf	nkf_continue	inputcode
 );
-$VERSION = '2.11';
+$VERSION = '2.12';
 
 bootstrap NKF $VERSION;
 
@@ -174,10 +174,6 @@ Katakana to Hiragana and Hiragana to Katakana conversion.
 =item B<-T>
 
 Text mode output (MS-DOS)
-
-=item B<-l>
-
-ISO8859-1 (Latin-1) support
 
 =item B<-f[I<m> [- I<n>]]>
 
