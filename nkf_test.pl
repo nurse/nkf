@@ -899,7 +899,7 @@ $example{'test_data/q-encode-utf-8.ans'} = <<"eofeof";
 eofeof
 
 printf "%-40s", "test_data/q-encode-utf-8";
-    &test("$nkf",$example{'test_data/q-encode-utf-8'},$example{'test_data/q-encode-utf-8.ans'});
+    &test("$nkf -w",$example{'test_data/q-encode-utf-8'},$example{'test_data/q-encode-utf-8.ans'});
 # test_data/rot13
 
 $example{'test_data/rot13'} = unpack('u',<<'eofeof');
