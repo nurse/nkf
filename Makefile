@@ -37,11 +37,11 @@ perl:
 
 python2:
 	( cd NKF.python2 ; \
-	$(PYTHON2) setup.py install )
+	$(PYTHON2) setup.py build )
 
 python3:
-	( cd NKF.python2 ; \
-	$(PYTHON3) setup.py install )
+	( cd NKF.python3 ; \
+	$(PYTHON3) setup.py build )
 
 install:
 	-$(MKDIR) $(prefix)/bin
