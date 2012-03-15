@@ -1,0 +1,44 @@
+Python Interface to NKF2 (2009.06.02)
+
+1. How to Install
+
+    1) Download latest nkf-2.0.9+ from http://sourceforge.jp/projects/nkf/
+
+    2) $ tar zxvf nkf-2.x.x.tar.gz
+
+    3) $ cd nkf-2.x.x
+
+    4) $ tar zxvf NKF_python.tgz
+
+    5) $ cd NKF.python
+
+    6) # python setup.py install
+
+2. Usage
+
+    ## flag is same as the flags of nkf itself
+    import nkf
+    output = nkf.nkf(flag, input)
+
+    ## For example, to convert from euc-jp to utf-8
+    output = nkf.nkf('-Ew', 'some euc-jp string')
+
+3.  guess() function,
+    which guesses input_string_code and returns one of next strings:
+        "BINARY"
+        "ASCII"
+        "Shift_JIS"
+        "CP932"
+        "EUC-JP"
+        "EUCJP-MS"
+        "CP51932"
+        "ISO-2022-JP"
+        "CP50221"
+        "CP50220"
+        "UTF-8"
+    
+    ## For example   
+    import nkf
+    input_code = nkf.guess('some string')
+
+Matsumoto, Tadashi  ma2@city.plala.jp
