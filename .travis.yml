@@ -1,4 +1,4 @@
-script: "make all test"
+script: "make test"
 
 branches:
   only:
