@@ -4190,8 +4190,12 @@ print_guessed_code(char *filename)
 	if (guess_f == 1) {
 	    printf("%s\n", input_codename);
 	} else {
-	    printf("%s%s\n",
+	    printf("%s%s%s\n",
 		   input_codename,
+		   iconv != w_iconv16 && iconv != w_iconv32 ? "" :
+		   input_endian == ENDIAN_LITTLE ? " LE" :
+		   input_endian == ENDIAN_BIG ? " BE" :
+		   "[BUG]",
 		   input_eol == CR   ? " (CR)" :
 		   input_eol == LF   ? " (LF)" :
 		   input_eol == CRLF ? " (CRLF)" :
