@@ -3500,7 +3500,7 @@ fold_conv(nkf_char c2, nkf_char c1)
 	f_prev = c1;
 	if (c2 || c2 == JIS_X_0201_1976_K)
 	    f_prev |= 0x80;  /* this is Japanese */
-	f_line += char_size(c2,c1);
+	f_line += c2 == JIS_X_0201_1976_K ? 1: char_size(c2,c1);
 	if (f_line<=fold_len) {   /* normal case */
 	    fold_state = 1;
 	} else {
