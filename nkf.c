@@ -5683,6 +5683,7 @@ kanji_convert(FILE *f)
 		    else if (c1 == 'I') {
 			/* JIS X 0201 Katakana */
 			set_input_mode(JIS_X_0201_1976_K);
+			shift_mode = 1;
 			SKIP;
 		    }
 		    else if (c1 == 'B' || c1 == 'J' || c1 == 'H') {

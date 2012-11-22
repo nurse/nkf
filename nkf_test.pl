@@ -527,6 +527,17 @@ printf "%-40s", "X0201 output: EUC";
     &test("$nkf -xe",$example{'x0201.jis'},$example{'x0201.euc'});
 printf "%-40s", "X0201 output: UTF8";
     &test("$nkf -xw",$example{'x0201.jis'},$example{'x0201.utf'});
+# test_data/x0201jis=
+
+$example{'test_data/x0201jis=.ans'} = unpack('u',<<'eofeof');
+MH:*CI*6FIZBIJJNLK:ZOL+&RL[2UMK>XN;J[O+V^O\#!PL/$Q<;'R,G*R\S-
+2SL_0T=+3U-76U]C9VMO<W=[?
+eofeof
+
+printf "%-40s",  "X0201 JIS contains '='";
+    &test("$nkf -xs",
+    "\x1b(I!\"#\$%&'()*+,-./0123456789:;<=>?\@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_\x1b(B",
+    $example{'test_data/x0201jis=.ans'});
 
 # MIME decode
 
