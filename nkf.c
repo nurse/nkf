@@ -509,7 +509,7 @@ static int             fold_margin  = FOLD_MARGIN;
 /* process default */
 
 static nkf_char
-no_connection2(nkf_char c2, nkf_char c1, nkf_char c0)
+no_connection2(ARG_UNUSED nkf_char c2, ARG_UNUSED nkf_char c1, ARG_UNUSED nkf_char c0)
 {
     fprintf(stderr,"nkf internal module connection failure.\n");
     exit(EXIT_FAILURE);
@@ -2181,7 +2181,7 @@ e_iconv(nkf_char c2, nkf_char c1, nkf_char c0)
 }
 
 static nkf_char
-s_iconv(nkf_char c2, nkf_char c1, nkf_char c0)
+s_iconv(ARG_UNUSED nkf_char c2, nkf_char c1, ARG_UNUSED nkf_char c0)
 {
     if (c2 == JIS_X_0201_1976_K || (0xA1 <= c2 && c2 <= 0xDF)) {
 	if (iso2022jp_f && !x0201_f) {
@@ -2457,14 +2457,14 @@ nkf_iconv_utf_16_nocombine(nkf_char c1, nkf_char c2)
 }
 
 static nkf_char
-w_iconv16(nkf_char c2, nkf_char c1, nkf_char c0)
+w_iconv16(nkf_char c2, nkf_char c1, ARG_UNUSED nkf_char c0)
 {
     (*oconv)(c2, c1);
     return 16; /* different from w_iconv32 */
 }
 
 static nkf_char
-w_iconv32(nkf_char c2, nkf_char c1, nkf_char c0)
+w_iconv32(nkf_char c2, nkf_char c1, ARG_UNUSED nkf_char c0)
 {
     (*oconv)(c2, c1);
     return 32; /* different from w_iconv16 */
@@ -3337,7 +3337,7 @@ std_getc(FILE *f)
 #endif /*WIN32DLL*/
 
 static nkf_char
-std_ungetc(nkf_char c, FILE *f)
+std_ungetc(nkf_char c, ARG_UNUSED FILE *f)
 {
     nkf_buf_push(nkf_state->std_gc_buf, c);
     return c;
@@ -3725,7 +3725,7 @@ broken_getc(FILE *f)
 }
 
 static nkf_char
-broken_ungetc(nkf_char c, FILE *f)
+broken_ungetc(nkf_char c, ARG_UNUSED FILE *f)
 {
     if (nkf_buf_length(nkf_state->broken_buf) < 2)
 	nkf_buf_push(nkf_state->broken_buf, c);
@@ -4321,7 +4321,7 @@ mime_input_buf_unshift(nkf_char c)
 }
 
 static nkf_char
-mime_ungetc(nkf_char c, FILE *f)
+mime_ungetc(nkf_char c, ARG_UNUSED FILE *f)
 {
     mime_input_buf_unshift(c);
     return c;
@@ -4522,7 +4522,7 @@ mime_begin(FILE *f)
 
 #ifdef CHECK_OPTION
 static void
-no_putc(nkf_char c)
+no_putc(ARG_UNUSED nkf_char c)
 {
     ;
 }
@@ -5859,7 +5859,7 @@ kanji_convert(FILE *f)
 	       (c3 = (*i_getc)(f)) != EOF &&
 	       (c4 = (*i_getc)(f)) != EOF) {
 	    nkf_char c5, c6, c7, c8;
-	    if (nkf_iconv_utf_32(c1, c2, c3, c4) == NKF_ICONV_WAIT_COMBINING_CHAR) {
+	    if (nkf_iconv_utf_32(c1, c2, c3, c4) == (size_t)NKF_ICONV_WAIT_COMBINING_CHAR) {
 		if ((c5 = (*i_getc)(f)) != EOF &&
 		    (c6 = (*i_getc)(f)) != EOF &&
 		    (c7 = (*i_getc)(f)) != EOF &&
@@ -5886,7 +5886,7 @@ kanji_convert(FILE *f)
 		(c3 = (*i_getc)(f)) != EOF &&
 		(c4 = (*i_getc)(f)) != EOF) {
 		nkf_iconv_utf_16(c1, c2, c3, c4);
-	    } else if (ret == NKF_ICONV_WAIT_COMBINING_CHAR) {
+	    } else if (ret == (size_t)NKF_ICONV_WAIT_COMBINING_CHAR) {
 		if ((c3 = (*i_getc)(f)) != EOF &&
 		    (c4 = (*i_getc)(f)) != EOF) {
 		    if (nkf_iconv_utf_16_combine(c1, c2, c3, c4)) {

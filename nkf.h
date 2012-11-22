@@ -174,6 +174,14 @@ void  setbinmode(FILE *fp)
 #define         FALSE   0
 #define         TRUE    1
 
+#ifndef ARG_UNUSED
+#if defined(__GNUC__)
+#  define ARG_UNUSED  __attribute__ ((unused))
+#else
+#  define ARG_UNUSED
+#endif
+#endif
+
 #ifdef WIN32DLL
 #include "nkf32.h"
 #endif
