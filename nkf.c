@@ -5111,6 +5111,9 @@ mime_prechar(nkf_char c2, nkf_char c1)
 	}
     } else if (c2) {
 	if (c2 != EOF && base64_count + mimeout_state.count/3*4> 60) {
+	    mimeout_mode =  (output_mode==ASCII ||output_mode == ISO_8859_1) ? 'Q' : 'B';
+	    open_mime(output_mode);
+	    (*o_base64conv)(EOF,0);
 	    oconv_newline(o_base64conv);
 	    (*o_base64conv)(0,SP);
 	    base64_count = 1;
