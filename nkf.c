@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
- * Copyright (c) 1996-2010, The nkf Project.
+ * Copyright (c) 1996-2013, The nkf Project.
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages

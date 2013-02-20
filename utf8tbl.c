@@ -1,7 +1,6 @@
 /*
  * utf8tbl.c - Convertion Table for nkf
  *
- * $Id: utf8tbl.c,v 1.23 2008/02/07 19:25:29 naruse Exp $
  */
 
 #include "config.h"
