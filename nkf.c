@@ -6189,9 +6189,10 @@ kanji_convert(FILE *f)
 		    }
 		}
 		else {
+		    i_ungetc(c1,f);
 		    /* lonely ESC  */
 		    (*oconv)(0, ESC);
-		    SEND;
+		    SKIP;
 		}
 	    } else if (c1 == LF || c1 == CR) {
 		if (broken_f&4) {
