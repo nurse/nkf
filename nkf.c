@@ -6150,9 +6150,10 @@ kanji_convert(FILE *f)
 		    }
 		}
 		else {
+		    i_ungetc(c1,f);
 		    /* lonely ESC  */
 		    (*oconv)(0, ESC);
-		    SEND;
+		    SKIP;
 		}
 	    } else if (c1 == ESC && iconv == s_iconv) {
 		/* ESC in Shift_JIS */
