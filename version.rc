@@ -1,8 +1,8 @@
 #include <windows.h>
 
 1 VERSIONINFO
-FILEVERSION 2,1,2,0
-PRODUCTVERSION 2,1,2,0
+FILEVERSION 2,1,3,0
+PRODUCTVERSION 2,1,3,0
 FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
 FILEFLAGS 0x1L
@@ -19,12 +19,12 @@ FILESUBTYPE 0x0L
         {
             VALUE "CompanyName", "project nkf\0"
             VALUE "FileDescription", "Network Kanji Filter\0"
-            VALUE "FileVersion", "2.1.2\0"
+            VALUE "FileVersion", "2.1.3\0"
             VALUE "InternalName", "nkf\0"
             VALUE "LegalCopyright", "Copyright (C) 1987, Fujitsu LTD. (Itaru ICHIKAWA)\0"
             VALUE "OriginalFilename", "nkf.c\0"
             VALUE "ProductName", "nkf.exe\0"
-            VALUE "ProductVersion", "2.1.2\0"
+            VALUE "ProductVersion", "2.1.3\0"
         }
     }
     BLOCK "VarFileInfo"

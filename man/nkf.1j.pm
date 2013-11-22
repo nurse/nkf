@@ -727,6 +727,6 @@ http://sourceforge.jp/projects/nkf/
 
 Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).
 
-Copyright (C) 1996-2009, The nkf Project.
+Copyright (C) 1996-2013, The nkf Project.
 
 =cut

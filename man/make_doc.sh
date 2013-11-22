@@ -1,5 +1,5 @@
 current=`pwd`
-self_dir=`echo $0 | sed -e's/\/[^\/]*$//`
+self_dir=`echo $0 | sed -e's/\/[^\/]*$//'`
 if [ -d $self_dir ]
 then
   echo cd $self_dir

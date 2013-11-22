@@ -35,7 +35,7 @@ require DynaLoader;
 @EXPORT = qw(
 	nkf	nkf_continue	inputcode
 );
-$VERSION = '2.12';
+$VERSION = '2.13';
 
 bootstrap NKF $VERSION;
 
@@ -499,7 +499,7 @@ Ignore rest of -option.
 
 Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
 
-Copyright (c) 1996-2010, The nkf Project.
+Copyright (c) 1996-2013, The nkf Project.
 
 =begin
 

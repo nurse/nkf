@@ -522,3 +522,15 @@ CP50220 がいわゆる半角カナを全角に変換していなかったのを修正
 .SS nkf 2.1.2
 
 Q-encoded UTF-8 のデコードが壊れていたのを修正 [nkf-bug:55125]
+
+.SS nkf 2.1.3
+
+NKF_python をマージした
+http://sourceforge.jp/ticket/browse.php?group_id=248&tid=27841
+
+guess オプションの強化
+http://sourceforge.jp/ticket/browse.php?group_id=248&tid=26325
+http://sourceforge.jp/ticket/browse.php?group_id=248&tid=26325
+
+その他バグの修正
+http://sourceforge.jp/projects/nkf/scm/git/nkf/
