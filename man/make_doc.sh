@@ -15,10 +15,10 @@ pod2man --section=1 --release="nkf $version" --center=" " --name=nkf nkf.1.pm ..
 #pod2man --section=1 --release="nkf 2.x.x" --center=" " --name=nkf nkf.1.pm|nroff -man|more
 
 echo generate nkf.1j
-pod2man --section=1 --release="nkf $version" --center=" " --name=nkf nkf.1j.pm | nkf -jE > ../nkf.1j
+pod2man --section=1 --release="nkf $version" --center=" " --name=nkf -u nkf.1j.pm | nkf -jW > ../nkf.1j
 echo generate nkf.doc
 pod2text nkf.1j.pm > ../nkf.doc
 
-#pod2man --section=1 --release="nkf 2.x.x" --center=" " --name=nkf nkf.1j.pm|jgroff -mandoc -T nippon|more -r
+#pod2man --section=1 --release="nkf 2.x.x" --center=" " --name=nkf -u nkf.1j.pm|jgroff -mandoc -T nippon|more -r
 echo cd $current
 cd $current
