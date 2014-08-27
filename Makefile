@@ -47,10 +47,12 @@ install:
 	-$(MKDIR) $(prefix)/bin
 	-$(MKDIR) $(prefix)/man
 	-$(MKDIR) $(prefix)/man/man1
-	-$(MKDIR) $(prefix)/man/ja
-	-$(MKDIR) $(prefix)/man/ja/man1
 	cp -f nkf $(prefix)/bin/
 	cp -f nkf.1 $(prefix)/man/man1/
+
+install-man-ja:
+	-$(MKDIR) $(prefix)/man/ja
+	-$(MKDIR) $(prefix)/man/ja/man1
 	cp -f nkf.1j $(prefix)/man/ja/man1/nkf.1
 
 shar:
