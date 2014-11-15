@@ -27,6 +27,9 @@
     <ClInclude Include="nkf32.h" />
     <ClInclude Include="utf8tbl.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="version.rc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9B7045EA-F5EB-4E6E-BBED-28F8474E8175}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
