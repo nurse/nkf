@@ -472,7 +472,7 @@ Thread static unsigned char prefix_table[256];
 static void e_status(struct input_code *, nkf_char);
 static void s_status(struct input_code *, nkf_char);
 
-struct input_code input_code_list[] = {
+Thread static struct input_code input_code_list[] = {
     {"EUC-JP",    0, 0, 0, {0, 0, 0}, e_status, e_iconv, 0},
     {"Shift_JIS", 0, 0, 0, {0, 0, 0}, s_status, s_iconv, 0},
 #ifdef UTF8_INPUT_ENABLE
