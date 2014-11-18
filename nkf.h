@@ -184,6 +184,9 @@ void  setbinmode(FILE *fp)
 
 #ifdef WIN32DLL
 #include "nkf32.h"
+#define Thread  __declspec( thread )
+#else
+#define Thread
 #endif
 
 #endif /* NKF_H */

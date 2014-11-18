@@ -55,7 +55,7 @@ DWORD guessdwFlags = MB_PRECOMPOSED;
 
 wchar_t *tounicode(const char *p)
 {
-static wchar_t buff[GUESS];
+Thread static wchar_t buff[GUESS];
     int sts;
 
     sts = MultiByteToWideChar(guessCodePage,guessdwFlags,p,-1,buff,sizeof(buff) / sizeof(wchar_t));
@@ -118,10 +118,10 @@ int dllprintf(FILE *fp,char *fmt,...)
 **    THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
 ***********************************************************************/
 
-static const unsigned char *cin = NULL;
-static int nin = -1;
-static int ninmax = -1;
-static int std_getc_mode = 1;
+Thread static const unsigned char *cin = NULL;
+Thread static int nin = -1;
+Thread static int ninmax = -1;
+Thread static int std_getc_mode = 1;
 
 int 
 std_getc(f)
@@ -153,11 +153,11 @@ FILE *f;
     return EOF;
 }
 
-static FILE *fout = NULL;
-static unsigned char *cout = NULL;
-static int nout = -1;
-static int noutmax = -1;
-static int std_putc_mode = 1;
+Thread static FILE *fout = NULL;
+Thread static unsigned char *cout = NULL;
+Thread static int nout = -1;
+Thread static int noutmax = -1;
+Thread static int std_putc_mode = 1;
 
 void 
 std_putc(c)
@@ -256,11 +256,11 @@ int WINAPI DllEntryPoint(HINSTANCE hinst,unsigned long reason,void* lpReserved)
 }
 #endif /* DLLDBG @@*/
 
-static LPSTR nkfverA = NKF_VERSION;
-static LPSTR dllverA = DLL_VERSION;
+Thread static LPSTR nkfverA = NKF_VERSION;
+Thread static LPSTR dllverA = DLL_VERSION;
 #ifdef UNICODESUPPORT
-static LPWSTR nkfverW = NKF_VERSIONW;
-static LPWSTR dllverW = DLL_VERSIONW;
+Thread static LPWSTR nkfverW = NKF_VERSIONW;
+Thread static LPWSTR dllverW = DLL_VERSIONW;
 #endif /*UNICODESUPPORT*/
 
 BOOL scp(LPSTR s,LPSTR t,DWORD n)
@@ -320,7 +320,7 @@ BOOL WINAPI GetNkfVersionSafeW(LPWSTR verStr,DWORD nBufferLength /*in TCHARs*/,L
 #endif /*UNICODESUPPORT*/
 }
 
-static LPSTR optStr0 = NULL;
+Thread static LPSTR optStr0 = NULL;
 
 int CALLBACK SetNkfOption(LPSTR optStr)
 {
@@ -730,7 +730,7 @@ BOOL WINAPI GetNkfGuessW(LPWSTR outStr,DWORD nBufferLength /*in TCHARs*/,LPDWORD
 #endif /*UNICODESUPPORT*/
 }
 
-static struct {
+Thread static struct {
 DWORD size;
 LPCSTR copyrightA;
 LPCSTR versionA;
