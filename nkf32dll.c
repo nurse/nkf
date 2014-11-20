@@ -341,11 +341,58 @@ int CALLBACK SetNkfOption(LPSTR optStr)
     return 0;
 }
 
+int findspace(const char* str)
+{
+	int find_n = 0;
+	while (*str != 0) {
+		if (*str == ' ') {
+			find_n++;
+		}
+		str++;
+	}
+	return find_n;
+}
+// オプションが 空白で区切られている場合に options を複数呼び出す
+void callOptions()
+{
+	char *work = strdup(optStr0);
+	int len = strlen(optStr0);
+	for (int i = 0; i < len; i++) {
+		if (work[i] == ' ') {
+			work[i] = '\0';
+		}
+	}
+	int i = 0;
+	while (i < len)
+	{
+		// 文字を探す
+		if (work[i] != '\0') {
+			// options 呼び出し
+			options(&work[i]);
+
+			// 文字の終端を探す
+			while (work[i] != '\0' && i < len) {
+				i++;
+			}
+		}
+		else {
+			i++;
+		}
+	}
+	free(work);
+}
+
 void options0(void)
 {
     reinit();
     if ( optStr0 != NULL ) {
-        options(optStr0);
+		// option の中に 空白があった場合 options を分割して呼び出す
+		if (findspace(optStr0) > 0) {
+			callOptions();
+		}
+		else {
+			options(optStr0);
+		}
     }
 }
 
