@@ -418,9 +418,22 @@ void callOptions()
 	free(work);
 }
 
+// プロセス起動時に初期値に設定される値を初期設定する。
+// dll を使ったコード変換は、フラグ変数が初期化されずに
+// 予想外の動きをする場合がある現象の修正用
+void reinit_dll()
+{
+#ifdef UTF8_INPUT_ENABLE
+	input_endian = ENDIAN_BIG;
+	input_bom_f = FALSE;
+#endif
+	input_eol = 0;
+}
+
 void options0(void)
 {
     reinit();
+	reinit_dll();
     if ( optStr0 != NULL ) {
 		// option の中に 空白があった場合 options を分割して呼び出す
 		if (findspace(optStr0) > 0) {
