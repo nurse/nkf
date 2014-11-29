@@ -47,6 +47,10 @@ void mkfile(char *f,char *p);
 #define GUESS 64
 #endif /*GUESS*/
 
+#ifndef GUESS_OPTION_LEN
+#define GUESS_OPTION_LEN 30
+#endif 
+
 char *guessbuffA = NULL;
 #ifdef UNICODESUPPORT
 wchar_t *guessbuffW = NULL;
@@ -182,14 +186,31 @@ void
 print_guessed_code (filename)
     char *filename;
 {
-    const char *codename = get_guessed_code();
-    if (filename != NULL) {
-        guessbuffA = realloc(guessbuffA,(strlen(filename) + GUESS + 1) * sizeof (char) );
-        sprintf(guessbuffA,"%s:%s", filename,codename);
-    } else {
-        guessbuffA = realloc(guessbuffA,(GUESS + 1) * sizeof (char) );
-        sprintf(guessbuffA,"%s", codename);
-    }
+	const char *codename = get_guessed_code();
+	char guessOption[GUESS_OPTION_LEN + 1];
+	guessOption[0] = '\0';
+
+	if (guess_f != 1) {
+		sprintf(guessOption, "%s%s%s",
+			iconv != w_iconv16 && iconv != w_iconv32 ? "" :
+			input_endian == ENDIAN_LITTLE ? " LE" :
+			input_endian == ENDIAN_BIG ? " BE" :
+			"[BUG]",
+			input_bom_f ? " (BOM)" : "",
+			input_eol == CR ? " (CR)" :
+			input_eol == LF ? " (LF)" :
+			input_eol == CRLF ? " (CRLF)" :
+			input_eol == EOF ? " (MIXED NL)" : "");
+	} 
+
+	if (filename != NULL) {
+		guessbuffA = realloc(guessbuffA, (strlen(filename) + GUESS + GUESS_OPTION_LEN + 1) * sizeof(char));
+		sprintf(guessbuffA, "%s:%s:%s", filename, codename, guessOption);
+	}
+	else {
+		guessbuffA = realloc(guessbuffA, (GUESS + GUESS_OPTION_LEN + 1) * sizeof(char));
+		sprintf(guessbuffA, "%s%s", codename, guessOption);
+	}
 }
 
 #ifdef UNICODESUPPORT
@@ -198,15 +219,30 @@ print_guessed_codeW (filename)
     wchar_t *filename;
 {
     const char *codename = get_guessed_code();
+	wchar_t guessOption[GUESS_OPTION_LEN + 1];
+	guessOption[0] = 0;
+
+	if (guess_f != 1) {
+		_snwprintf(guessOption, GUESS_OPTION_LEN, L"%s%s%s",
+			iconv != w_iconv16 && iconv != w_iconv32 ? L"" :
+			input_endian == ENDIAN_LITTLE ? L" LE" :
+			input_endian == ENDIAN_BIG ? L" BE" :
+			L"[BUG]",
+			input_bom_f ? L" (BOM)" : L"",
+			input_eol == CR ? L" (CR)" :
+			input_eol == LF ? L" (LF)" :
+			input_eol == CRLF ? L" (CRLF)" :
+			input_eol == EOF ? L" (MIXED NL)" : L"");
+	}
     size_t size;
     if (filename != NULL) {
 	size = (wcslen(filename) + GUESS + 1) * sizeof (wchar_t);
 	guessbuffW = realloc(guessbuffW, size);
-	_snwprintf(guessbuffW, size, L"%s:%s", filename, tounicode(codename));
+	_snwprintf(guessbuffW, size, L"%s:%s%s", filename, tounicode(codename), guessOption);
     } else {
 	size = (GUESS + 1) * sizeof (wchar_t);
 	guessbuffW = realloc(guessbuffW, size);
-	_snwprintf(guessbuffW, size, L"%s", tounicode(codename));
+	_snwprintf(guessbuffW, size, L"%s%s", tounicode(codename), guessOption);
     }
 }
 #endif /*UNICODESUPPORT*/
