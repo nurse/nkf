@@ -51,11 +51,11 @@ void mkfile(char *f,char *p);
 #define GUESS_OPTION_LEN 30
 #endif 
 
-char *guessbuffA = NULL;
+Thread char *guessbuffA = NULL;
 #ifdef UNICODESUPPORT
-wchar_t *guessbuffW = NULL;
-UINT guessCodePage = CP_OEMCP;
-DWORD guessdwFlags = MB_PRECOMPOSED;
+Thread wchar_t *guessbuffW = NULL;
+Thread UINT guessCodePage = CP_OEMCP;
+Thread DWORD guessdwFlags = MB_PRECOMPOSED;
 
 wchar_t *tounicode(const char *p)
 {
@@ -71,9 +71,9 @@ Thread static wchar_t buff[GUESS];
 }
 #endif /*UNICODESUPPORT*/
 
-char *ubuff;
-int ulen;
-int uret;
+Thread char *ubuff;
+Thread int ulen;
+Thread int uret;
 
 int dllprintf(FILE *fp,char *fmt,...)
 {
