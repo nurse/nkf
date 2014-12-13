@@ -1,5 +1,5 @@
 # Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
-# Copyright (c) 1996-2010, The nkf Project.
+# Copyright (c) 1996-2014, The nkf Project.
 # All rights reserved.
 #
 # This software is provided 'as-is', without any express or implied
@@ -98,6 +98,12 @@ By default, X0201 kana is converted into X0208 kana.
 For X0201 kana, SO/SI, SSO and ESC-(-I methods are supported.
 For automatic code detection, nkf assumes no X0201 kana in Shift_JIS.
 To accept X0201 in Shift_JIS, use B<-X>, B<-x> or B<-S>.
+
+multiple options are specifed as seprate strings, such as
+
+  print nkf('--ic=UTF8-MAC', '-w', $string), "\n";
+
+except the last arguments.
 
 =head1 OPTIONS
 
@@ -499,7 +505,7 @@ Ignore rest of -option.
 
 Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
 
-Copyright (c) 1996-2013, The nkf Project.
+Copyright (c) 1996-2014, The nkf Project.
 
 =begin
 
