@@ -3575,6 +3575,7 @@ static void
 check_bom(FILE *f)
 {
     int c2;
+    input_bom_f = FALSE;
     switch(c2 = (*i_getc)(f)){
     case 0x00:
 	if((c2 = (*i_getc)(f)) == 0x00){
