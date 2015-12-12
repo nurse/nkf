@@ -774,7 +774,7 @@ nkf_enc_find(const char *name)
 
 #ifdef DEFAULT_CODE_LOCALE
 static const char*
-nkf_locale_charmap()
+nkf_locale_charmap(void)
 {
 #ifdef HAVE_LANGINFO_H
     return nl_langinfo(CODESET);
@@ -802,7 +802,7 @@ nkf_locale_charmap()
 }
 
 static nkf_encoding*
-nkf_locale_encoding()
+nkf_locale_encoding(void)
 {
     nkf_encoding *enc = 0;
     const char *encname = nkf_locale_charmap();
@@ -813,13 +813,13 @@ nkf_locale_encoding()
 #endif /* DEFAULT_CODE_LOCALE */
 
 static nkf_encoding*
-nkf_utf8_encoding()
+nkf_utf8_encoding(void)
 {
     return &nkf_encoding_table[UTF_8];
 }
 
 static nkf_encoding*
-nkf_default_encoding()
+nkf_default_encoding(void)
 {
     nkf_encoding *enc = 0;
 #ifdef DEFAULT_CODE_LOCALE
@@ -4341,7 +4341,7 @@ mime_ungetc_buf(nkf_char c, FILE *f)
 static nkf_char
 mime_getc_buf(FILE *f)
 {
-    /* we don't keep eof of mime_input_buf, becase it contains ?= as
+    /* we don't keep eof of mime_input_buf, because it contains ?= as
        a terminator. It was checked in mime_integrity. */
     return ((mimebuf_f)?
 	    (*i_mgetc_buf)(f):mime_input_buf(mime_input_state.input++));
@@ -5491,7 +5491,7 @@ typedef struct nkf_iconv_t {
     size_t input_buffer_size;
     char *output_buffer;
     size_t output_buffer_size;
-}
+};
 
 static nkf_iconv_t
 nkf_iconv_new(char *tocode, char *fromcode)
@@ -5714,9 +5714,9 @@ module_connection(void)
 		x0201_f = X0201_DEFAULT;
 	}
 
-    /* replace continucation module, from output side */
+    /* replace continuation module, from output side */
 
-    /* output redicrection */
+    /* output redirection */
 #ifdef CHECK_OPTION
     if (noout_f || guess_f){
 	o_putc = no_putc;
@@ -5753,7 +5753,7 @@ module_connection(void)
 
     i_getc = std_getc;
     i_ungetc = std_ungetc;
-    /* input redicrection */
+    /* input redirection */
 #ifdef INPUT_OPTION
     if (cap_f){
 	i_cgetc = i_getc; i_getc = cap_getc;
@@ -5915,7 +5915,7 @@ kanji_convert(FILE *f)
 		/* in case of 8th bit is on */
 		if (!estab_f&&!mime_decode_mode) {
 		    /* in case of not established yet */
-		    /* It is still ambiguious */
+		    /* It is still ambiguous */
 		    if (h_conv(f, c2, c1)==EOF) {
 			LAST;
 		    }
@@ -6899,7 +6899,7 @@ options(unsigned char *cp)
 	    continue;
 #endif
 	case SP:
-	    /* module muliple options in a string are allowed for Perl moudle  */
+	    /* module multiple options in a string are allowed for Perl module  */
 	    while(*cp && *cp++!='-');
 	    continue;
 	default:
