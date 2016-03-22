@@ -3834,8 +3834,8 @@ fold_conv(nkf_char c2, nkf_char c1)
 	    f_prev = c1;
 	    f_line = 0;
 	    fold_state =  CR;
-	} else if ((f_prev == c1 && !fold_preserve_f)
-		   || (f_prev == LF && fold_preserve_f)
+	} else if ((f_prev == c1)
+		   || (f_prev == LF)
 		  ) {        /* duplicate newline */
 	    if (f_line) {
 		f_line = 0;
