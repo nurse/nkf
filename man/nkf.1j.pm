@@ -723,10 +723,10 @@ GHG00637@nifty-serve.or.jp (COW)
 
 =back
 
-http://sourceforge.jp/projects/nkf/
+https://osdn.jp/projects/nkf/
 
 Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).
 
-Copyright (C) 1996-2013, The nkf Project.
+Copyright (C) 1996-2016, The nkf Project.
 
 =cut
