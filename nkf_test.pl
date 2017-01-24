@@ -1369,6 +1369,11 @@ printf "%-40s",  "[nkf-bug:32328] JIS";
     "\x1b\x1b\$B\$\x22\x1b(B",
     "\x1b\xe3\x81\x82");
 
+printf "%-40s",  "[nkf-bug:36572]";
+    &test("$nkf -sW --fb-html",
+    "\xe6\xbf\xb9\xe4\xb8\x8a",
+    "&#28665;\x8f\xe3");
+
     if (!NKF) {
 printf "%-40s", "Guess NL";
 &command_tests(

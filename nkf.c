@@ -1947,12 +1947,17 @@ unicode_to_jis_common(nkf_char c2, nkf_char c1, nkf_char c0, nkf_char *p2, nkf_c
 	ret = unicode_to_jis_common2(c1, c0, ppp[c2 - 0xE0], sizeof_utf8_to_euc_C2, p2, p1);
     }else return -1;
 #ifdef SHIFTJIS_CP932
-    if (!ret && !cp932inv_f && is_eucg3(*p2)) {
-	nkf_char s2, s1;
-	if (e2s_conv(*p2, *p1, &s2, &s1) == 0) {
-	    s2e_conv(s2, s1, p2, p1);
-	}else{
-	    ret = 1;
+    if (!ret&& is_eucg3(*p2)) {
+	if (cp932inv_f) {
+	    if (encode_fallback) ret = 1;
+	}
+	else {
+	    nkf_char s2, s1;
+	    if (e2s_conv(*p2, *p1, &s2, &s1) == 0) {
+		s2e_conv(s2, s1, p2, p1);
+	    }else{
+		ret = 1;
+	    }
 	}
     }
 #endif
