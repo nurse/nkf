@@ -5,7 +5,7 @@ Required: Python3.1+, nkf-2.0.9+
 
 1. How to Install
 
-    1) Download latest nkf-2.0.9+ from http://sourceforge.jp/projects/nkf/
+    1) Download latest nkf-2.0.9+ from https://osdn.jp/projects/nkf/
 
     2) $ tar zxvf nkf-2.x.x.tar.gz
 

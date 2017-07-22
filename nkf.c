@@ -20,11 +20,11 @@
  *
  * 3. This notice may not be removed or altered from any source distribution.
  */
-#define NKF_VERSION "2.1.3"
-#define NKF_RELEASE_DATE "2013-11-22"
+#define NKF_VERSION "2.1.4"
+#define NKF_RELEASE_DATE "2015-12-12"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
-    "Copyright (C) 1996-2013, The nkf Project."
+    "Copyright (C) 1996-2015, The nkf Project."
 
 #include "config.h"
 #include "nkf.h"
@@ -774,7 +774,7 @@ nkf_enc_find(const char *name)
 
 #ifdef DEFAULT_CODE_LOCALE
 static const char*
-nkf_locale_charmap()
+nkf_locale_charmap(void)
 {
 #ifdef HAVE_LANGINFO_H
     return nl_langinfo(CODESET);
@@ -802,7 +802,7 @@ nkf_locale_charmap()
 }
 
 static nkf_encoding*
-nkf_locale_encoding()
+nkf_locale_encoding(void)
 {
     nkf_encoding *enc = 0;
     const char *encname = nkf_locale_charmap();
@@ -813,13 +813,13 @@ nkf_locale_encoding()
 #endif /* DEFAULT_CODE_LOCALE */
 
 static nkf_encoding*
-nkf_utf8_encoding()
+nkf_utf8_encoding(void)
 {
     return &nkf_encoding_table[UTF_8];
 }
 
 static nkf_encoding*
-nkf_default_encoding()
+nkf_default_encoding(void)
 {
     nkf_encoding *enc = 0;
 #ifdef DEFAULT_CODE_LOCALE
@@ -1947,12 +1947,17 @@ unicode_to_jis_common(nkf_char c2, nkf_char c1, nkf_char c0, nkf_char *p2, nkf_c
 	ret = unicode_to_jis_common2(c1, c0, ppp[c2 - 0xE0], sizeof_utf8_to_euc_C2, p2, p1);
     }else return -1;
 #ifdef SHIFTJIS_CP932
-    if (!ret && !cp932inv_f && is_eucg3(*p2)) {
-	nkf_char s2, s1;
-	if (e2s_conv(*p2, *p1, &s2, &s1) == 0) {
-	    s2e_conv(s2, s1, p2, p1);
-	}else{
-	    ret = 1;
+    if (!ret&& is_eucg3(*p2)) {
+	if (cp932inv_f) {
+	    if (encode_fallback) ret = 1;
+	}
+	else {
+	    nkf_char s2, s1;
+	    if (e2s_conv(*p2, *p1, &s2, &s1) == 0) {
+		s2e_conv(s2, s1, p2, p1);
+	    }else{
+		ret = 1;
+	    }
 	}
     }
 #endif
@@ -3575,6 +3580,7 @@ static void
 check_bom(FILE *f)
 {
     int c2;
+    input_bom_f = FALSE;
     switch(c2 = (*i_getc)(f)){
     case 0x00:
 	if((c2 = (*i_getc)(f)) == 0x00){
@@ -3833,8 +3839,8 @@ fold_conv(nkf_char c2, nkf_char c1)
 	    f_prev = c1;
 	    f_line = 0;
 	    fold_state =  CR;
-	} else if ((f_prev == c1 && !fold_preserve_f)
-		   || (f_prev == LF && fold_preserve_f)
+	} else if ((f_prev == c1)
+		   || (f_prev == LF)
 		  ) {        /* duplicate newline */
 	    if (f_line) {
 		f_line = 0;
@@ -4341,7 +4347,7 @@ mime_ungetc_buf(nkf_char c, FILE *f)
 static nkf_char
 mime_getc_buf(FILE *f)
 {
-    /* we don't keep eof of mime_input_buf, becase it contains ?= as
+    /* we don't keep eof of mime_input_buf, because it contains ?= as
        a terminator. It was checked in mime_integrity. */
     return ((mimebuf_f)?
 	    (*i_mgetc_buf)(f):mime_input_buf(mime_input_state.input++));
@@ -5436,8 +5442,8 @@ mime_putc(nkf_char c)
 		mimeout_state.buf[mimeout_state.count++] = (char)c;
 		if (mimeout_state.count>MIMEOUT_BUF_LENGTH) {
 		    eof_mime();
-		    for (i=0;i<mimeout_state.count;i++) {
-			(*o_mputc)(mimeout_state.buf[i]);
+		    for (j=0;j<mimeout_state.count;j++) {
+			(*o_mputc)(mimeout_state.buf[j]);
 			base64_count++;
 		    }
 		    mimeout_state.count = 0;
@@ -5491,7 +5497,7 @@ typedef struct nkf_iconv_t {
     size_t input_buffer_size;
     char *output_buffer;
     size_t output_buffer_size;
-}
+};
 
 static nkf_iconv_t
 nkf_iconv_new(char *tocode, char *fromcode)
@@ -5710,13 +5716,13 @@ module_connection(void)
     if (nkf_enc_unicode_p(output_encoding))
 	output_mode = UTF_8;
 
-	if (x0201_f == NKF_UNSPECIFIED) {
-		x0201_f = X0201_DEFAULT;
-	}
+    if (x0201_f == NKF_UNSPECIFIED) {
+	x0201_f = X0201_DEFAULT;
+    }
 
-    /* replace continucation module, from output side */
+    /* replace continuation module, from output side */
 
-    /* output redicrection */
+    /* output redirection */
 #ifdef CHECK_OPTION
     if (noout_f || guess_f){
 	o_putc = no_putc;
@@ -5753,7 +5759,7 @@ module_connection(void)
 
     i_getc = std_getc;
     i_ungetc = std_ungetc;
-    /* input redicrection */
+    /* input redirection */
 #ifdef INPUT_OPTION
     if (cap_f){
 	i_cgetc = i_getc; i_getc = cap_getc;
@@ -5915,7 +5921,7 @@ kanji_convert(FILE *f)
 		/* in case of 8th bit is on */
 		if (!estab_f&&!mime_decode_mode) {
 		    /* in case of not established yet */
-		    /* It is still ambiguious */
+		    /* It is still ambiguous */
 		    if (h_conv(f, c2, c1)==EOF) {
 			LAST;
 		    }
@@ -6899,7 +6905,7 @@ options(unsigned char *cp)
 	    continue;
 #endif
 	case SP:
-	    /* module muliple options in a string are allowed for Perl moudle  */
+	    /* module multiple options in a string are allowed for Perl module  */
 	    while(*cp && *cp++!='-');
 	    continue;
 	default:
