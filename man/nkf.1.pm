@@ -77,7 +77,7 @@ For X0201 kana, SO/SI, SSO and ESC-(-I methods are supported.
 For automatic code detection, nkf assumes no X0201 kana in Shift_JIS.
 To accept X0201 in Shift_JIS, use B<-X>, B<-x> or B<-S>.
 
-multiple options are specifed as seprate strings, such as
+multiple options are specified as seprate strings, such as
 
   print nkf('--ic=UTF8-MAC', '-w', $string), "\n";
 
@@ -117,13 +117,13 @@ UTF-8N.
 
 UTF-16.
 B or L gives whether Big Endian or Little Endian.
-0 gives whther put BOM or not.
+0 gives whether put BOM or not.
 
 =item B<-W32[BL][0]>
 
 UTF-32.
 B or L gives whether Big Endian or Little Endian.
-0 gives whther put BOM or not.
+0 gives whether put BOM or not.
 
 =back
 

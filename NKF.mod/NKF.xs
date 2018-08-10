@@ -102,7 +102,7 @@ nkf_putchar_grow(unsigned int c)
 
 /* package defenition  */
 
-/* nkf accepts variable length arugments. The last argument is */
+/* nkf accepts variable length arguments. The last argument is */
 /* the input data. Other strings are flags for nkf translation.    */
 
 MODULE = NKF		PACKAGE = NKF		
