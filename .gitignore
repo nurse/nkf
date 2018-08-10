@@ -12,3 +12,6 @@ NKF.mod/NKF.bs
 NKF.mod/NKF.c
 NKF.mod/blib/
 NKF.mod/pm_to_blib
+NKF.mod/MYMETA.json
+NKF.mod/MYMETA.yml
+NKF.python2/build/
