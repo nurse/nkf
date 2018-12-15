@@ -1353,6 +1353,11 @@ printf "%-40s",  "[nkf-forum:65482]  ";
     "\x1b\x24\x42\x7f\x21\x80\x21\x1b\x28\x42\n",
     "\xf0\x40\xf0\x9f\x0a");
 
+printf "%-40s",  "[nkf-bug:38800]  ";
+    &test("$nkf -W -e --fb-java",
+    "\xF0\xA0\xAE\xB7",
+    "\\uD842\\uDFB7");
+
 # [KNOWNBUG]
 # printf "%-40s",  "[ruby-dev:47057]  ";
 #     &test("$nkf -jW -M --cp932",
