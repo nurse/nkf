@@ -76,6 +76,9 @@ shar:
 tar:
 	-mkdir nkf-$(VERSION)
 	-mkdir nkf-$(VERSION)/NKF.mod
+	-mkdir nkf-$(VERSION)/NKF.python2
+	-mkdir nkf-$(VERSION)/NKF.python3
+	-mkdir nkf-$(VERSION)/man
 	for file in  `cat MANIFEST`;  \
 	do  \
 	    cp $$file nkf-$(VERSION)/$$file ; \
