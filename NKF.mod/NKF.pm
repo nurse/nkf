@@ -47,44 +47,48 @@ bootstrap NKF $VERSION;
 __END__
 
 #
-# =begin から =begin COMMAND までは Perl/NKF のドキュメント
-# =begin COMMAND から =end までは nkf コマンドのドキュメント
+# =begin FUNC から =end FUNC までは Perl/NKF のドキュメント
+# =begin COMMAND から =end COMMAND までは nkf コマンドのドキュメント
 # 
 
 =head1 NAME
 
-=begin
+=begin FUNC
 
 NKF - Perl extension for Network Kanji Filter
+
+=end FUNC
 
 =begin COMMAND
 
 nkf - Network Kanji Filter
 
-=end
+=end COMMAND
 
 =head1 SYNOPSIS
 
-=begin
+=begin FUNC
 
   use NKF;
   $output = nkf("-s",$input);
+
+=end FUNC
 
 =begin COMMAND
 
 nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
 
-=end
+=end COMMAND
 
 =head1 DESCRIPTION
 
-=begin
+=begin FUNC
 
 This is a Perl Extension version of nkf (Network Kanji Filter).
 It converts the last argument and return converted result. Conversion
 details are specified by flags before the last argument.
 
-=end
+=end FUNC
 
 B<Nkf> is a yet another kanji code converter among networks, hosts and terminals.
 It converts input kanji code to designated kanji code
@@ -493,7 +497,7 @@ Print nkf's help.
 
 Print nkf's version.
 
-=end
+=end COMMAND
 
 =item B<-->
 
@@ -507,12 +511,12 @@ Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
 
 Copyright (c) 1996-2015, The nkf Project.
 
-=begin
+=begin FUNC
 
 =head1 SEE ALSO
 
 perl(1).   nkf(1)
 
-=end
+=end FUNC
 
 =cut
