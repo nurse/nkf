@@ -120,7 +120,7 @@ sub command_tests {
     return;
 }
 
-do "nkf_test.pl";
+do "./nkf_test.pl";
 unlink "nkf.in";
 unlink "nkf.out";
 
