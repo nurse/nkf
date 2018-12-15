@@ -1,5 +1,5 @@
 # Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
-# Copyright (c) 1996-2015, The nkf Project.
+# Copyright (c) 1996-2018, The nkf Project.
 # All rights reserved.
 #
 # This software is provided 'as-is', without any express or implied
@@ -35,7 +35,7 @@ require DynaLoader;
 @EXPORT = qw(
 	nkf	nkf_continue	inputcode
 );
-$VERSION = '2.14';
+$VERSION = '2.15';
 
 bootstrap NKF $VERSION;
 
@@ -52,10 +52,12 @@ __END__
 =head1 NAME
 
 
+
 nkf - Network Kanji Filter
 
 
 =head1 SYNOPSIS
+
 
 
 nkf B<[-butjnesliohrTVvwWJESZxXFfmMBOcdILg]> B<[>I<file ...>B<]>
@@ -481,7 +483,7 @@ Ignore rest of -option.
 
 Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
 
-Copyright (c) 1996-2015, The nkf Project.
+Copyright (c) 1996-2018, The nkf Project.
 
 
 =cut

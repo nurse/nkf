@@ -727,6 +727,6 @@ https://osdn.jp/projects/nkf/
 
 Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).
 
-Copyright (C) 1996-2016, The nkf Project.
+Copyright (C) 1996-2018, The nkf Project.
 
 =cut

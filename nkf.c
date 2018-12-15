@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1987, Fujitsu LTD. (Itaru ICHIKAWA).
- * Copyright (c) 1996-2013, The nkf Project.
+ * Copyright (c) 1996-2018, The nkf Project.
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,11 +20,11 @@
  *
  * 3. This notice may not be removed or altered from any source distribution.
  */
-#define NKF_VERSION "2.1.4"
-#define NKF_RELEASE_DATE "2015-12-12"
+#define NKF_VERSION "2.1.5"
+#define NKF_RELEASE_DATE "2018-12-15"
 #define COPY_RIGHT \
     "Copyright (C) 1987, FUJITSU LTD. (I.Ichikawa).\n" \
-    "Copyright (C) 1996-2015, The nkf Project."
+    "Copyright (C) 1996-2018, The nkf Project."
 
 #include "config.h"
 #include "nkf.h"
