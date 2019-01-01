@@ -61,13 +61,13 @@ cf. --ic and --oc.
 
     UTF-16.
     B or L gives whether Big Endian or Little Endian.
-    0 gives whther put BOM or not.
+    0 gives whether put BOM or not.
 
     - __-W32[BL][0]__
 
     UTF-32.
     B or L gives whether Big Endian or Little Endian.
-    0 gives whther put BOM or not.
+    0 gives whether put BOM or not.
 
 - __-b -u__
 
@@ -344,7 +344,7 @@ When Unicode to Unicode conversion,
 with this and -x option, nkf can be used as UTF converter.
 (In other words, without this and -x option, nkf doesn't save some characters)
 
-When nkf converts strings that related to path, you should use this opion.
+When nkf converts strings that related to path, you should use this option.
 
 - __--cap-input__
 
