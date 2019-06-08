@@ -6,7 +6,7 @@ SHAR = shar
 PERL = perl
 RM = rm -rf
 VERSION = 2.1.5
-MKDIR = mkdir
+MKDIR = mkdir -p
 prefix = /usr/local
 PYTHON2 = python
 PYTHON3 = python
@@ -60,8 +60,8 @@ install-man-ja:
 	cp -f nkf.1j $(prefix)/man/ja/man1/nkf.1
 
 shar:
-	-mkdir nkf-$(VERSION)
-	-mkdir nkf-$(VERSION)/NKF.mod
+	-$(MKDIR) nkf-$(VERSION)
+	-$(MKDIR) nkf-$(VERSION)/NKF.mod
 	for file in  `cat MANIFEST`;  \
 	do  \
 	    nkf -j -m0 $$file > nkf-$(VERSION)/$$file ; \
@@ -74,11 +74,11 @@ shar:
 	-$(RM) nkf-$(VERSION)
 
 tar:
-	-mkdir nkf-$(VERSION)
-	-mkdir nkf-$(VERSION)/NKF.mod
-	-mkdir nkf-$(VERSION)/NKF.python2
-	-mkdir nkf-$(VERSION)/NKF.python3
-	-mkdir nkf-$(VERSION)/man
+	-$(MKDIR) nkf-$(VERSION)
+	-$(MKDIR) nkf-$(VERSION)/NKF.mod
+	-$(MKDIR) nkf-$(VERSION)/NKF.python2
+	-$(MKDIR) nkf-$(VERSION)/NKF.python3
+	-$(MKDIR) nkf-$(VERSION)/man
 	for file in  `cat MANIFEST`;  \
 	do  \
 	    cp $$file nkf-$(VERSION)/$$file ; \
