@@ -97,7 +97,10 @@ Specify the escape sequence for US-ASCII/JIS X 0201 Roman. (DEFAULT B)
 
 {de/en}crypt ROT13/47
 
-    - __-h[123] --hiragana --katakana --katakana-hiragana__
+- __-h[123] --hiragana --katakana --katakana-hiragana__
+
+Hiragana/Katakana conversion
+
     - __-h1 --hiragana__
 
     Katakana to Hiragana conversion.
@@ -251,8 +254,8 @@ NKF supports following codesets and those codeset names are case insensitive.
 
     a.k.a. AT&T JIS, Japanese EUC, UJIS
 
-            - eucJP-ascii
-        - eucJP-ms
+    - eucJP-ascii
+    - eucJP-ms
     - CP51932
 
     Microsoft Version of EUC-JP.
